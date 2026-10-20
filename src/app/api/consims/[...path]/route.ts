@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const TARGET_BASE = process.env.CONSIMS_API_URL || "http://localhost:3000";
+export const dynamic = "force-dynamic";
 
 async function proxyRequest(
   req: NextRequest,
   context: { params: { path?: string[] } | Promise<{ path?: string[] }> }
 ) {
+  const targetBase = (process.env.CONSIMS_API_URL || "https://api.consims.com").replace(/\/$/, "");
   const params = await Promise.resolve(context?.params);
   const pathSegments = params?.path || [];
   const subpath = pathSegments.join("/");
   const search = req.nextUrl.search;
-  const targetUrl = `${TARGET_BASE.replace(/\/$/, "")}/${subpath}${search}`;
+  const targetUrl = `${targetBase}/${subpath}${search}`;
 
   const forwardHeaders: Record<string, string> = {};
   req.headers.forEach((value, key) => {
@@ -63,7 +64,7 @@ async function proxyRequest(
     return NextResponse.json(
       {
         Success: "false",
-        Message: `Không thể kết nối đến máy chủ ERP backend (${TARGET_BASE}): ${err.message}`,
+        Message: `Không thể kết nối đến máy chủ ERP backend (${targetBase}): ${err.message}`,
         error: err.message,
       },
       { status: 502 }
