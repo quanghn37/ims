@@ -53,7 +53,8 @@ async function proxyRequest(
       }
     });
 
-    const responseBody = await backendRes.arrayBuffer();
+    const isNoBodyStatus = backendRes.status === 204 || backendRes.status === 205 || backendRes.status === 304;
+    const responseBody = isNoBodyStatus ? null : await backendRes.arrayBuffer();
     return new NextResponse(responseBody, {
       status: backendRes.status,
       statusText: backendRes.statusText,
