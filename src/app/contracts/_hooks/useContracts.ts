@@ -9,6 +9,7 @@ type PaginationState = { current: number; pageSize: number; total: number };
 
 export const contractColumnFields: Record<string, string[]> = {
   ContractCode: ["ContractCode", "Contractcode", "Code"],
+  S_Type: ["S_Type", "s_type", "S_type", "ContractCategory", "Category"],
   MainCode: ["MainCode", "MainContractCode", "MainContractName"],
   MasterContract: ["MasterContract", "MasterContractCode", "MasterContractNo", "ParentContractCode", "ParentCode"],
   QuotationCode: ["QuotationCode", "Quotationcode", "SourceCode"],
@@ -22,6 +23,7 @@ export const contractColumnFields: Record<string, string[]> = {
 const getContractSearchValues = (contract: ContractItem) => [
   contract.Description ?? contract.Remarks ?? contract.ContractName ?? "",
   contract.ContractCode ?? contract.Contractcode ?? contract.Code ?? "",
+  contract.S_Type ?? (contract as any).s_type ?? (contract as any).S_type ?? contract.ContractCategory ?? "",
   contract.Venname ?? contract.ClientName ?? contract.CompanyName ?? "",
   contract.MainCode ?? contract.MainContractCode ?? "",
   (contract as any).MasterContract ?? (contract as any).MasterContractCode ?? (contract as any).ParentContractCode ?? "",

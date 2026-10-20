@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import {
@@ -503,8 +503,27 @@ export default function ContractFormDrawer({
               </Form.Item>
             </Col>
 
-            {/* Cột 7: Hình thức hợp đồng */}
-            <Col span={5} style={{ paddingLeft: 8 }}>
+            {/* Cột 7: Loại HĐ */}
+            <Col span={3} style={{ paddingLeft: 8, paddingRight: 8, borderRight: "1px solid #dce5e6" }}>
+              <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+                {t.contract.contractCategory}
+              </div>
+              <Form.Item name="S_Type" style={{ margin: 0 }}>
+                <Select
+                  variant="borderless"
+                  allowClear
+                  placeholder={t.contract.contractCategory}
+                  style={{ padding: 0, width: "100%", fontWeight: 500, fontSize: 13, color: "#123443" }}
+                  options={[
+                    { value: "XD", label: "XD" },
+                    { value: "MEP", label: "MEP" },
+                  ]}
+                />
+              </Form.Item>
+            </Col>
+
+            {/* Cột 8: E-Contract */}
+            <Col span={2} style={{ paddingLeft: 8 }}>
               <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                 {t.contract.contractType}
               </div>

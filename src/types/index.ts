@@ -21,6 +21,9 @@ export interface ApiResponse<T = any> {
 export interface ContractItem {
   ContractId: number | string;
   ContractType: "quotation" | "purchase_order" | "Sub_contract" | string;
+  S_Type?: string;
+  s_type?: string;
+  ContractCategory?: string;
   Description?: string;
   FromDate?: string;
   ToDate?: string;

@@ -85,6 +85,8 @@ export interface UpdateContractInfoParams {
   ContractId?: number | string;
   ContractType?: "purchase_order" | "quotation" | "mat_equip" | string;
   S_Type?: string;
+  s_type?: string;
+  ContractCategory?: string;
   MainContractId?: number | string;
   ParentContractId?: number | string | null;
   Description?: string;

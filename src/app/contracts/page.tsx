@@ -161,6 +161,8 @@ export default function ContractsPage() {
       FromDate: dayjs(),
       ToDate: null,
       IsVcontract: false,
+      S_Type: undefined,
+      ContractCategory: undefined,
       ContractCode: "",
       ParentContractId: undefined,
       ParentContractCode: "",
@@ -209,6 +211,14 @@ export default function ContractsPage() {
       }
     }
 
+    const sTypeVal =
+      record.S_Type ??
+      (record as any).s_type ??
+      (record as any).S_type ??
+      (record as any).ContractCategory ??
+      (record as any).Category ??
+      undefined;
+
     contractForm.setFieldsValue({
       ClientId: clientId,
       MainContractId: mainContractId,
@@ -223,6 +233,8 @@ export default function ContractsPage() {
       FromDate: parseDateSafe(record.StartDate || record.FromDate),
       ToDate: parseDateSafe(record.EndDate || record.ToDate),
       IsVcontract: Boolean((record as any).IsVcontract ?? (record as any).IsVContract),
+      S_Type: sTypeVal,
+      ContractCategory: sTypeVal,
       PayTerms:
         record.PayTerms ||
         (record as any).PaymentTerm ||
@@ -253,6 +265,14 @@ export default function ContractsPage() {
     const parentContractId = Number(record.ContractId);
     const parentContractCode = record.ContractCode || String(record.ContractId);
 
+    const sTypeVal =
+      record.S_Type ??
+      (record as any).s_type ??
+      (record as any).S_type ??
+      (record as any).ContractCategory ??
+      (record as any).Category ??
+      undefined;
+
     contractForm.setFieldsValue({
       ClientId: clientId,
       MainContractId: mainContractId,
@@ -266,6 +286,8 @@ export default function ContractsPage() {
       FromDate: parseDateSafe(record.StartDate || record.FromDate) || dayjs(),
       ToDate: parseDateSafe(record.EndDate || record.ToDate) || null,
       IsVcontract: false,
+      S_Type: sTypeVal,
+      ContractCategory: sTypeVal,
       PayTerms:
         record.PayTerms ||
         (record as any).PaymentTerm ||
@@ -342,13 +364,16 @@ export default function ContractsPage() {
             : values.PayTerms
           : undefined;
 
+      const sTypeValue = values.S_Type || values.ContractCategory || "";
+
       if (editingContract) {
         const rawEditingClientId = editingContract.ClientID ?? editingContract.ClientId;
         const updatePayload = {
           WSId: "",
           ContractId: Number(editingContract.ContractId),
           ContractType: "mat_equip",
-          S_Type: "PUR",
+          S_Type: sTypeValue,
+          s_type: sTypeValue,
           MainContractId: mainContractIdVal,
           ParentContractId: parentContractId,
           ClientId: values.ClientId
@@ -368,6 +393,7 @@ export default function ContractsPage() {
           FromDate: fromDateFormatted,
           ToDate: toDateFormatted,
           IsVcontract: values.IsVcontract ? 1 : 0,
+          ContractCategory: sTypeValue,
           Currency: values.Currency || "VND",
           PaytermId: paytermVal,
         };
@@ -379,6 +405,9 @@ export default function ContractsPage() {
             ? {
                 ...prev,
                 ...updatePayload,
+                S_Type: sTypeValue,
+                s_type: sTypeValue,
+                ContractCategory: sTypeValue,
                 ContractedAmount: updatePayload.Amount,
                 StartDate: updatePayload.FromDate,
                 EndDate: updatePayload.ToDate,
@@ -391,7 +420,8 @@ export default function ContractsPage() {
         const createPayload = {
           WSId: "",
           ContractType: "mat_equip",
-          S_Type: "PUR",
+          S_Type: sTypeValue,
+          s_type: sTypeValue,
           MainContractId: mainContractIdVal,
           ParentContractId: parentContractId,
           ClientId: values.ClientId ? Number(values.ClientId) : undefined,
@@ -403,6 +433,7 @@ export default function ContractsPage() {
           FromDate: fromDateFormatted,
           ToDate: toDateFormatted,
           IsVcontract: values.IsVcontract ? 1 : 0,
+          ContractCategory: sTypeValue,
           Currency: values.Currency || "VND",
           PaytermId: paytermVal,
         };

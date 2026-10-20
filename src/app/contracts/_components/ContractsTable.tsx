@@ -1,4 +1,4 @@
-﻿import React, { useMemo } from "react";
+import React, { useMemo } from "react";
 import { Button, Card, Input, Popconfirm, Space, Table, Tag, Tooltip, Typography } from "antd";
 import {
   IconCircleX,
@@ -46,7 +46,7 @@ export default function ContractsTable({ filteredContracts, loading, searchKeywo
         title: t.contract.code,
         dataIndex: "ContractCode",
         key: "ContractCode",
-        width: 170,
+        width: 160,
         render: (val: string, r: ContractItem) => {
           const code = val || (r as any).Contractcode || (r as any).Code;
           if (!code) return <span>---</span>;
@@ -64,6 +64,18 @@ export default function ContractsTable({ filteredContracts, loading, searchKeywo
               {code}
             </span>
           );
+        },
+      },
+      {
+        title: t.contract.contractCategory,
+        dataIndex: "S_Type",
+        key: "S_Type",
+        width: 100,
+        align: "center" as const,
+        render: (val: string, r: any) => {
+          const type = val || r.s_type || r.S_type || r.ContractCategory || r.Category;
+          if (!type) return <span style={{ color: "#a0aec0" }}>---</span>;
+          return <span style={{ color: "#262626" }}>{String(type).trim()}</span>;
         },
       },
       {
