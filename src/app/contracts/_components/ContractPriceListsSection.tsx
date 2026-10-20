@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useMemo } from "react";
 import {
@@ -122,7 +122,7 @@ export default function ContractPriceListsSection({
         width: 150,
         align: "center" as const,
         render: (_: any, r: ContractMaterialItem) => (
-          <span style={{ color: "#0F172A", fontSize: 13, fontWeight: 400 }}>
+          <span style={{ color: "#123443", fontSize: 13, fontWeight: 400 }}>
             {r.QuotationCode || r.PriceListCode || "---"}
           </span>
         ),
@@ -136,14 +136,14 @@ export default function ContractPriceListsSection({
           const sCode = r.SystemCode || r.ItemCode || (r.MaterialId ? String(r.MaterialId) : "");
           return (
             <div>
-              <div style={{ fontWeight: 600, color: "#0F172A", fontSize: 13, wordBreak: "break-word" }}>
+              <div style={{ fontWeight: 600, color: "#123443", fontSize: 13, wordBreak: "break-word" }}>
                 {desc || "Vật tư trong bảng giá"}
               </div>
               {sCode && (
                 <div
                   style={{
                     fontSize: 11.5,
-                    color: "#64748B",
+                    color: "#718894",
                     marginTop: 2,
                     fontFamily: "monospace",
                     wordBreak: "break-word",
@@ -171,7 +171,7 @@ export default function ContractPriceListsSection({
         width: 80,
         align: "right" as const,
         render: (val: number, r: ContractMaterialItem) => (
-          <span style={{ color: "#0F172A", fontSize: 13 }}>
+          <span style={{ color: "#123443", fontSize: 13 }}>
             {Number(val ?? r.Qnty ?? 0).toLocaleString("vi-VN")}
           </span>
         ),
@@ -183,7 +183,7 @@ export default function ContractPriceListsSection({
         width: 105,
         align: "right" as const,
         render: (val: number, r: ContractMaterialItem) => (
-          <span style={{ color: "#0F172A", fontSize: 13 }}>
+          <span style={{ color: "#123443", fontSize: 13 }}>
             {Number(val ?? r.UnitPrice ?? 0).toLocaleString("vi-VN")}
           </span>
         ),
@@ -196,7 +196,7 @@ export default function ContractPriceListsSection({
         align: "right" as const,
         render: (val: any, r: ContractMaterialItem) => {
           const raw = Number(val ?? r.Amount ?? (Number(r.UnitPrice || 0) * Number(r.Qnty || 0)));
-          return <span style={{ color: "#0F172A", fontSize: 13 }}>{raw.toLocaleString("vi-VN")}</span>;
+          return <span style={{ color: "#123443", fontSize: 13 }}>{raw.toLocaleString("vi-VN")}</span>;
         },
       },
       {
@@ -220,7 +220,7 @@ export default function ContractPriceListsSection({
               ? Number(val)
               : rawAmount * (Number(r.TaxRate) || 0);
           return (
-            <span style={{ color: "#0F172A", fontSize: 13 }}>
+            <span style={{ color: "#123443", fontSize: 13 }}>
               {taxVal.toLocaleString("vi-VN")}
             </span>
           );
@@ -239,7 +239,7 @@ export default function ContractPriceListsSection({
               : rawAmount * (Number(r.TaxRate) || 0);
           const totalVat = rawAmount + taxVal;
           return (
-            <span style={{ color: "#0F172A", fontWeight: 600, fontSize: 13 }}>
+            <span style={{ color: "#123443", fontWeight: 600, fontSize: 13 }}>
               {totalVat.toLocaleString("vi-VN")}
             </span>
           );
@@ -280,7 +280,7 @@ export default function ContractPriceListsSection({
             {
               title: (
                 <Tooltip title={t.table.action}>
-                  <IconSettings size={15} strokeWidth={1.8} style={{ color: "#64748B" }} />
+                  <IconSettings size={15} strokeWidth={1.8} style={{ color: "#718894" }} />
                 </Tooltip>
               ),
               key: "action",
@@ -324,7 +324,7 @@ export default function ContractPriceListsSection({
       <style>{`
         .contract-detail-table .ant-table-thead > tr > th,
         .reconcile-tree-table .ant-table-thead > tr > th {
-          background: #F8FAFC !important;
+          background: #f7fbfa !important;
           font-weight: 600 !important;
           color: #475569 !important;
           font-size: 12px !important;
@@ -365,7 +365,7 @@ export default function ContractPriceListsSection({
       <div
         style={{
           marginTop: 10,
-          border: "1px solid #E2E8F0",
+          border: "1px solid #dce5e6",
           borderRadius: 8,
           background: "#ffffff",
           padding: "10px 12px",
@@ -395,8 +395,8 @@ export default function ContractPriceListsSection({
                 width: 20,
                 height: 20,
                 borderRadius: "50%",
-                backgroundColor: "#EDE9FE",
-                color: "#7C3AED",
+                backgroundColor: "#dce5e6",
+                color: "#008f89",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -407,7 +407,7 @@ export default function ContractPriceListsSection({
             >
               {isPriceListSectionExpanded ? "−" : "+"}
             </div>
-            <span style={{ fontWeight: 700, fontSize: 13, color: "#7C3AED", textTransform: "uppercase" }}>
+            <span style={{ fontWeight: 700, fontSize: 13, color: "#008f89", textTransform: "uppercase" }}>
               {t.contract.materialDetails}
             </span>
           </div>
@@ -415,7 +415,7 @@ export default function ContractPriceListsSection({
           {/* CỤM BUTTON NGANG HÀNG VỚI TIÊU ĐỀ: LÀM MỚI & ĐỐI CHIẾU BẢNG GIÁ */}
           <Space size={8}>
             <Button
-              icon={<IconRefresh size={16} strokeWidth={1.8} style={{ color: "#64748B" }} />}
+              icon={<IconRefresh size={16} strokeWidth={1.8} style={{ color: "#718894" }} />}
               onClick={onRefreshMaterials}
               loading={loadingMaterials}
               style={{
@@ -447,13 +447,13 @@ export default function ContractPriceListsSection({
                   onClick={() => setIsReconcileModalOpen(true)}
                   disabled={!isEditing || !effectiveClientId || !effectiveSubconOf}
                   style={{
-                    background: "#7C3AED",
-                    borderColor: "#7C3AED",
+                    background: "#008f89",
+                    borderColor: "#008f89",
                     height: 32,
                     borderRadius: 6,
                     fontSize: 13,
                     fontWeight: 500,
-                    boxShadow: "0 2px 4px rgba(124, 58, 237, 0.2)",
+                    boxShadow: "0 2px 4px rgba(0, 143, 137, 0.2)",
                   }}
                 >
                   {t.contract.reconcilePriceList}
@@ -508,7 +508,7 @@ export default function ContractPriceListsSection({
                   });
 
                   return (
-                    <Table.Summary.Row style={{ background: "#F8FAFC", fontWeight: 700 }}>
+                    <Table.Summary.Row style={{ background: "#f7fbfa", fontWeight: 700 }}>
                       <Table.Summary.Cell index={0} align="center">
                         -
                       </Table.Summary.Cell>
@@ -516,13 +516,13 @@ export default function ContractPriceListsSection({
                         -
                       </Table.Summary.Cell>
                       <Table.Summary.Cell index={2} align="center">
-                        <span style={{ color: "#0F172A", fontWeight: 700 }}>{t.common.total}</span>
+                        <span style={{ color: "#123443", fontWeight: 700 }}>{t.common.total}</span>
                       </Table.Summary.Cell>
                       <Table.Summary.Cell index={3} align="center">
                         -
                       </Table.Summary.Cell>
                       <Table.Summary.Cell index={4} align="right">
-                        <span style={{ color: "#0F172A", fontWeight: 700 }}>
+                        <span style={{ color: "#123443", fontWeight: 700 }}>
                           {totalQnty.toLocaleString("vi-VN")}
                         </span>
                       </Table.Summary.Cell>
@@ -530,7 +530,7 @@ export default function ContractPriceListsSection({
                         -
                       </Table.Summary.Cell>
                       <Table.Summary.Cell index={6} align="right">
-                        <span style={{ color: "#0F172A", fontWeight: 700 }}>
+                        <span style={{ color: "#123443", fontWeight: 700 }}>
                           {totalAmount.toLocaleString("vi-VN")}
                         </span>
                       </Table.Summary.Cell>
@@ -538,12 +538,12 @@ export default function ContractPriceListsSection({
                         -
                       </Table.Summary.Cell>
                       <Table.Summary.Cell index={8} align="right">
-                        <span style={{ color: "#0F172A", fontWeight: 700 }}>
+                        <span style={{ color: "#123443", fontWeight: 700 }}>
                           {totalTax.toLocaleString("vi-VN")}
                         </span>
                       </Table.Summary.Cell>
                       <Table.Summary.Cell index={9} align="right">
-                        <span style={{ color: "#7C3AED", fontWeight: 700 }}>
+                        <span style={{ color: "#008f89", fontWeight: 700 }}>
                           {totalVat.toLocaleString("vi-VN")}
                         </span>
                       </Table.Summary.Cell>
@@ -569,7 +569,7 @@ export default function ContractPriceListsSection({
                   textAlign: "center",
                   color: "#94a3b8",
                   fontSize: 13,
-                  background: "#F8FAFC",
+                  background: "#f7fbfa",
                   borderRadius: 6,
                   border: "1px dashed #CBD5E1",
                 }}

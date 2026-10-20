@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useMemo } from "react";
 import { Button, Typography } from "antd";
@@ -108,7 +108,7 @@ export default function ClientLovModal({
           <Button
             type="primary"
             size="small"
-            style={{ background: "#7C3AED", borderColor: "#7C3AED", borderRadius: 6 }}
+            style={{ background: "#008f89", borderColor: "#008f89", borderRadius: 6 }}
             onClick={(e) => {
               e.stopPropagation();
               onSelectClient(record);
@@ -127,7 +127,7 @@ export default function ClientLovModal({
       open={open}
       onClose={onClose}
       title={t.lov.vendorTitle}
-      icon={<IconBuildingStore size={20} strokeWidth={1.8} style={{ color: "#7C3AED" }} />}
+      icon={<IconBuildingStore size={20} strokeWidth={1.8} style={{ color: "#008f89" }} />}
       searchPlaceholder={t.lov.vendorSearchPlaceholder}
       searchInput={clientSearchInput}
       setSearchInput={setClientSearchInput}
@@ -138,7 +138,7 @@ export default function ClientLovModal({
       columns={columns}
       rowKey={(r, index) => r.ClientId ?? r.CompanyId ?? r.Id ?? `client_${index}`}
       width={880}
-      primaryColor="#7C3AED"
+      primaryColor="#008f89"
     />
   );
 }

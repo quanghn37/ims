@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useMemo } from "react";
 import {
@@ -79,7 +79,7 @@ export default function StockCardDrawer({
       width: 50,
       align: "center",
       render: (val: number, _, index: number) => (
-        <span style={{ color: "#64748B", fontSize: 13 }}>{val ?? index + 1}</span>
+        <span style={{ color: "#718894", fontSize: 13 }}>{val ?? index + 1}</span>
       ),
     },
     {
@@ -103,7 +103,7 @@ export default function StockCardDrawer({
         <span
           style={{
             fontWeight: 600,
-            color: "#7C3AED",
+            color: "#008f89",
             fontFamily: "monospace",
             fontSize: 13,
           }}
@@ -133,7 +133,7 @@ export default function StockCardDrawer({
                 : language === "en" ? "Stock Out" : "Xuất kho"}
             </span>
             {r.SubType && (
-              <span style={{ fontSize: 11, color: "#64748B", marginLeft: 4 }}>
+              <span style={{ fontSize: 11, color: "#718894", marginLeft: 4 }}>
                 ({r.SubType})
               </span>
             )}
@@ -157,7 +157,7 @@ export default function StockCardDrawer({
       width: 180,
       ellipsis: true,
       render: (val: string) => (
-        <span style={{ color: "#64748B", fontSize: 13 }}>{val || "---"}</span>
+        <span style={{ color: "#718894", fontSize: 13 }}>{val || "---"}</span>
       ),
     },
     // Nhóm Cột Nhập
@@ -173,7 +173,7 @@ export default function StockCardDrawer({
           render: (val: number) => (
             <span
               style={{
-                color: val > 0 ? "#16A34A" : "#64748B",
+                color: val > 0 ? "#16A34A" : "#718894",
                 fontWeight: val > 0 ? 600 : 400,
                 fontSize: 13,
               }}
@@ -203,7 +203,7 @@ export default function StockCardDrawer({
           render: (val: number) => (
             <span
               style={{
-                color: val > 0 ? "#16A34A" : "#64748B",
+                color: val > 0 ? "#16A34A" : "#718894",
                 fontWeight: val > 0 ? 600 : 400,
                 fontSize: 13,
               }}
@@ -227,7 +227,7 @@ export default function StockCardDrawer({
           render: (val: number) => (
             <span
               style={{
-                color: val > 0 ? "#DC2626" : "#64748B",
+                color: val > 0 ? "#DC2626" : "#718894",
                 fontWeight: val > 0 ? 600 : 400,
                 fontSize: 13,
               }}
@@ -257,7 +257,7 @@ export default function StockCardDrawer({
           render: (val: number) => (
             <span
               style={{
-                color: val > 0 ? "#DC2626" : "#64748B",
+                color: val > 0 ? "#DC2626" : "#718894",
                 fontWeight: val > 0 ? 600 : 400,
                 fontSize: 13,
               }}
@@ -279,7 +279,7 @@ export default function StockCardDrawer({
           width: 100,
           align: "right",
           render: (val: number) => (
-            <span style={{ fontWeight: 600, color: "#0F172A", fontSize: 13 }}>
+            <span style={{ fontWeight: 600, color: "#123443", fontSize: 13 }}>
               {Number(val || 0).toLocaleString(numLocale)}
             </span>
           ),
@@ -291,7 +291,7 @@ export default function StockCardDrawer({
           width: 130,
           align: "right",
           render: (val: number) => (
-            <span style={{ fontWeight: 600, color: "#7C3AED", fontSize: 13 }}>
+            <span style={{ fontWeight: 600, color: "#008f89", fontSize: 13 }}>
               {Number(val || 0).toLocaleString(numLocale)}
             </span>
           ),
@@ -310,22 +310,22 @@ export default function StockCardDrawer({
                 width: 34,
                 height: 34,
                 borderRadius: 8,
-                background: "#EDE9FE",
+                background: "#dce5e6",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                color: "#7C3AED",
+                color: "#008f89",
               }}
             >
               <FileTextOutlined style={{ fontSize: 18 }} />
             </div>
             <div>
-              <div style={{ fontWeight: 700, fontSize: 16, color: "#0F172A" }}>
+              <div style={{ fontWeight: 700, fontSize: 16, color: "#123443" }}>
                 {language === "en" ? "Stock Card: " : "Thẻ kho: "}{itemName}
               </div>
-              <div style={{ fontSize: 12, color: "#64748B", fontWeight: 400 }}>
+              <div style={{ fontSize: 12, color: "#718894", fontWeight: 400 }}>
                 {language === "en" ? "Item Code: " : "Mã VT: "}
-                <span style={{ fontFamily: "monospace", fontWeight: 600, color: "#7C3AED" }}>{itemCode}</span>
+                <span style={{ fontFamily: "monospace", fontWeight: 600, color: "#008f89" }}>{itemCode}</span>
                 {" • "}{language === "en" ? "Unit: " : "ĐVT: "}{unit}
                 {" • "}{language === "en" ? "Warehouse: " : "Kho: "}{warehouseName}
               </div>
@@ -369,8 +369,8 @@ export default function StockCardDrawer({
       onClose={onClose}
       open={open}
       styles={{
-        header: { borderBottom: "1px solid #E2E8F0", padding: "14px 20px" },
-        body: { padding: "18px 20px", background: "#F8FAFC" },
+        header: { borderBottom: "1px solid #dce5e6", padding: "14px 20px" },
+        body: { padding: "18px 20px", background: "#f7fbfa" },
       }}
     >
       <Spin spinning={loading} tip={language === "en" ? "Loading stock card data..." : "Đang tải dữ liệu Thẻ kho..."}>
@@ -381,21 +381,21 @@ export default function StockCardDrawer({
             <div
               style={{
                 background: "#FFFFFF",
-                border: "1px solid #E2E8F0",
+                border: "1px solid #dce5e6",
                 borderRadius: 8,
                 padding: "12px 14px",
                 boxShadow: "0 1px 2px rgba(0,0,0,0.03)",
               }}
             >
-              <div style={{ fontSize: 12, color: "#64748B", marginBottom: 2 }}>
+              <div style={{ fontSize: 12, color: "#718894", marginBottom: 2 }}>
                 {language === "en" ? "Opening Stock" : "Tồn đầu kỳ"}
               </div>
-              <div style={{ fontSize: 18, fontWeight: 700, color: "#0F172A" }}>
+              <div style={{ fontSize: 18, fontWeight: 700, color: "#123443" }}>
                 {openingQty.toLocaleString(numLocale)}
               </div>
-              <div style={{ fontSize: 12, color: "#64748B", marginTop: 2 }}>
+              <div style={{ fontSize: 12, color: "#718894", marginTop: 2 }}>
                 {language === "en" ? "Value: " : "Giá trị: "}
-                <span style={{ fontWeight: 500, color: "#0F172A" }}>{openingValue.toLocaleString(numLocale)}</span>
+                <span style={{ fontWeight: 500, color: "#123443" }}>{openingValue.toLocaleString(numLocale)}</span>
               </div>
             </div>
           </Col>
@@ -405,7 +405,7 @@ export default function StockCardDrawer({
             <div
               style={{
                 background: "#FFFFFF",
-                border: "1px solid #E2E8F0",
+                border: "1px solid #dce5e6",
                 borderRadius: 8,
                 padding: "12px 14px",
                 boxShadow: "0 1px 2px rgba(0,0,0,0.03)",
@@ -417,7 +417,7 @@ export default function StockCardDrawer({
               <div style={{ fontSize: 18, fontWeight: 700, color: "#16A34A" }}>
                 {totalReceiptQty.toLocaleString(numLocale)}
               </div>
-              <div style={{ fontSize: 12, color: "#64748B", marginTop: 2 }}>
+              <div style={{ fontSize: 12, color: "#718894", marginTop: 2 }}>
                 {language === "en" ? "Value: " : "Giá trị: "}
                 <span style={{ fontWeight: 500, color: "#16A34A" }}>{totalReceiptValue.toLocaleString(numLocale)}</span>
               </div>
@@ -429,7 +429,7 @@ export default function StockCardDrawer({
             <div
               style={{
                 background: "#FFFFFF",
-                border: "1px solid #E2E8F0",
+                border: "1px solid #dce5e6",
                 borderRadius: 8,
                 padding: "12px 14px",
                 boxShadow: "0 1px 2px rgba(0,0,0,0.03)",
@@ -441,7 +441,7 @@ export default function StockCardDrawer({
               <div style={{ fontSize: 18, fontWeight: 700, color: "#DC2626" }}>
                 {totalIssueQty.toLocaleString(numLocale)}
               </div>
-              <div style={{ fontSize: 12, color: "#64748B", marginTop: 2 }}>
+              <div style={{ fontSize: 12, color: "#718894", marginTop: 2 }}>
                 {language === "en" ? "Value: " : "Giá trị: "}
                 <span style={{ fontWeight: 500, color: "#DC2626" }}>{totalIssueValue.toLocaleString(numLocale)}</span>
               </div>
@@ -452,22 +452,22 @@ export default function StockCardDrawer({
           <Col span={6}>
             <div
               style={{
-                background: "#EDE9FE",
-                border: "1px solid #DDD6FE",
+                background: "#dce5e6",
+                border: "1px solid #b2ded9",
                 borderRadius: 8,
                 padding: "12px 14px",
                 boxShadow: "0 1px 2px rgba(0,0,0,0.03)",
               }}
             >
-              <div style={{ fontSize: 12, color: "#7C3AED", marginBottom: 2, fontWeight: 500 }}>
+              <div style={{ fontSize: 12, color: "#008f89", marginBottom: 2, fontWeight: 500 }}>
                 {language === "en" ? "Closing Stock" : "Tồn cuối kỳ"}
               </div>
-              <div style={{ fontSize: 18, fontWeight: 800, color: "#6D28D9" }}>
+              <div style={{ fontSize: 18, fontWeight: 800, color: "#007873" }}>
                 {closingQty.toLocaleString(numLocale)}
               </div>
-              <div style={{ fontSize: 12, color: "#7C3AED", marginTop: 2 }}>
+              <div style={{ fontSize: 12, color: "#008f89", marginTop: 2 }}>
                 {language === "en" ? "Value: " : "Giá trị: "}
-                <span style={{ fontWeight: 600, color: "#6D28D9" }}>{closingValue.toLocaleString(numLocale)}</span>
+                <span style={{ fontWeight: 600, color: "#007873" }}>{closingValue.toLocaleString(numLocale)}</span>
               </div>
             </div>
           </Col>
@@ -477,7 +477,7 @@ export default function StockCardDrawer({
         <div
           style={{
             background: "#FFFFFF",
-            border: "1px solid #E2E8F0",
+            border: "1px solid #dce5e6",
             borderRadius: 8,
             overflow: "hidden",
           }}
@@ -485,17 +485,17 @@ export default function StockCardDrawer({
           <div
             style={{
               padding: "12px 16px",
-              borderBottom: "1px solid #E2E8F0",
+              borderBottom: "1px solid #dce5e6",
               fontWeight: 600,
               fontSize: 14,
-              color: "#0F172A",
+              color: "#123443",
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
             }}
           >
             <span>{language === "en" ? "Stock card transaction details" : "Chi tiết các giao dịch xuất nhập Thẻ kho"}</span>
-            <Tag style={{ margin: 0, background: "#EDE9FE", color: "#7C3AED", border: "none" }}>
+            <Tag style={{ margin: 0, background: "#dce5e6", color: "#008f89", border: "none" }}>
               {transactions.length} {language === "en" ? "movements" : "phát sinh"}
             </Tag>
           </div>
@@ -519,9 +519,9 @@ export default function StockCardDrawer({
             summary={() => {
               if (transactions.length === 0) return null;
               return (
-                <Table.Summary.Row style={{ background: "#F5F3FF", fontWeight: 600 }}>
+                <Table.Summary.Row style={{ background: "#eef8f6", fontWeight: 600 }}>
                   <Table.Summary.Cell index={0} colSpan={6} align="center">
-                    <span style={{ fontWeight: 700, color: "#0F172A", fontSize: 13 }}>
+                    <span style={{ fontWeight: 700, color: "#123443", fontSize: 13 }}>
                       {language === "en" ? "Total Movements:" : "Tổng cộng phát sinh:"}
                     </span>
                   </Table.Summary.Cell>
@@ -547,10 +547,10 @@ export default function StockCardDrawer({
                   </Table.Summary.Cell>
                   {/* Tồn cuối */}
                   <Table.Summary.Cell index={7} align="right">
-                    <span style={{ color: "#0F172A" }}>{closingQty.toLocaleString(numLocale)}</span>
+                    <span style={{ color: "#123443" }}>{closingQty.toLocaleString(numLocale)}</span>
                   </Table.Summary.Cell>
                   <Table.Summary.Cell index={8} align="right">
-                    <span style={{ color: "#7C3AED", fontWeight: 700 }}>
+                    <span style={{ color: "#008f89", fontWeight: 700 }}>
                       {closingValue.toLocaleString(numLocale)}
                     </span>
                   </Table.Summary.Cell>

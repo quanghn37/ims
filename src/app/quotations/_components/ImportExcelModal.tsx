@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import { Modal, Button, Upload, Typography, Table, Space, Tag, Spin } from "antd";
@@ -85,11 +85,11 @@ export default function ImportExcelModal({
       key: "ItemName",
       render: (itemName: string, record: any) => (
         <div style={{ padding: "2px 0" }}>
-          <div style={{ fontWeight: 400, fontSize: 14, color: "#1e293b", lineHeight: 1.4 }}>
+          <div style={{ fontWeight: 400, fontSize: 14, color: "#123443", lineHeight: 1.4 }}>
             {itemName || "—"}
           </div>
           {record.ItemCode && (
-            <div style={{ fontSize: 13, color: "#64748b", marginTop: 2, fontWeight: 400 }}>
+            <div style={{ fontSize: 13, color: "#718894", marginTop: 2, fontWeight: 400 }}>
               {record.ItemCode}
             </div>
           )}
@@ -119,7 +119,7 @@ export default function ImportExcelModal({
       width: 130,
       align: "right" as const,
       render: (val: any) => (
-        <Text style={{ fontSize: 14, fontWeight: 400, color: "#1e293b" }}>
+        <Text style={{ fontSize: 14, fontWeight: 400, color: "#123443" }}>
           {val ? Number(val).toLocaleString(language === "en" ? "en-US" : "vi-VN") : "0"}
         </Text>
       ),
@@ -152,7 +152,7 @@ export default function ImportExcelModal({
       render: (msg: string, record: any) => {
         const ok = record.IsValid === true || record.IsValid === 1;
         return (
-          <Text style={{ fontSize: 13, color: ok ? "#64748b" : "#dc2626", fontWeight: ok ? 400 : 500 }}>
+          <Text style={{ fontSize: 13, color: ok ? "#718894" : "#dc2626", fontWeight: ok ? 400 : 500 }}>
             {msg || "—"}
           </Text>
         );
@@ -178,7 +178,7 @@ export default function ImportExcelModal({
           {language === "en"
             ? "Select or drag & drop an Excel file matching the template to import into Price List #"
             : "Chọn hoặc kéo thả file Excel chứa danh sách vật tư theo biểu mẫu để nạp vào Bảng giá #"}
-          <strong style={{ color: "#7C3AED" }}>{selectedContractId}</strong>.
+          <strong style={{ color: "#008f89" }}>{selectedContractId}</strong>.
         </Text>
 
         {/* TRẠNG THÁI 1: CHƯA CÓ FILE (HIỂN THỊ KHUNG KÉO THẢ XL) */}
@@ -201,15 +201,15 @@ export default function ImportExcelModal({
               }}
             >
               <p style={{ margin: 0, marginBottom: 8 }}>
-                <CloudUploadOutlined style={{ fontSize: 44, color: "#7C3AED" }} />
+                <CloudUploadOutlined style={{ fontSize: 44, color: "#008f89" }} />
               </p>
-              <p style={{ fontSize: 15, fontWeight: 600, color: "#1E293B", margin: 0, marginBottom: 4 }}>
+              <p style={{ fontSize: 15, fontWeight: 600, color: "#123443", margin: 0, marginBottom: 4 }}>
                 {language === "en" ? "Drag & drop Excel file here, or " : "Kéo & thả file Excel vào đây, hoặc "}
-                <span style={{ color: "#7C3AED", textDecoration: "underline" }}>
+                <span style={{ color: "#008f89", textDecoration: "underline" }}>
                   {language === "en" ? "Click to select file" : "Bấm để chọn file"}
                 </span>
               </p>
-              <p style={{ fontSize: 13, color: "#64748B", margin: 0 }}>
+              <p style={{ fontSize: 13, color: "#718894", margin: 0 }}>
                 {language === "en"
                   ? "Supports Excel files (.xlsx, .xls) containing item data"
                   : "Hỗ trợ định dạng file Excel (.xlsx, .xls) chứa dữ liệu vật tư"}
@@ -277,13 +277,13 @@ export default function ImportExcelModal({
                     height: 38,
                     padding: "0 16px",
                     borderRadius: 6,
-                    backgroundColor: previewResult.canImport ? "#F5F3FF" : "#FEF2F2",
-                    border: `1px solid ${previewResult.canImport ? "#DDD6FE" : "#FCA5A5"}`,
+                    backgroundColor: previewResult.canImport ? "#eef8f6" : "#FEF2F2",
+                    border: `1px solid ${previewResult.canImport ? "#b2ded9" : "#FCA5A5"}`,
                     margin: 0,
                   }}
                 >
                   <Space style={{ fontSize: 14 }}>
-                    <InfoCircleFilled style={{ color: previewResult.canImport ? "#7C3AED" : "#dc2626", marginRight: 2 }} />
+                    <InfoCircleFilled style={{ color: previewResult.canImport ? "#008f89" : "#dc2626", marginRight: 2 }} />
                     <span style={{ color: "#334155" }}>
                       {language === "en" ? "Total rows:" : "Tổng số dòng:"} <strong>{previewResult.total || 0}</strong>
                     </span>
@@ -309,11 +309,11 @@ export default function ImportExcelModal({
                   textAlign: "center",
                   background: "#FAF5FF",
                   borderRadius: 8,
-                  border: "1px dashed #DDD6FE",
+                  border: "1px dashed #b2ded9",
                 }}
               >
-                <Spin indicator={<LoadingOutlined style={{ fontSize: 32, color: "#7C3AED" }} spin />} />
-                <div style={{ marginTop: 12, fontSize: 14, color: "#7C3AED", fontWeight: 500 }}>
+                <Spin indicator={<LoadingOutlined style={{ fontSize: 32, color: "#008f89" }} spin />} />
+                <div style={{ marginTop: 12, fontSize: 14, color: "#008f89", fontWeight: 500 }}>
                   {language === "en" ? "Validating Excel file data..." : "Đang kiểm tra dữ liệu file Excel..."}
                 </div>
               </div>
@@ -354,8 +354,8 @@ export default function ImportExcelModal({
               borderRadius: 6,
               height: 38,
               padding: "0 24px",
-              backgroundColor: previewResult && previewResult.canImport && !previewing ? "#7C3AED" : undefined,
-              borderColor: previewResult && previewResult.canImport && !previewing ? "#7C3AED" : undefined,
+              backgroundColor: previewResult && previewResult.canImport && !previewing ? "#008f89" : undefined,
+              borderColor: previewResult && previewResult.canImport && !previewing ? "#008f89" : undefined,
               fontWeight: 600,
             }}
           >

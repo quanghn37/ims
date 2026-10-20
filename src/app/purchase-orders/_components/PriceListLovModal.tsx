@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useMemo } from "react";
 import { Button } from "antd";
@@ -100,7 +100,7 @@ export default function PriceListLovModal({
         <Button
           type="primary"
           size="small"
-          style={{ background: "#7C3AED", borderColor: "#7C3AED", borderRadius: 6 }}
+          style={{ background: "#008f89", borderColor: "#008f89", borderRadius: 6 }}
           onClick={(e) => {
             e.stopPropagation();
             onSelectPriceList(record);
@@ -119,7 +119,7 @@ export default function PriceListLovModal({
       open={open}
       onClose={onClose}
       title={language === "en" ? "Price List Directory (LOV)" : "Danh sách bảng giá"}
-      icon={<ProfileOutlined style={{ color: "#7C3AED", fontSize: 18 }} />}
+      icon={<ProfileOutlined style={{ color: "#008f89", fontSize: 18 }} />}
       searchPlaceholder={t.lov.priceListSearchPlaceholder}
       searchInput={priceListSearchInput}
       setSearchInput={setPriceListSearchInput}
@@ -130,7 +130,7 @@ export default function PriceListLovModal({
       columns={columns}
       rowKey={(r, index) => r.ContractId ?? r.Id ?? `pricelist_${index}`}
       width={900}
-      primaryColor="#7C3AED"
+      primaryColor="#008f89"
     />
   );
 }

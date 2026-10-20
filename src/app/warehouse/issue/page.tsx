@@ -328,9 +328,9 @@ export default function StockOutPage() {
         width: 260,
         render: (val, r) => (
           <div>
-            <div style={{ color: "#0F172A", fontWeight: 500, fontSize: 13 }}>{val}</div>
+            <div style={{ color: "#123443", fontWeight: 500, fontSize: 13 }}>{val}</div>
             {r.workPackage && (
-              <div style={{ fontSize: 12, color: "#64748B" }}>
+              <div style={{ fontSize: 12, color: "#718894" }}>
                 Gói thầu: {r.workPackage}
               </div>
             )}
@@ -366,7 +366,7 @@ export default function StockOutPage() {
         render: (val, record) => (
           <a
             onClick={() => handleOpenEdit(record)}
-            style={{ color: "#7C3AED", fontWeight: 600, cursor: "pointer" }}
+            style={{ color: "#008f89", fontWeight: 600, cursor: "pointer" }}
           >
             {val || "---"}
           </a>
@@ -387,7 +387,7 @@ export default function StockOutPage() {
         width: 100,
         align: "right",
         render: (val) => (
-          <span style={{ fontWeight: 600, color: "#0F172A", fontSize: 13 }}>
+          <span style={{ fontWeight: 600, color: "#123443", fontSize: 13 }}>
             {Number(val || 0).toLocaleString("vi-VN")}
           </span>
         ),
@@ -399,7 +399,7 @@ export default function StockOutPage() {
         width: 140,
         align: "right",
         render: (val) => (
-          <span style={{ fontWeight: 600, color: "#0F172A", fontSize: 13 }}>
+          <span style={{ fontWeight: 600, color: "#123443", fontSize: 13 }}>
             {Number(val || 0).toLocaleString("vi-VN")}
           </span>
         ),
@@ -458,7 +458,7 @@ export default function StockOutPage() {
       key: "list",
       label: (
         <Space size={6}>
-          <IconList size={16} strokeWidth={1.8} style={{ color: "#7C3AED" }} />
+          <IconList size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />
           <span>{t.issue.tabList}</span>
         </Space>
       ),
@@ -481,7 +481,7 @@ export default function StockOutPage() {
                 strong
                 style={{
                   fontSize: 18,
-                  color: "#7C3AED",
+                  color: "#008f89",
                   fontWeight: 700,
                   lineHeight: "28px",
                   display: "flex",
@@ -489,12 +489,12 @@ export default function StockOutPage() {
                   gap: 8,
                 }}
               >
-                <IconUpload size={18} strokeWidth={1.8} style={{ color: "#7C3AED" }} /> {t.issue.listTitle}
+                <IconUpload size={18} strokeWidth={1.8} style={{ color: "#008f89" }} /> {t.issue.listTitle}
               </Text>
               <Tag
                 style={{
-                  background: "#EDE9FE",
-                  color: "#7C3AED",
+                  background: "#dce5e6",
+                  color: "#008f89",
                   borderRadius: 12,
                   border: "none",
                   fontSize: 12,
@@ -540,7 +540,7 @@ export default function StockOutPage() {
               <Button
                 icon={<IconSearch size={16} strokeWidth={1.8} />}
                 onClick={() => {}}
-                style={{ height: 36, borderRadius: 8, borderColor: "#E2E8F0" }}
+                style={{ height: 36, borderRadius: 8, borderColor: "#dce5e6" }}
               >
                 {t.common.search}
               </Button>
@@ -552,7 +552,7 @@ export default function StockOutPage() {
                   setSelectedWarehouseFilter("ALL");
                   setSelectedStatusFilter("ALL");
                 }}
-                style={{ height: 36, borderRadius: 8, borderColor: "#E2E8F0" }}
+                style={{ height: 36, borderRadius: 8, borderColor: "#dce5e6" }}
               >
                 {t.common.refresh}
               </Button>
@@ -561,12 +561,12 @@ export default function StockOutPage() {
                 type="primary"
                 icon={<IconPlus size={16} strokeWidth={2} />}
                 style={{
-                  background: "#7C3AED",
-                  borderColor: "#7C3AED",
+                  background: "#008f89",
+                  borderColor: "#008f89",
                   height: 36,
                   borderRadius: 8,
                   fontWeight: 500,
-                  boxShadow: "0 2px 4px rgba(124, 58, 237, 0.2)",
+                  boxShadow: "0 2px 4px rgba(0, 143, 137, 0.2)",
                 }}
                 onClick={handleOpenCreate}
               >
@@ -582,7 +582,7 @@ export default function StockOutPage() {
             style={{
               boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
               borderRadius: 8,
-              border: "1px solid #E2E8F0",
+              border: "1px solid #dce5e6",
               overflow: "hidden",
             }}
           >
@@ -611,7 +611,7 @@ export default function StockOutPage() {
             key: "edit",
             label: (
               <Space size={6}>
-                <IconPencil size={16} strokeWidth={1.8} style={{ color: "#7C3AED" }} />
+                <IconPencil size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />
                 <span>
                   {editingIssue
                     ? `${editingIssue.issueCode || t.issue.code}`
@@ -636,53 +636,53 @@ export default function StockOutPage() {
   ];
 
   return (
-    <div style={{ padding: 0, width: "100%", height: "100%", background: "#fff" }}>
+    <div style={{ padding: 0, width: "100%", minHeight: "calc(100vh - 100px)", background: "#FFFFFF", borderRadius: 16, border: "1px solid #dce5e6", overflow: "hidden", boxShadow: "0 1px 3px rgba(18, 52, 67, 0.04)" }}>
       {/* Scoped CSS for stockout table and tabs */}
       <style jsx global>{`
         .stockin-main-table .ant-table-thead > tr > th {
-          background: #F8FAFC !important;
-          color: #0F172A !important;
+          background: #f7fbfa !important;
+          color: #123443 !important;
           font-size: 13px !important;
           font-weight: 600 !important;
           line-height: 18px !important;
-          border-color: #E2E8F0 !important;
+          border-color: #dce5e6 !important;
           padding: 10px 12px !important;
         }
         .stockin-main-table .ant-table-tbody > tr > td {
-          color: #0F172A !important;
+          color: #123443 !important;
           font-size: 13px !important;
           line-height: 18px !important;
-          border-color: #E2E8F0 !important;
+          border-color: #dce5e6 !important;
           padding: 10px 12px !important;
           height: 46px !important;
         }
         .stockin-main-table .ant-table-tbody > tr:hover > td {
-          background-color: #F5F3FF !important;
+          background-color: #eef8f6 !important;
         }
         .stockin-main-table .ant-table-container {
-          border: 1px solid #E2E8F0 !important;
+          border: 1px solid #dce5e6 !important;
           border-radius: 8px !important;
           overflow: hidden;
         }
         .stockin-main-table .ant-pagination .ant-pagination-item-active {
-          border-color: #7C3AED !important;
-          background-color: #7C3AED !important;
+          border-color: #008f89 !important;
+          background-color: #008f89 !important;
         }
         .stockin-main-table .ant-pagination .ant-pagination-item-active a {
           color: #FFFFFF !important;
         }
         .stockout-page-tabs .ant-tabs-nav {
           margin-bottom: 0 !important;
-          background: #F8FAFC !important;
-          border-bottom: 1px solid #E2E8F0 !important;
+          background: #f7fbfa !important;
+          border-bottom: 1px solid #dce5e6 !important;
           padding: 6px 16px 0 16px !important;
         }
         .stockout-page-tabs .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
-          color: #7C3AED !important;
+          color: #008f89 !important;
           font-weight: 600 !important;
         }
         .stockout-page-tabs .ant-tabs-ink-bar {
-          background: #7C3AED !important;
+          background: #008f89 !important;
         }
       `}</style>
 
@@ -700,9 +700,9 @@ export default function StockOutPage() {
         items={tabItems}
         tabBarStyle={{
           margin: 0,
-          background: "#F8FAFC",
+          background: "#f7fbfa",
           padding: "6px 16px 0 16px",
-          borderBottom: "1px solid #E2E8F0",
+          borderBottom: "1px solid #dce5e6",
         }}
       />
     </div>

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+﻿import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Button, Input } from "antd";
 import { IconCircleX, IconSearch } from "@tabler/icons-react";
 import { useTranslation } from "@/locales/LanguageContext";
@@ -113,7 +113,7 @@ export const ColumnFilterDropdown: React.FC<FilterDropdownProps> = ({
           size="small"
           icon={<IconSearch size={14} strokeWidth={1.8} />}
           onClick={() => handleConfirm()}
-          style={{ background: "#7C3AED", borderColor: "#7C3AED" }}
+          style={{ background: "#008f89", borderColor: "#008f89" }}
         >
           {language === "en" ? "Apply" : "Áp dụng"}
         </Button>

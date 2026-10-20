@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, useCallback } from "react";
 import { Drawer, Table, Steps, Spin, Typography, Tag, message } from "antd";
@@ -142,7 +142,7 @@ export default function InventoryWorkflowDrawer({
       width: 50,
       align: "center" as const,
       render: (val: any, _: any, idx: number) => (
-        <span style={{ fontFamily: "monospace", color: "#64748B", fontWeight: 600, fontSize: 13 }}>
+        <span style={{ fontFamily: "monospace", color: "#718894", fontWeight: 600, fontSize: 13 }}>
           #{val || idx + 1}
         </span>
       ),
@@ -156,9 +156,9 @@ export default function InventoryWorkflowDrawer({
       render: (val: string) => (
         <Tag
           style={{
-            background: "#EDE9FE",
-            color: "#7C3AED",
-            border: "1px solid #DDD6FE",
+            background: "#dce5e6",
+            color: "#008f89",
+            border: "1px solid #b2ded9",
             borderRadius: 4,
             fontWeight: 600,
             fontSize: 12,
@@ -176,7 +176,7 @@ export default function InventoryWorkflowDrawer({
       key: "FullName",
       width: 170,
       render: (val: string, r: any) => (
-        <span style={{ fontWeight: 600, color: "#0F172A", fontSize: 13 }}>
+        <span style={{ fontWeight: 600, color: "#123443", fontSize: 13 }}>
           {val || r.UserName || "---"}
         </span>
       ),
@@ -210,7 +210,7 @@ export default function InventoryWorkflowDrawer({
         const start = r.ActualStart ? dayjs(r.ActualStart).format("HH:mm DD/MM") : null;
         const finish = r.ActualFinish ? dayjs(r.ActualFinish).format("HH:mm DD/MM") : null;
         return (
-          <div style={{ fontSize: 12, color: "#64748B", lineHeight: "18px" }}>
+          <div style={{ fontSize: 12, color: "#718894", lineHeight: "18px" }}>
             {start && <div>🕒 {start}</div>}
             {finish && <div style={{ color: "#0D9488", fontWeight: 500 }}>✓ {finish}</div>}
             {!start && !finish && "---"}
@@ -230,21 +230,21 @@ export default function InventoryWorkflowDrawer({
                 width: 36,
                 height: 36,
                 borderRadius: 8,
-                background: "#EDE9FE",
+                background: "#dce5e6",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <IconRoute size={20} strokeWidth={1.8} style={{ color: "#7C3AED" }} />
+              <IconRoute size={20} strokeWidth={1.8} style={{ color: "#008f89" }} />
             </div>
             <div>
-              <div style={{ fontSize: 18, fontWeight: 700, color: "#7C3AED", lineHeight: "24px" }}>
+              <div style={{ fontSize: 18, fontWeight: 700, color: "#008f89", lineHeight: "24px" }}>
                 {language === "en"
                   ? `Approval Workflow (${displayMode === "Request" ? "Material Request" : "Stock Receipt"})`
                   : `Quy trình phê duyệt ${displayMode === "Request" ? "Yêu cầu xuất" : "Nhập kho"}`}
               </div>
-              <div style={{ fontSize: 12, color: "#64748B", marginTop: 2 }}>
+              <div style={{ fontSize: 12, color: "#718894", marginTop: 2 }}>
                 Submission #{subId} · {displayMode === "Request" ? (language === "en" ? "Material Requisition Note" : "Phiếu yêu cầu xuất vật tư") : (language === "en" ? "Stock Receipt Note" : "Phiếu nhập vật tư")}
               </div>
             </div>
@@ -259,27 +259,27 @@ export default function InventoryWorkflowDrawer({
         {/* Scoped CSS cho bảng lịch sử phê duyệt */}
         <style jsx global>{`
           .workflow-history-table .ant-table-thead > tr > th {
-            background: #F8FAFC !important;
-            color: #0F172A !important;
+            background: #f7fbfa !important;
+            color: #123443 !important;
             font-size: 13px !important;
             font-weight: 600 !important;
             line-height: 18px !important;
-            border-color: #E2E8F0 !important;
+            border-color: #dce5e6 !important;
             padding: 10px 12px !important;
           }
           .workflow-history-table .ant-table-tbody > tr > td {
-            color: #0F172A !important;
+            color: #123443 !important;
             font-size: 13px !important;
             line-height: 18px !important;
-            border-color: #E2E8F0 !important;
+            border-color: #dce5e6 !important;
             padding: 10px 12px !important;
             height: 46px !important;
           }
           .workflow-history-table .ant-table-tbody > tr:hover > td {
-            background-color: #F5F3FF !important;
+            background-color: #eef8f6 !important;
           }
           .workflow-history-table .ant-table-container {
-            border: 1px solid #E2E8F0 !important;
+            border: 1px solid #dce5e6 !important;
             border-radius: 8px !important;
             overflow: hidden;
           }
@@ -291,7 +291,7 @@ export default function InventoryWorkflowDrawer({
               style={{
                 fontSize: 12,
                 fontWeight: 700,
-                color: "#64748B",
+                color: "#718894",
                 letterSpacing: 0.5,
                 marginBottom: 8,
                 textTransform: "uppercase",
@@ -302,7 +302,7 @@ export default function InventoryWorkflowDrawer({
             <div
               style={{
                 background: "#FFFFFF",
-                border: "1px solid #E2E8F0",
+                border: "1px solid #dce5e6",
                 borderRadius: 10,
                 padding: "14px",
                 boxShadow: "0 1px 3px rgba(0, 0, 0, 0.03)",
@@ -316,22 +316,22 @@ export default function InventoryWorkflowDrawer({
                 }}
               >
                 {/* Ô 1: Mã vật tư */}
-                <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 8, padding: "10px 14px" }}>
-                  <div style={{ fontSize: 12, color: "#64748B", fontWeight: 500, marginBottom: 4 }}>
+                <div style={{ background: "#f7fbfa", border: "1px solid #dce5e6", borderRadius: 8, padding: "10px 14px" }}>
+                  <div style={{ fontSize: 12, color: "#718894", fontWeight: 500, marginBottom: 4 }}>
                     {t("common.materialCode") || "Mã vật tư"}
                   </div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: "#0F172A", fontFamily: "monospace" }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "#123443", fontFamily: "monospace" }}>
                     {itemDetail.SystemCode || itemDetail.itemCode || "---"}
                   </div>
                 </div>
 
                 {/* Ô 2: Tên vật tư */}
-                <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 8, padding: "10px 14px" }}>
-                  <div style={{ fontSize: 12, color: "#64748B", fontWeight: 500, marginBottom: 4 }}>
+                <div style={{ background: "#f7fbfa", border: "1px solid #dce5e6", borderRadius: 8, padding: "10px 14px" }}>
+                  <div style={{ fontSize: 12, color: "#718894", fontWeight: 500, marginBottom: 4 }}>
                     {t("common.materialName") || "Tên vật tư"}
                   </div>
                   <div
-                    style={{ fontSize: 14, fontWeight: 700, color: "#0F172A", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                    style={{ fontSize: 14, fontWeight: 700, color: "#123443", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
                     title={itemDetail.Description || itemDetail.itemName}
                   >
                     {itemDetail.Description || itemDetail.itemName || "---"}
@@ -339,11 +339,11 @@ export default function InventoryWorkflowDrawer({
                 </div>
 
                 {/* Ô 3: ĐVT */}
-                <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 8, padding: "10px 14px" }}>
-                  <div style={{ fontSize: 12, color: "#64748B", fontWeight: 500, marginBottom: 4 }}>
+                <div style={{ background: "#f7fbfa", border: "1px solid #dce5e6", borderRadius: 8, padding: "10px 14px" }}>
+                  <div style={{ fontSize: 12, color: "#718894", fontWeight: 500, marginBottom: 4 }}>
                     {t("common.unit") || "ĐVT"}
                   </div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: "#0F172A" }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "#123443" }}>
                     {itemDetail.Unit || itemDetail.unit || "---"}
                   </div>
                 </div>
@@ -352,13 +352,13 @@ export default function InventoryWorkflowDrawer({
                 {displayMode === "Request" ? (
                   <>
                     {/* Ô 4: OrgName */}
-                    <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 8, padding: "10px 14px" }}>
-                      <div style={{ fontSize: 12, color: "#64748B", fontWeight: 500, marginBottom: 4 }}>OrgName</div>
+                    <div style={{ background: "#f7fbfa", border: "1px solid #dce5e6", borderRadius: 8, padding: "10px 14px" }}>
+                      <div style={{ fontSize: 12, color: "#718894", fontWeight: 500, marginBottom: 4 }}>OrgName</div>
                       <div
                         style={{
                           fontSize: 14,
                           fontWeight: 700,
-                          color: "#0F172A",
+                          color: "#123443",
                           overflow: "hidden",
                           textOverflow: "ellipsis",
                           whiteSpace: "nowrap",
@@ -374,21 +374,21 @@ export default function InventoryWorkflowDrawer({
                     </div>
 
                     {/* Ô 5: Số lượng đề nghị */}
-                    <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 8, padding: "10px 14px" }}>
-                      <div style={{ fontSize: 12, color: "#64748B", fontWeight: 500, marginBottom: 4 }}>
+                    <div style={{ background: "#f7fbfa", border: "1px solid #dce5e6", borderRadius: 8, padding: "10px 14px" }}>
+                      <div style={{ fontSize: 12, color: "#718894", fontWeight: 500, marginBottom: 4 }}>
                         {language === "en" ? "Requested Qty" : "Số lượng đề nghị"}
                       </div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: "#0F172A" }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: "#123443" }}>
                         {Number(itemDetail.requestedQty ?? itemDetail.Qnty ?? itemDetail.actualQty ?? 0).toLocaleString(numLocale)}
                       </div>
                     </div>
 
                     {/* Ô 6: Số lượng duyệt */}
-                    <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 8, padding: "10px 14px" }}>
-                      <div style={{ fontSize: 12, color: "#64748B", fontWeight: 500, marginBottom: 4 }}>
+                    <div style={{ background: "#f7fbfa", border: "1px solid #dce5e6", borderRadius: 8, padding: "10px 14px" }}>
+                      <div style={{ fontSize: 12, color: "#718894", fontWeight: 500, marginBottom: 4 }}>
                         {t("workflow.approvedQty") || "Số lượng duyệt"}
                       </div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: "#7C3AED" }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: "#008f89" }}>
                         {Number(itemDetail.approvedQty ?? itemDetail.ApprovedQty ?? 0).toLocaleString(numLocale)}
                       </div>
                     </div>
@@ -396,31 +396,31 @@ export default function InventoryWorkflowDrawer({
                 ) : (
                   <>
                     {/* Ô 4: Số lượng đề nghị */}
-                    <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 8, padding: "10px 14px" }}>
-                      <div style={{ fontSize: 12, color: "#64748B", fontWeight: 500, marginBottom: 4 }}>
+                    <div style={{ background: "#f7fbfa", border: "1px solid #dce5e6", borderRadius: 8, padding: "10px 14px" }}>
+                      <div style={{ fontSize: 12, color: "#718894", fontWeight: 500, marginBottom: 4 }}>
                         {language === "en" ? "Requested Qty" : "Số lượng đề nghị"}
                       </div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: "#0F172A" }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: "#123443" }}>
                         {Number(itemDetail.Qnty ?? itemDetail.actualQty ?? 0).toLocaleString(numLocale)}
                       </div>
                     </div>
 
                     {/* Ô 5: Đơn giá đề nghị */}
-                    <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 8, padding: "10px 14px" }}>
-                      <div style={{ fontSize: 12, color: "#64748B", fontWeight: 500, marginBottom: 4 }}>
+                    <div style={{ background: "#f7fbfa", border: "1px solid #dce5e6", borderRadius: 8, padding: "10px 14px" }}>
+                      <div style={{ fontSize: 12, color: "#718894", fontWeight: 500, marginBottom: 4 }}>
                         {language === "en" ? "Requested Unit Price" : "Đơn giá đề nghị"}
                       </div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: "#0F172A" }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: "#123443" }}>
                         {Number(itemDetail.UnitPrice ?? itemDetail.unitPrice ?? 0).toLocaleString(numLocale)}
                       </div>
                     </div>
 
                     {/* Ô 6: Thành tiền đề nghị */}
-                    <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 8, padding: "10px 14px" }}>
-                      <div style={{ fontSize: 12, color: "#64748B", fontWeight: 500, marginBottom: 4 }}>
+                    <div style={{ background: "#f7fbfa", border: "1px solid #dce5e6", borderRadius: 8, padding: "10px 14px" }}>
+                      <div style={{ fontSize: 12, color: "#718894", fontWeight: 500, marginBottom: 4 }}>
                         {language === "en" ? "Requested Amount" : "Thành tiền đề nghị"}
                       </div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: "#7C3AED" }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: "#008f89" }}>
                         {Number(itemDetail.Amount ?? itemDetail.totalPrice ?? 0).toLocaleString(numLocale)}
                       </div>
                     </div>
@@ -454,7 +454,7 @@ export default function InventoryWorkflowDrawer({
                 background: "#FFFFFF",
                 padding: "20px 24px",
                 borderRadius: 10,
-                border: "1px solid #E2E8F0",
+                border: "1px solid #dce5e6",
                 boxShadow: "0 1px 3px rgba(0, 0, 0, 0.03)",
               }}
             >
@@ -523,7 +523,7 @@ export default function InventoryWorkflowDrawer({
                           width: 32,
                           height: 32,
                           borderRadius: "50%",
-                          background: "#7C3AED",
+                          background: "#008f89",
                           color: "#FFFFFF",
                           display: "flex",
                           alignItems: "center",
@@ -562,13 +562,13 @@ export default function InventoryWorkflowDrawer({
                           height: 32,
                           borderRadius: "50%",
                           background: "#F1F5F9",
-                          color: "#64748B",
+                          color: "#718894",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
                           fontWeight: 700,
                           fontSize: 14,
-                          border: "1px solid #E2E8F0",
+                          border: "1px solid #dce5e6",
                         }}
                       >
                         {idx + 1}
@@ -582,12 +582,12 @@ export default function InventoryWorkflowDrawer({
                   return {
                     icon: iconNode,
                     title: (
-                      <div style={{ fontSize: 14, fontWeight: 700, color: "#0F172A", marginTop: 4 }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: "#123443", marginTop: 4 }}>
                         {item.FullName || item.UserName || `${language === "en" ? "Approver " : "Người duyệt "}${idx + 1}`}
                       </div>
                     ),
                     description: (
-                      <div style={{ fontSize: 12, color: "#64748B", marginTop: 2, lineHeight: "16px" }}>
+                      <div style={{ fontSize: 12, color: "#718894", marginTop: 2, lineHeight: "16px" }}>
                         <div>
                           {isDone
                             ? (statusStr || (language === "en" ? "Approved" : "Chấp thuận"))
@@ -610,7 +610,7 @@ export default function InventoryWorkflowDrawer({
               <div
                 style={{
                   fontSize: 12,
-                  color: "#64748B",
+                  color: "#718894",
                   marginBottom: 10,
                   display: "flex",
                   alignItems: "center",

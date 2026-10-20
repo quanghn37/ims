@@ -36,7 +36,7 @@ export const ErpLayout: React.FC<ErpLayoutProps> = ({ children }) => {
   const { user, loading, logout } = useAuth();
   const [openKeys, setOpenKeys] = useState<string[]>([]);
 
-  // Tự động đóng popup submenu khi pathname thay đổi hoặc khi click
+  // Tự động đóng popup submenu khi pathname thay đổi hoặc khi click chọn mục
   useEffect(() => {
     if (collapsed) {
       setOpenKeys([]);
@@ -182,7 +182,7 @@ export const ErpLayout: React.FC<ErpLayoutProps> = ({ children }) => {
   ];
 
   return (
-    <Layout style={{ minHeight: "100vh" }}>
+    <Layout style={{ minHeight: "100vh", background: "#f2f6f5" }}>
       <Sider
         collapsible
         collapsed={collapsed}
@@ -190,12 +190,13 @@ export const ErpLayout: React.FC<ErpLayoutProps> = ({ children }) => {
         theme="dark"
         width={250}
         style={{
-          boxShadow: "2px 0 8px rgba(0, 21, 41, 0.15)",
+          boxShadow: "2px 0 8px rgba(18, 52, 67, 0.12)",
           zIndex: 101,
           position: "sticky",
           top: 0,
           height: "100vh",
           overflow: "auto",
+          background: "#0e2631",
         }}
       >
         <div
@@ -204,14 +205,15 @@ export const ErpLayout: React.FC<ErpLayoutProps> = ({ children }) => {
             display: "flex",
             alignItems: "center",
             padding: "0 16px",
-            background: "#002140",
+            background: "#082a39",
             gap: 12,
+            borderBottom: "1px solid rgba(220, 229, 230, 0.1)",
           }}
         >
-          <IconBuildingCommunity size={24} strokeWidth={1.8} style={{ color: "#A78BFA" }} />
+          <IconBuildingCommunity size={24} strokeWidth={1.8} style={{ color: "#008f89" }} />
           {!collapsed && (
             <div>
-              <Text strong style={{ color: "#fff", fontSize: 16, display: "block", lineHeight: "1.2" }}>
+              <Text strong style={{ color: "#fff", fontSize: 16, display: "block", lineHeight: "1.2", letterSpacing: "-0.3px" }}>
                 ConsIMS
               </Text>
             </div>
@@ -235,10 +237,10 @@ export const ErpLayout: React.FC<ErpLayoutProps> = ({ children }) => {
               });
             }
           }}
-          style={{ marginTop: 8 }}
+          style={{ marginTop: 8, background: "#0e2631" }}
         />
       </Sider>
-      <Layout>
+      <Layout style={{ background: "#f2f6f5" }}>
         <Header
           style={{
             background: "#fff",
@@ -246,15 +248,16 @@ export const ErpLayout: React.FC<ErpLayoutProps> = ({ children }) => {
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            boxShadow: "0 1px 4px rgba(0,21,41,.08)",
+            borderBottom: "1px solid #dce5e6",
+            boxShadow: "0 1px 4px rgba(18, 52, 67, 0.04)",
             zIndex: 100,
             position: "sticky",
             top: 0,
           }}
         >
           <Space size="middle">
-            <IconLayoutDashboard size={20} strokeWidth={1.8} style={{ color: "#7C3AED" }} />
-            <Text strong style={{ fontSize: 16 }}>
+            <IconLayoutDashboard size={20} strokeWidth={1.8} style={{ color: "#008f89" }} />
+            <Text strong style={{ fontSize: 16, color: "#123443" }}>
               {activePath === "/quotations" && t("pageTitles.quotations")}
               {activePath === "/contracts" && t("pageTitles.contracts")}
               {activePath === "/purchase-orders" && t("pageTitles.purchaseOrders")}
@@ -266,29 +269,31 @@ export const ErpLayout: React.FC<ErpLayoutProps> = ({ children }) => {
             </Text>
             {isNavigating && <Spin size="small" />}
             {sessionIdText ? (
-              <Tag color="blue" suppressHydrationWarning>{t("common.session")}: {sessionIdText}...</Tag>
+              <Tag style={{ background: "#eef8f6", color: "#008f89", borderColor: "#79c7bf", borderRadius: 6 }} suppressHydrationWarning>
+                {t("common.session")}: {sessionIdText}...
+              </Tag>
             ) : null}
           </Space>
 
           <Space size="middle">
             <Dropdown menu={{ items: languageMenuItems }} placement="bottomRight">
-              <Button style={{ display: "inline-flex", alignItems: "center", gap: 6, borderRadius: 6, height: 32 }}>
-                <IconWorld size={16} strokeWidth={1.8} style={{ color: "#7C3AED" }} />
+              <Button style={{ display: "inline-flex", alignItems: "center", gap: 6, borderRadius: 8, height: 32, borderColor: "#dce5e6", color: "#123443" }}>
+                <IconWorld size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />
                 <span>{language === "en" ? "English (en)" : "Tiếng Việt (vi)"}</span>
               </Button>
             </Dropdown>
             <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
               <Space style={{ cursor: "pointer" }}>
                 <span suppressHydrationWarning>
-                  <Avatar style={{ backgroundColor: "#7C3AED" }} icon={<IconUser size={16} />}>
+                  <Avatar style={{ backgroundColor: "#008f89" }} icon={<IconUser size={16} />}>
                     {userInitial}
                   </Avatar>
                 </span>
                 <div style={{ textAlign: "left", lineHeight: 1.2 }}>
-                  <Text strong style={{ display: "block", fontSize: 13 }} suppressHydrationWarning>
+                  <Text strong style={{ display: "block", fontSize: 13, color: "#123443" }} suppressHydrationWarning>
                     {userFullName}
                   </Text>
-                  <Text type="secondary" style={{ fontSize: 11 }} suppressHydrationWarning>
+                  <Text style={{ fontSize: 11, color: "#718894" }} suppressHydrationWarning>
                     {userJobTitle}
                   </Text>
                 </div>
@@ -298,8 +303,9 @@ export const ErpLayout: React.FC<ErpLayoutProps> = ({ children }) => {
         </Header>
         <Content
           style={{
-            margin: "16px",
+            margin: "16px 20px 24px 20px",
             minHeight: 280,
+            background: "#f2f6f5",
             opacity: isNavigating ? 0.65 : 1,
             transition: "opacity 0.15s ease",
           }}

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useMemo } from "react";
 import {
@@ -86,7 +86,7 @@ export default function ItemFormDrawer({
         value: code,
         label: (
           <div title={fullLabel} style={{ whiteSpace: "normal", wordBreak: "break-word", lineHeight: "1.3", padding: "2px 0" }}>
-            <span style={{ fontWeight: 600, color: "#7C3AED" }}>{code}</span>
+            <span style={{ fontWeight: 600, color: "#008f89" }}>{code}</span>
             {desc && <span style={{ color: "#595959", marginLeft: 6 }}>- {desc}</span>}
           </div>
         ),
@@ -103,7 +103,7 @@ export default function ItemFormDrawer({
           value: currentOrg,
           label: (
             <div title={currentOrg} style={{ padding: "2px 0" }}>
-              <span style={{ fontWeight: 600, color: "#7C3AED" }}>{currentOrg}</span>
+              <span style={{ fontWeight: 600, color: "#008f89" }}>{currentOrg}</span>
             </div>
           ),
           searchKey: currentOrg.toLowerCase(),
@@ -117,15 +117,15 @@ export default function ItemFormDrawer({
   return (
     <Drawer
       closable={true}
-      closeIcon={<CloseOutlined style={{ fontSize: 16, color: "#64748B" }} />}
+      closeIcon={<CloseOutlined style={{ fontSize: 16, color: "#718894" }} />}
       title={
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {editingSubmissionItem ? (
-            <EditOutlined style={{ color: "#7C3AED", fontSize: 18 }} />
+            <EditOutlined style={{ color: "#008f89", fontSize: 18 }} />
           ) : (
-            <PlusOutlined style={{ color: "#7C3AED", fontSize: 18 }} />
+            <PlusOutlined style={{ color: "#008f89", fontSize: 18 }} />
           )}
-          <span style={{ fontSize: 16, fontWeight: 700, color: "#0F172A" }}>
+          <span style={{ fontSize: 16, fontWeight: 700, color: "#123443" }}>
             {editingSubmissionItem
               ? (language === "en" ? "Edit PO Order Item" : "Chỉnh sửa Mặt hàng trong Đơn hàng PO")
               : (language === "en" ? "Add Item to PO Order" : "Thêm Mặt hàng vào Đơn hàng PO")}
@@ -143,7 +143,7 @@ export default function ItemFormDrawer({
             style={{
               height: 38,
               borderRadius: 8,
-              borderColor: "#E2E8F0",
+              borderColor: "#dce5e6",
               color: "#334155",
               padding: "0 18px",
             }}
@@ -155,13 +155,13 @@ export default function ItemFormDrawer({
               type="primary"
               icon={<SaveOutlined />}
               style={{
-                background: "#7C3AED",
-                borderColor: "#7C3AED",
+                background: "#008f89",
+                borderColor: "#008f89",
                 height: 38,
                 borderRadius: 8,
                 fontWeight: 500,
                 padding: "0 20px",
-                boxShadow: "0 2px 6px rgba(124, 58, 237, 0.25)",
+                boxShadow: "0 2px 6px rgba(0, 143, 137, 0.25)",
               }}
               onClick={() => form.submit()}
               loading={submitting}
@@ -192,8 +192,8 @@ export default function ItemFormDrawer({
         {editingSubmissionItem ? (
           <div
             style={{
-              background: "#F8FAFC",
-              border: "1px solid #E2E8F0",
+              background: "#f7fbfa",
+              border: "1px solid #dce5e6",
               borderRadius: 8,
               padding: "12px 14px",
               marginBottom: 16,
@@ -201,14 +201,14 @@ export default function ItemFormDrawer({
           >
             {/* Dòng 1: Tên / Mã mặt hàng */}
             <div style={{ marginBottom: 10 }}>
-              <div style={{ fontSize: 12, color: "#64748B", fontWeight: 500, marginBottom: 3, lineHeight: "16px" }}>
+              <div style={{ fontSize: 12, color: "#718894", fontWeight: 500, marginBottom: 3, lineHeight: "16px" }}>
                 {language === "en" ? "Item Name / Code" : "Tên / Mã mặt hàng"}
               </div>
               <div
                 style={{
                   fontWeight: 600,
                   fontSize: 14,
-                  color: "#0F172A",
+                  color: "#123443",
                   lineHeight: "20px",
                   wordBreak: "break-word",
                 }}
@@ -223,23 +223,23 @@ export default function ItemFormDrawer({
                 display: "flex",
                 gap: 16,
                 paddingTop: 10,
-                borderTop: "1px solid #E2E8F0",
+                borderTop: "1px solid #dce5e6",
               }}
             >
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 12, color: "#64748B", fontWeight: 500, marginBottom: 3, lineHeight: "16px" }}>
+                <div style={{ fontSize: 12, color: "#718894", fontWeight: 500, marginBottom: 3, lineHeight: "16px" }}>
                   {t.itemDrawer.unit}
                 </div>
-                <div style={{ fontWeight: 600, fontSize: 14, color: "#0F172A", lineHeight: "20px" }}>
+                <div style={{ fontWeight: 600, fontSize: 14, color: "#123443", lineHeight: "20px" }}>
                   {form.getFieldValue("Unit") || editingSubmissionItem?.Unit || "---"}
                 </div>
               </div>
 
               <div style={{ flex: 1.5 }}>
-                <div style={{ fontSize: 12, color: "#64748B", fontWeight: 500, marginBottom: 3, lineHeight: "16px" }}>
+                <div style={{ fontSize: 12, color: "#718894", fontWeight: 500, marginBottom: 3, lineHeight: "16px" }}>
                   {t.itemDrawer.unitPrice}
                 </div>
-                <div style={{ fontWeight: 600, fontSize: 14, color: "#0F172A", lineHeight: "20px" }}>
+                <div style={{ fontWeight: 600, fontSize: 14, color: "#123443", lineHeight: "20px" }}>
                   {Number(form.getFieldValue("UnitPrice") ?? editingSubmissionItem?.UnitPrice ?? 0).toLocaleString(language === "en" ? "en-US" : "vi-VN")}
                 </div>
               </div>
@@ -299,7 +299,7 @@ export default function ItemFormDrawer({
               >
                 <Input
                   placeholder={language === "en" ? "e.g.: Pcs" : "vd: Cái"}
-                  style={{ height: 38, borderRadius: 8, borderColor: "#E2E8F0" }}
+                  style={{ height: 38, borderRadius: 8, borderColor: "#dce5e6" }}
                 />
               </Form.Item>
 
@@ -310,7 +310,7 @@ export default function ItemFormDrawer({
                 rules={[{ required: true, message: t.itemDrawer.priceRequired }]}
               >
                 <InputNumber
-                  style={{ width: "100%", height: 38, borderRadius: 8, borderColor: "#E2E8F0" }}
+                  style={{ width: "100%", height: 38, borderRadius: 8, borderColor: "#dce5e6" }}
                   min={0}
                   placeholder="0"
                   formatter={(val) => `${val}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
@@ -396,8 +396,8 @@ export default function ItemFormDrawer({
                 width: "100%",
                 height: 38,
                 borderRadius: 8,
-                borderColor: "#E2E8F0",
-                ...(isEditable ? {} : { color: "#334155", backgroundColor: "#F8FAFC", cursor: "not-allowed" }),
+                borderColor: "#dce5e6",
+                ...(isEditable ? {} : { color: "#334155", backgroundColor: "#f7fbfa", cursor: "not-allowed" }),
               }}
               min={1}
               placeholder="1"
@@ -436,9 +436,9 @@ export default function ItemFormDrawer({
             placeholder={language === "en" ? "e.g.: Main distribution board..." : "vd: Tủ điện phân phối trung tâm..."}
             style={{
               borderRadius: 8,
-              borderColor: "#E2E8F0",
+              borderColor: "#dce5e6",
               padding: "10px 12px",
-              ...(isEditable ? {} : { color: "#334155", backgroundColor: "#F8FAFC", cursor: "not-allowed" }),
+              ...(isEditable ? {} : { color: "#334155", backgroundColor: "#f7fbfa", cursor: "not-allowed" }),
             }}
           />
         </Form.Item>
@@ -450,34 +450,34 @@ export default function ItemFormDrawer({
           </Checkbox>
         </Form.Item>
 
-        {/* Khối tổng tiền (Summary Box) theo thiết kế Purple #7C3AED */}
+        {/* Khối tổng tiền (Summary Box) theo thiết kế Purple #008f89 */}
         <div
           style={{
-            background: "#F5F3FF",
-            border: "1px solid #EDE9FE",
+            background: "#eef8f6",
+            border: "1px solid #dce5e6",
             borderRadius: 10,
             padding: "14px 16px",
             marginBottom: 20,
           }}
         >
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-            <span style={{ fontSize: 13, color: "#64748B", fontWeight: 500 }}>{t.itemDrawer.subtotal}</span>
-            <span style={{ fontSize: 13, fontWeight: 600, color: "#1E293B" }}>
+            <span style={{ fontSize: 13, color: "#718894", fontWeight: 500 }}>{t.itemDrawer.subtotal}</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: "#123443" }}>
               {rawItemTotal.toLocaleString(language === "en" ? "en-US" : "vi-VN")}
             </span>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-            <span style={{ fontSize: 13, color: "#64748B", fontWeight: 500 }}>
+            <span style={{ fontSize: 13, color: "#718894", fontWeight: 500 }}>
               {t.itemDrawer.taxAmount} ({((watchedTaxRate || 0) * 100).toFixed(0)}%):
             </span>
-            <span style={{ fontSize: 13, color: "#64748B" }}>
+            <span style={{ fontSize: 13, color: "#718894" }}>
               {taxItemTotal.toLocaleString(language === "en" ? "en-US" : "vi-VN")}
             </span>
           </div>
-          <Divider style={{ margin: "10px 0", borderColor: "#DDD6FE" }} />
+          <Divider style={{ margin: "10px 0", borderColor: "#b2ded9" }} />
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <span style={{ fontSize: 14, fontWeight: 600, color: "#475569" }}>{t.itemDrawer.totalAmount}</span>
-            <span style={{ fontSize: 20, fontWeight: 700, color: "#7C3AED", letterSpacing: 0.2 }}>
+            <span style={{ fontSize: 20, fontWeight: 700, color: "#008f89", letterSpacing: 0.2 }}>
               {grandItemTotal.toLocaleString(language === "en" ? "en-US" : "vi-VN")}
             </span>
           </div>

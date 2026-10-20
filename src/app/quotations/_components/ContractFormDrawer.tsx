@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect, useState } from "react";
 import {
@@ -153,24 +153,24 @@ export default function ContractFormDrawer({
           font-family: inherit;
         }
         .quotation-detail-table .ant-table-thead > tr > th {
-          background-color: #F8FAFC !important;
+          background-color: #f7fbfa !important;
           color: #475569 !important;
           font-size: 13px !important;
           font-weight: 600 !important;
           line-height: 18px !important;
-          border-color: #E2E8F0 !important;
+          border-color: #dce5e6 !important;
           padding: 10px 12px !important;
         }
         .quotation-detail-table .ant-table-tbody > tr > td {
-          color: #0F172A !important;
+          color: #123443 !important;
           font-size: 13px !important;
           line-height: 18px !important;
-          border-color: #E2E8F0 !important;
+          border-color: #dce5e6 !important;
           padding: 10px 12px !important;
           height: 46px !important;
         }
         .quotation-detail-table .ant-table-container {
-          border: 1px solid #E2E8F0 !important;
+          border: 1px solid #dce5e6 !important;
           border-radius: 8px !important;
           overflow: hidden;
         }
@@ -184,11 +184,11 @@ export default function ContractFormDrawer({
           alignItems: "center",
           marginBottom: 10,
           paddingBottom: 8,
-          borderBottom: "1px solid #E2E8F0",
+          borderBottom: "1px solid #dce5e6",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <Text strong style={{ fontSize: 13, color: "#7C3AED", fontWeight: 700, textTransform: "uppercase" }}>
+          <Text strong style={{ fontSize: 13, color: "#008f89", fontWeight: 700, textTransform: "uppercase" }}>
             {t.section.generalInfoQuotation}
           </Text>
           {isReadOnly && (
@@ -211,7 +211,7 @@ export default function ContractFormDrawer({
 
         <Space size={8}>
           <Button
-            icon={<IconPaperclip size={16} strokeWidth={1.8} style={{ color: "#7C3AED" }} />}
+            icon={<IconPaperclip size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />}
             onClick={() => setIsAttachmentModalOpen(true)}
             style={{
               display: "inline-flex",
@@ -220,7 +220,7 @@ export default function ContractFormDrawer({
               fontWeight: 500,
               height: 32,
               borderRadius: 6,
-              borderColor: "#E2E8F0",
+              borderColor: "#dce5e6",
               background: "#FFFFFF",
               color: "#334155",
             }}
@@ -229,8 +229,8 @@ export default function ContractFormDrawer({
             {attachments.length > 0 ? (
               <span
                 style={{
-                  background: "#EDE9FE",
-                  color: "#7C3AED",
+                  background: "#dce5e6",
+                  color: "#008f89",
                   borderRadius: 10,
                   padding: "1px 7px",
                   fontSize: 11,
@@ -275,14 +275,14 @@ export default function ContractFormDrawer({
           )}
 
           <Button
-            icon={<IconX size={15} strokeWidth={1.8} style={{ color: "#64748B" }} />}
+            icon={<IconX size={15} strokeWidth={1.8} style={{ color: "#718894" }} />}
             onClick={onClose}
             style={{
               height: 32,
               fontSize: 13,
               fontWeight: 500,
               borderRadius: 6,
-              borderColor: "#E2E8F0",
+              borderColor: "#dce5e6",
               background: "#FFFFFF",
               color: "#334155",
             }}
@@ -295,14 +295,14 @@ export default function ContractFormDrawer({
               type="primary"
               icon={<IconDeviceFloppy size={16} strokeWidth={2} />}
               style={{
-                background: "#7C3AED",
-                borderColor: "#7C3AED",
+                background: "#008f89",
+                borderColor: "#008f89",
                 height: 32,
                 fontSize: 13,
                 fontWeight: 500,
                 borderRadius: 6,
                 color: "#FFFFFF",
-                boxShadow: "0 2px 4px rgba(124, 58, 237, 0.2)",
+                boxShadow: "0 2px 4px rgba(0, 143, 137, 0.2)",
               }}
               onClick={() => form.submit()}
               loading={submitting}
@@ -323,7 +323,7 @@ export default function ContractFormDrawer({
           <div
             style={{
               background: "#FFFFFF",
-              border: "1px solid #E2E8F0",
+              border: "1px solid #dce5e6",
               borderRadius: 6,
               padding: "5px 12px",
               boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
@@ -332,8 +332,8 @@ export default function ContractFormDrawer({
             {/* Hàng 1: 4 Cột */}
             <Row gutter={[0, 0]} align="middle">
               {/* Cột 1: HĐ chủ đầu tư */}
-              <Col span={6} style={{ paddingRight: 10, borderRight: "1px solid #E2E8F0" }}>
-                <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={6} style={{ paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
+                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                   {t.quotation.mainContract}
                 </div>
                 <div
@@ -343,7 +343,7 @@ export default function ContractFormDrawer({
                     fontWeight: 600,
                     fontSize: 13,
                     lineHeight: "18px",
-                    color: selectedMainContractDisplay ? "#0F172A" : "#94A3B8",
+                    color: selectedMainContractDisplay ? "#123443" : "#94A3B8",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
@@ -374,8 +374,8 @@ export default function ContractFormDrawer({
               </Col>
 
               {/* Cột 2: Đối tượng (NCC) */}
-              <Col span={6} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #E2E8F0" }}>
-                <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={6} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
+                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                   {t.quotation.vendor} <span style={{ color: "#ff4d4f" }}>*</span>
                 </div>
                 <div
@@ -385,7 +385,7 @@ export default function ContractFormDrawer({
                     fontWeight: 600,
                     fontSize: 13,
                     lineHeight: "18px",
-                    color: selectedClientDisplay ? "#0F172A" : "#94A3B8",
+                    color: selectedClientDisplay ? "#123443" : "#94A3B8",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
@@ -416,8 +416,8 @@ export default function ContractFormDrawer({
               </Col>
 
               {/* Cột 3: Số hiệu bảng giá */}
-              <Col span={5} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #E2E8F0" }}>
-                <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={5} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
+                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                   {t.quotation.code}
                 </div>
                 <Form.Item name="ContractCode" style={{ margin: 0 }}>
@@ -430,7 +430,7 @@ export default function ContractFormDrawer({
                       fontWeight: 600,
                       fontSize: 13,
                       lineHeight: "18px",
-                      color: "#0F172A",
+                      color: "#123443",
                       fontFamily: "monospace",
                     }}
                   />
@@ -439,7 +439,7 @@ export default function ContractFormDrawer({
 
               {/* Cột 4: Tên bảng giá */}
               <Col span={7} style={{ paddingLeft: 10 }}>
-                <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                   {t.quotation.name} <span style={{ color: "#ff4d4f" }}>*</span>
                 </div>
                 <Form.Item
@@ -451,19 +451,19 @@ export default function ContractFormDrawer({
                     variant="borderless"
                     disabled={isReadOnly}
                     placeholder={t.quotation.namePlaceholder}
-                    style={{ padding: 0, fontWeight: 500, fontSize: 13, lineHeight: "18px", color: "#0F172A" }}
+                    style={{ padding: 0, fontWeight: 500, fontSize: 13, lineHeight: "18px", color: "#123443" }}
                   />
                 </Form.Item>
               </Col>
             </Row>
 
-            <Divider style={{ margin: "3px 0", borderColor: "#E2E8F0" }} />
+            <Divider style={{ margin: "3px 0", borderColor: "#dce5e6" }} />
 
             {/* Hàng 2: 5 Cột */}
             <Row gutter={[0, 0]} align="middle">
               {/* Cột 1: Ngày bảng giá */}
-              <Col span={5} style={{ paddingRight: 10, borderRight: "1px solid #E2E8F0" }}>
-                <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={5} style={{ paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
+                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                   {t.quotation.date}
                 </div>
                 <Form.Item name="ContractDate" style={{ margin: 0 }}>
@@ -472,14 +472,14 @@ export default function ContractFormDrawer({
                     disabled={isReadOnly}
                     format="DD/MM/YYYY"
                     placeholder={t.quotation.selectDate}
-                    style={{ padding: 0, width: "100%", fontWeight: 500, fontSize: 13, color: "#0F172A" }}
+                    style={{ padding: 0, width: "100%", fontWeight: 500, fontSize: 13, color: "#123443" }}
                   />
                 </Form.Item>
               </Col>
 
               {/* Cột 2: Ngày hiệu lực */}
-              <Col span={5} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #E2E8F0" }}>
-                <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={5} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
+                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                   {t.quotation.effectiveDate}
                 </div>
                 <Form.Item name="FromDate" style={{ margin: 0 }}>
@@ -488,14 +488,14 @@ export default function ContractFormDrawer({
                     disabled={isReadOnly}
                     format="DD/MM/YYYY"
                     placeholder={t.quotation.selectDate}
-                    style={{ padding: 0, width: "100%", fontWeight: 500, fontSize: 13, color: "#0F172A" }}
+                    style={{ padding: 0, width: "100%", fontWeight: 500, fontSize: 13, color: "#123443" }}
                   />
                 </Form.Item>
               </Col>
 
               {/* Cột 3: Ngày hết hiệu lực */}
-              <Col span={5} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #E2E8F0" }}>
-                <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={5} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
+                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                   {t.quotation.expiryDate}
                 </div>
                 <Form.Item name="ToDate" style={{ margin: 0 }}>
@@ -504,14 +504,14 @@ export default function ContractFormDrawer({
                     disabled={isReadOnly}
                     format="DD/MM/YYYY"
                     placeholder={t.quotation.selectDate}
-                    style={{ padding: 0, width: "100%", fontWeight: 500, fontSize: 13, color: "#0F172A" }}
+                    style={{ padding: 0, width: "100%", fontWeight: 500, fontSize: 13, color: "#123443" }}
                   />
                 </Form.Item>
               </Col>
 
               {/* Cột 4: Điều khoản thanh toán */}
-              <Col span={6} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #E2E8F0" }}>
-                <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={6} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
+                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                   {t.quotation.paymentTerm}
                 </div>
                 <Form.Item name="PaymentTerm" style={{ margin: 0 }}>
@@ -519,7 +519,7 @@ export default function ContractFormDrawer({
                     variant="borderless"
                     disabled={isReadOnly}
                     placeholder={t.quotation.selectPaymentTerm}
-                    style={{ padding: 0, width: "100%", fontWeight: 500, fontSize: 13, color: "#0F172A" }}
+                    style={{ padding: 0, width: "100%", fontWeight: 500, fontSize: 13, color: "#123443" }}
                     options={[
                       { value: "DK03", label: "DK03 - Thanh toán 100% sau 60 ngày" },
                       { value: "DK01", label: "DK01 - Thanh toán ngay khi nhận hàng" },
@@ -533,14 +533,14 @@ export default function ContractFormDrawer({
 
               {/* Cột 5: Loại tiền */}
               <Col span={3} style={{ paddingLeft: 10 }}>
-                <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                   {t.quotation.currency}
                 </div>
                 <Form.Item name="Currency" style={{ margin: 0 }}>
                   <Select
                     variant="borderless"
                     disabled={isReadOnly}
-                    style={{ padding: 0, width: "100%", fontWeight: 500, fontSize: 13, color: "#0F172A" }}
+                    style={{ padding: 0, width: "100%", fontWeight: 500, fontSize: 13, color: "#123443" }}
                     options={[
                       { value: "VND", label: "VND" },
                       { value: "USD", label: "USD" },

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, useMemo } from "react";
 import {
@@ -241,9 +241,9 @@ export default function SubmissionDetailDrawer({
               }}
               icon={
                 isReadOnly ? (
-                  <EyeOutlined style={{ color: "#64748B", fontSize: 13 }} />
+                  <EyeOutlined style={{ color: "#718894", fontSize: 13 }} />
                 ) : (
-                  <EditOutlined style={{ color: "#7C3AED", fontSize: 13 }} />
+                  <EditOutlined style={{ color: "#008f89", fontSize: 13 }} />
                 )
               }
               onClick={() => onOpenEditItem(record)}
@@ -416,7 +416,7 @@ export default function SubmissionDetailDrawer({
                 <Text strong style={{ color: "#262626" }}>{totalTax.toLocaleString(numLocale)}</Text>
               </Table.Summary.Cell>
               <Table.Summary.Cell index={6} align="right">
-                <Text strong style={{ color: "#7C3AED", fontSize: 13.5 }}>
+                <Text strong style={{ color: "#008f89", fontSize: 13.5 }}>
                   {grandTotal.toLocaleString(numLocale)}
                 </Text>
               </Table.Summary.Cell>

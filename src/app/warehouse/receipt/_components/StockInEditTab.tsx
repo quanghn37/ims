@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
@@ -344,7 +344,7 @@ export default function StockInEditTab({
 
           if (!orgName) {
             return (
-              <span style={{ fontWeight: 600, color: "#0F172A", fontSize: 13 }}>
+              <span style={{ fontWeight: 600, color: "#123443", fontSize: 13 }}>
                 {orgCode}
               </span>
             );
@@ -352,11 +352,11 @@ export default function StockInEditTab({
 
           return (
             <div>
-              <div style={{ fontWeight: 600, color: "#0F172A", fontSize: 13, lineHeight: "17px" }}>
+              <div style={{ fontWeight: 600, color: "#123443", fontSize: 13, lineHeight: "17px" }}>
                 {orgName}
               </div>
               {orgCode && (
-                <div style={{ fontSize: 11.5, color: "#64748B", marginTop: 2 }}>
+                <div style={{ fontSize: 11.5, color: "#718894", marginTop: 2 }}>
                   {orgCode.startsWith("(") ? orgCode : `(${orgCode})`}
                 </div>
               )}
@@ -373,11 +373,11 @@ export default function StockInEditTab({
           const desc = record.Description || record.itemName || "";
           return (
             <div>
-              <div style={{ fontWeight: 600, color: "#0F172A", fontSize: 12, lineHeight: "17px" }}>
+              <div style={{ fontWeight: 600, color: "#123443", fontSize: 12, lineHeight: "17px" }}>
                 {desc || "---"}
               </div>
               {sCode && (
-                <div style={{ color: "#64748B", fontSize: 11, fontFamily: "monospace", lineHeight: "15px" }}>
+                <div style={{ color: "#718894", fontSize: 11, fontFamily: "monospace", lineHeight: "15px" }}>
                   {sCode}
                 </div>
               )}
@@ -587,17 +587,17 @@ export default function StockInEditTab({
           alignItems: "center",
           marginBottom: 6,
           paddingBottom: 6,
-          borderBottom: "1px solid #E2E8F0",
+          borderBottom: "1px solid #dce5e6",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <Text strong style={{ fontSize: 13, color: "#7C3AED", fontWeight: 700, textTransform: "uppercase" }}>
+          <Text strong style={{ fontSize: 13, color: "#008f89", fontWeight: 700, textTransform: "uppercase" }}>
             {t.section.generalInfoReceipt}
           </Text>
         </div>
 
         <Space size={8}>
-          <Button onClick={onClose} style={{ height: 32, borderRadius: 6, borderColor: "#E2E8F0", fontSize: 13 }}>
+          <Button onClick={onClose} style={{ height: 32, borderRadius: 6, borderColor: "#dce5e6", fontSize: 13 }}>
             {t.common.close}
           </Button>
           {!hasDetails && (
@@ -606,13 +606,13 @@ export default function StockInEditTab({
               icon={<IconDeviceFloppy size={16} strokeWidth={2} />}
               loading={submitting}
               style={{
-                background: "#7C3AED",
-                borderColor: "#7C3AED",
+                background: "#008f89",
+                borderColor: "#008f89",
                 height: 32,
                 borderRadius: 6,
                 fontWeight: 500,
                 fontSize: 13,
-                boxShadow: "0 2px 4px rgba(124, 58, 237, 0.2)",
+                boxShadow: "0 2px 4px rgba(0, 143, 137, 0.2)",
               }}
               onClick={() => form.submit()}
             >
@@ -628,7 +628,7 @@ export default function StockInEditTab({
           <div
             style={{
               background: "#FFFFFF",
-              border: "1px solid #E2E8F0",
+              border: "1px solid #dce5e6",
               borderRadius: 6,
               padding: "5px 12px",
               boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
@@ -637,8 +637,8 @@ export default function StockInEditTab({
             {/* Hàng 1: 4 Cột */}
             <Row gutter={[0, 0]} align="middle">
               {/* Cột 1: Loại nhập kho */}
-              <Col span={6} style={{ paddingRight: 10, borderRight: "1px solid #E2E8F0" }}>
-                <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={6} style={{ paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
+                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                   {t.table.receiptType} <span style={{ color: "#ff4d4f" }}>*</span>
                 </div>
                 <Form.Item
@@ -653,7 +653,7 @@ export default function StockInEditTab({
                       width: "100%",
                       fontWeight: 600,
                       fontSize: 12,
-                      color: "#0F172A",
+                      color: "#123443",
                     }}
                     disabled={isHeaderDisabled}
                     options={[
@@ -668,8 +668,8 @@ export default function StockInEditTab({
               </Col>
 
               {/* Cột 2: Đơn hàng PO */}
-              <Col span={4} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #E2E8F0" }}>
-                <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={4} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
+                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                   {t.table.poCode}
                 </div>
                 <Form.Item name="poCode" style={{ margin: 0 }}>
@@ -682,15 +682,15 @@ export default function StockInEditTab({
                       fontWeight: 600,
                       fontSize: 12,
                       lineHeight: "18px",
-                      color: "#0F172A",
+                      color: "#123443",
                     }}
                   />
                 </Form.Item>
               </Col>
 
               {/* Cột 3: Hợp đồng */}
-              <Col span={5} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #E2E8F0" }}>
-                <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={5} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
+                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                   {t.table.contractCode} <span style={{ color: "#ff4d4f" }}>*</span>
                 </div>
                 <Form.Item name="contractCode" style={{ margin: 0 }}>
@@ -704,7 +704,7 @@ export default function StockInEditTab({
                       fontWeight: 600,
                       fontSize: 12,
                       lineHeight: "18px",
-                      color: "#0F172A",
+                      color: "#123443",
                     }}
                   />
                 </Form.Item>
@@ -712,7 +712,7 @@ export default function StockInEditTab({
 
               {/* Cột 4: Nhà Cung Cấp */}
               <Col span={9} style={{ paddingLeft: 10 }}>
-                <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                   {t.table.vendorName}
                 </div>
                 <Form.Item name="vendorName" style={{ margin: 0 }}>
@@ -726,20 +726,20 @@ export default function StockInEditTab({
                       fontWeight: 600,
                       fontSize: 12,
                       lineHeight: "18px",
-                      color: "#0F172A",
+                      color: "#123443",
                     }}
                   />
                 </Form.Item>
               </Col>
             </Row>
 
-            <Divider style={{ margin: "3px 0", borderColor: "#E2E8F0" }} />
+            <Divider style={{ margin: "3px 0", borderColor: "#dce5e6" }} />
 
             {/* Hàng 2: 5 Cột */}
             <Row gutter={[0, 0]} align="middle">
               {/* Cột 1: Số phiếu nhập */}
-              <Col span={4} style={{ paddingRight: 10, borderRight: "1px solid #E2E8F0" }}>
-                <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={4} style={{ paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
+                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                   {t.table.receiptCode}
                 </div>
                 <Form.Item name="receiptCode" style={{ margin: 0 }}>
@@ -752,7 +752,7 @@ export default function StockInEditTab({
                       fontWeight: 600,
                       fontSize: 12,
                       lineHeight: "18px",
-                      color: "#0F172A",
+                      color: "#123443",
                       fontFamily: "monospace",
                     }}
                   />
@@ -760,8 +760,8 @@ export default function StockInEditTab({
               </Col>
 
               {/* Cột 2: Ngày nhập kho */}
-              <Col span={4} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #E2E8F0" }}>
-                <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={4} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
+                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                   {t.table.receiptDate} <span style={{ color: "#ff4d4f" }}>*</span>
                 </div>
                 <Form.Item
@@ -779,15 +779,15 @@ export default function StockInEditTab({
                       width: "100%",
                       fontWeight: 500,
                       fontSize: 12,
-                      color: "#0F172A",
+                      color: "#123443",
                     }}
                   />
                 </Form.Item>
               </Col>
 
               {/* Cột 3: Diễn giải */}
-              <Col span={7} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #E2E8F0" }}>
-                <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={7} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
+                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                   {t.table.description} <span style={{ color: "#ff4d4f" }}>*</span>
                 </div>
                 <Form.Item
@@ -804,15 +804,15 @@ export default function StockInEditTab({
                       fontWeight: 500,
                       fontSize: 12,
                       lineHeight: "18px",
-                      color: "#0F172A",
+                      color: "#123443",
                     }}
                   />
                 </Form.Item>
               </Col>
 
               {/* Cột 4: Kho nhận hàng */}
-              <Col span={5} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #E2E8F0" }}>
-                <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={5} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
+                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                   {t.table.warehouse} <span style={{ color: "#ff4d4f" }}>*</span>
                 </div>
                 <Form.Item
@@ -827,7 +827,7 @@ export default function StockInEditTab({
                       width: "100%",
                       fontWeight: 500,
                       fontSize: 12,
-                      color: "#0F172A",
+                      color: "#123443",
                     }}
                     disabled={isHeaderDisabled}
                     options={warehouseOptions}
@@ -837,7 +837,7 @@ export default function StockInEditTab({
 
               {/* Cột 5: Trạng thái phiếu */}
               <Col span={4} style={{ paddingLeft: 10 }}>
-                <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                   {t.table.status}
                 </div>
                 <Form.Item name="status" style={{ margin: 0 }}>
@@ -851,7 +851,7 @@ export default function StockInEditTab({
                       fontWeight: 500,
                       fontSize: 12,
                       lineHeight: "18px",
-                      color: "#0F172A",
+                      color: "#123443",
                     }}
                   />
                 </Form.Item>
@@ -866,36 +866,36 @@ export default function StockInEditTab({
         {/* Scoped CSS for stockin items table */}
         <style jsx global>{`
           .stockin-items-table .ant-table-thead > tr > th {
-            background: #F8FAFC !important;
-            color: #0F172A !important;
+            background: #f7fbfa !important;
+            color: #123443 !important;
             font-size: 12px !important;
             font-weight: 600 !important;
             line-height: 18px !important;
-            border-color: #E2E8F0 !important;
+            border-color: #dce5e6 !important;
             padding: 8px 10px !important;
           }
           .stockin-items-table .ant-table-tbody > tr > td {
-            color: #0F172A !important;
+            color: #123443 !important;
             font-size: 12px !important;
             line-height: 18px !important;
-            border-color: #E2E8F0 !important;
+            border-color: #dce5e6 !important;
             padding: 8px 10px !important;
             height: 38px !important;
           }
           .stockin-items-table .ant-table-tbody > tr:hover > td {
-            background-color: #F5F3FF !important;
+            background-color: #eef8f6 !important;
           }
           .stockin-items-table .ant-table-container {
-            border: 1px solid #E2E8F0 !important;
+            border: 1px solid #dce5e6 !important;
             border-radius: 8px !important;
             overflow: hidden;
           }
           .stockin-reconcile-table .ant-table-thead > tr > th {
-            background: #F8FAFC !important;
-            color: #0F172A !important;
+            background: #f7fbfa !important;
+            color: #123443 !important;
             font-size: 12px !important;
             font-weight: 600 !important;
-            border-color: #E2E8F0 !important;
+            border-color: #dce5e6 !important;
           }
         `}</style>
 
@@ -908,13 +908,13 @@ export default function StockInEditTab({
           }}
         >
           <Space size={10} align="center">
-            <Text strong style={{ fontSize: 13, color: "#7C3AED", fontWeight: 700, textTransform: "uppercase" }}>
+            <Text strong style={{ fontSize: 13, color: "#008f89", fontWeight: 700, textTransform: "uppercase" }}>
               {t.section.materialInfo}
             </Text>
             <Tag
               style={{
-                background: "#EDE9FE",
-                color: "#7C3AED",
+                background: "#dce5e6",
+                color: "#008f89",
                 border: "none",
                 borderRadius: 12,
                 fontSize: 12,
@@ -931,16 +931,16 @@ export default function StockInEditTab({
             <Button
               icon={<IconRefresh size={16} strokeWidth={1.8} />}
               onClick={onRefreshItems}
-              style={{ height: 36, borderRadius: 8, borderColor: "#E2E8F0" }}
+              style={{ height: 36, borderRadius: 8, borderColor: "#dce5e6" }}
             >
               {t.common.refresh}
             </Button>
             <Button
               icon={<IconScale size={16} strokeWidth={1.8} />}
               style={{
-                color: "#7C3AED",
-                borderColor: "#DDD6FE",
-                background: "#F5F3FF",
+                color: "#008f89",
+                borderColor: "#b2ded9",
+                background: "#eef8f6",
                 height: 36,
                 borderRadius: 8,
                 fontWeight: 500,
@@ -967,41 +967,41 @@ export default function StockInEditTab({
           scroll={{ x: scrollX }}
           summary={() => (
             <Table.Summary fixed>
-              <Table.Summary.Row style={{ background: "#F5F3FF", fontWeight: "bold" }}>
+              <Table.Summary.Row style={{ background: "#eef8f6", fontWeight: "bold" }}>
                 {tableColumns.map((col, idx) => {
                   const key = String(col.key ?? (col as any).dataIndex ?? idx);
                   if (key === "Description") {
                     return (
                       <Table.Summary.Cell key={key} index={idx} align="right">
-                        <Text strong style={{ color: "#7C3AED" }}>{t.table.total}</Text>
+                        <Text strong style={{ color: "#008f89" }}>{t.table.total}</Text>
                       </Table.Summary.Cell>
                     );
                   }
                   if (key === "Qnty") {
                     return (
                       <Table.Summary.Cell key={key} index={idx} align="right">
-                        <Text strong style={{ color: "#0F172A" }}>{totalQty.toLocaleString("vi-VN")}</Text>
+                        <Text strong style={{ color: "#123443" }}>{totalQty.toLocaleString("vi-VN")}</Text>
                       </Table.Summary.Cell>
                     );
                   }
                   if (key === "Amount") {
                     return (
                       <Table.Summary.Cell key={key} index={idx} align="right">
-                        <Text strong style={{ color: "#0F172A" }}>{totalAmount.toLocaleString("vi-VN")}</Text>
+                        <Text strong style={{ color: "#123443" }}>{totalAmount.toLocaleString("vi-VN")}</Text>
                       </Table.Summary.Cell>
                     );
                   }
                   if (key === "TaxAmount") {
                     return (
                       <Table.Summary.Cell key={key} index={idx} align="right">
-                        <Text strong style={{ color: "#0F172A" }}>{totalTaxAmount.toLocaleString("vi-VN")}</Text>
+                        <Text strong style={{ color: "#123443" }}>{totalTaxAmount.toLocaleString("vi-VN")}</Text>
                       </Table.Summary.Cell>
                     );
                   }
                   if (key === "totalWithVat") {
                     return (
                       <Table.Summary.Cell key={key} index={idx} align="right">
-                        <Text strong style={{ color: "#7C3AED", fontSize: 14 }}>
+                        <Text strong style={{ color: "#008f89", fontSize: 14 }}>
                           {(totalAmount + totalTaxAmount).toLocaleString("vi-VN")}
                         </Text>
                       </Table.Summary.Cell>

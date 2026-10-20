@@ -632,7 +632,7 @@ export default function StockInPage() {
         render: (val, record) => (
           <a
             onClick={() => handleOpenEdit(record)}
-            style={{ color: "#7C3AED", fontWeight: 600, cursor: "pointer" }}
+            style={{ color: "#008f89", fontWeight: 600, cursor: "pointer" }}
           >
             {val || record.receiptCode || "---"}
           </a>
@@ -715,7 +715,7 @@ export default function StockInPage() {
       key: "list",
       label: (
         <Space size={6}>
-          <IconList size={16} strokeWidth={1.8} style={{ color: "#7C3AED" }} />
+          <IconList size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />
           <span>{t("receipt.tabList")}</span>
         </Space>
       ),
@@ -725,49 +725,49 @@ export default function StockInPage() {
           {/* Scoped CSS for stockin main table and tabs */}
           <style jsx global>{`
             .stockin-main-table .ant-table-thead > tr > th {
-              background: #F8FAFC !important;
-              color: #0F172A !important;
+              background: #f7fbfa !important;
+              color: #123443 !important;
               font-size: 12px !important;
               font-weight: 600 !important;
               line-height: 18px !important;
-              border-color: #E2E8F0 !important;
+              border-color: #dce5e6 !important;
               padding: 8px 10px !important;
             }
             .stockin-main-table .ant-table-tbody > tr > td {
-              color: #0F172A !important;
+              color: #123443 !important;
               font-size: 12px !important;
               line-height: 18px !important;
-              border-color: #E2E8F0 !important;
+              border-color: #dce5e6 !important;
               padding: 8px 10px !important;
               height: 40px !important;
             }
             .stockin-main-table .ant-table-tbody > tr:hover > td {
-              background-color: #F5F3FF !important;
+              background-color: #eef8f6 !important;
             }
             .stockin-main-table .ant-table-container {
-              border: 1px solid #E2E8F0 !important;
+              border: 1px solid #dce5e6 !important;
               border-radius: 8px !important;
               overflow: hidden;
             }
             .stockin-main-table .ant-pagination .ant-pagination-item-active {
-              border-color: #7C3AED !important;
-              background-color: #7C3AED !important;
+              border-color: #008f89 !important;
+              background-color: #008f89 !important;
             }
             .stockin-main-table .ant-pagination .ant-pagination-item-active a {
               color: #FFFFFF !important;
             }
             .stockin-page-tabs .ant-tabs-nav {
               margin-bottom: 0 !important;
-              background: #F8FAFC !important;
-              border-bottom: 1px solid #E2E8F0 !important;
+              background: #f7fbfa !important;
+              border-bottom: 1px solid #dce5e6 !important;
               padding: 6px 16px 0 16px !important;
             }
             .stockin-page-tabs .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
-              color: #7C3AED !important;
+              color: #008f89 !important;
               font-weight: 600 !important;
             }
             .stockin-page-tabs .ant-tabs-ink-bar {
-              background: #7C3AED !important;
+              background: #008f89 !important;
             }
           `}</style>
 
@@ -787,7 +787,7 @@ export default function StockInPage() {
                 strong
                 style={{
                   fontSize: 14,
-                  color: "#7C3AED",
+                  color: "#008f89",
                   fontWeight: 700,
                   lineHeight: "22px",
                   display: "flex",
@@ -795,12 +795,12 @@ export default function StockInPage() {
                   gap: 8,
                 }}
               >
-                <IconPackage size={18} strokeWidth={1.8} style={{ color: "#7C3AED" }} /> {t("receipt.listTitle")}
+                <IconPackage size={18} strokeWidth={1.8} style={{ color: "#008f89" }} /> {t("receipt.listTitle")}
               </Text>
               <Tag
                 style={{
-                  background: "#EDE9FE",
-                  color: "#7C3AED",
+                  background: "#dce5e6",
+                  color: "#008f89",
                   borderRadius: 12,
                   border: "none",
                   fontSize: 12,
@@ -847,7 +847,7 @@ export default function StockInPage() {
               <Button
                 icon={<IconSearch size={16} strokeWidth={1.8} />}
                 onClick={() => fetchReceipts(1, pagination.pageSize, searchKeyword.trim())}
-                style={{ height: 36, borderRadius: 8, borderColor: "#E2E8F0" }}
+                style={{ height: 36, borderRadius: 8, borderColor: "#dce5e6" }}
               >
                 {t("common.search")}
               </Button>
@@ -861,7 +861,7 @@ export default function StockInPage() {
                   setSelectedStatusFilter("ALL");
                   fetchReceipts(1, pagination.pageSize, "");
                 }}
-                style={{ height: 36, borderRadius: 8, borderColor: "#E2E8F0" }}
+                style={{ height: 36, borderRadius: 8, borderColor: "#dce5e6" }}
               >
                 {t("common.refresh")}
               </Button>
@@ -870,12 +870,12 @@ export default function StockInPage() {
                 type="primary"
                 icon={<IconPlus size={16} strokeWidth={2} />}
                 style={{
-                  background: "#7C3AED",
-                  borderColor: "#7C3AED",
+                  background: "#008f89",
+                  borderColor: "#008f89",
                   height: 36,
                   borderRadius: 8,
                   fontWeight: 500,
-                  boxShadow: "0 2px 4px rgba(124, 58, 237, 0.2)",
+                  boxShadow: "0 2px 4px rgba(0, 143, 137, 0.2)",
                 }}
                 onClick={handleOpenCreate}
               >
@@ -891,7 +891,7 @@ export default function StockInPage() {
             style={{
               boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
               borderRadius: 8,
-              border: "1px solid #E2E8F0",
+              border: "1px solid #dce5e6",
               overflow: "hidden",
             }}
           >
@@ -924,7 +924,7 @@ export default function StockInPage() {
       key: "reconcile",
       label: (
         <Space size={6}>
-          <IconScale size={16} strokeWidth={1.8} style={{ color: "#7C3AED" }} />
+          <IconScale size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />
           <span>{t.receipt.reconcilePO}</span>
         </Space>
       ),
@@ -943,7 +943,7 @@ export default function StockInPage() {
             key: "edit",
             label: (
               <Space size={6}>
-                <IconPencil size={16} strokeWidth={1.8} style={{ color: "#7C3AED" }} />
+                <IconPencil size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />
                 <span>
                   {editingReceipt
                     ? `${t.receipt.updateReceipt}: ${editingReceipt.DocCode || editingReceipt.receiptCode || ""}`
@@ -979,7 +979,7 @@ export default function StockInPage() {
   ];
 
   return (
-    <div style={{ padding: 0, width: "100%", height: "100%", background: "#fff" }}>
+    <div style={{ padding: 0, width: "100%", minHeight: "calc(100vh - 100px)", background: "#FFFFFF", borderRadius: 16, border: "1px solid #dce5e6", overflow: "hidden", boxShadow: "0 1px 3px rgba(18, 52, 67, 0.04)" }}>
       <Tabs
         className="stockin-page-tabs"
         type="editable-card"
@@ -999,9 +999,9 @@ export default function StockInPage() {
         items={tabItems}
         tabBarStyle={{
           margin: 0,
-          background: "#F8FAFC",
+          background: "#f7fbfa",
           padding: "6px 16px 0 16px",
-          borderBottom: "1px solid #E2E8F0",
+          borderBottom: "1px solid #dce5e6",
         }}
       />
 

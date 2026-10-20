@@ -519,7 +519,7 @@ export default function QuotationsPage() {
       key: "list",
       label: (
         <Space size={6}>
-          <IconFileText size={16} strokeWidth={1.8} style={{ color: "#7C3AED" }} />
+          <IconFileText size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />
           <span>{t.menu.quotations}</span>
         </Space>
       ),
@@ -556,9 +556,9 @@ export default function QuotationsPage() {
               return (
                 <Space size={6}>
                   {isReadOnly ? (
-                    <IconEye size={16} strokeWidth={1.8} style={{ color: "#64748B" }} />
+                    <IconEye size={16} strokeWidth={1.8} style={{ color: "#718894" }} />
                   ) : (
-                    <IconPencil size={16} strokeWidth={1.8} style={{ color: "#7C3AED" }} />
+                    <IconPencil size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />
                   )}
                   <span>
                     {editingContract
@@ -616,34 +616,34 @@ export default function QuotationsPage() {
   ];
 
   return (
-    <div style={{ padding: 0, width: "100%", height: "100%", background: "#FFFFFF" }}>
+    <div style={{ padding: 0, width: "100%", minHeight: "calc(100vh - 100px)", background: "#FFFFFF", borderRadius: 16, border: "1px solid #dce5e6", overflow: "hidden", boxShadow: "0 1px 3px rgba(18, 52, 67, 0.04)" }}>
       <style>{`
         .quotation-page-tabs .ant-tabs-nav {
           margin-bottom: 0 !important;
         }
         .quotation-page-tabs .ant-tabs-nav::before {
-          border-bottom: 1px solid #E2E8F0 !important;
+          border-bottom: 1px solid #dce5e6 !important;
         }
         .quotation-page-tabs .ant-tabs-tab {
-          border-color: #E2E8F0 !important;
-          background: #F8FAFC !important;
-          color: #64748B !important;
+          border-color: #dce5e6 !important;
+          background: #f7fbfa !important;
+          color: #718894 !important;
           border-radius: 8px 8px 0 0 !important;
           font-weight: 500 !important;
           font-size: 13px !important;
           transition: all 0.2s ease;
         }
         .quotation-page-tabs .ant-tabs-tab:hover {
-          color: #7C3AED !important;
+          color: #008f89 !important;
         }
         .quotation-page-tabs .ant-tabs-tab-active {
           background: #FFFFFF !important;
           border-bottom-color: #FFFFFF !important;
-          color: #7C3AED !important;
+          color: #008f89 !important;
           font-weight: 600 !important;
         }
         .quotation-page-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
-          color: #7C3AED !important;
+          color: #008f89 !important;
         }
         .quotation-page-tabs .ant-tabs-tab .ant-tabs-tab-remove {
           color: #94A3B8 !important;
@@ -668,7 +668,7 @@ export default function QuotationsPage() {
           margin: 0,
           background: "#FFFFFF",
           padding: "8px 24px 0 24px",
-          borderBottom: "1px solid #E2E8F0",
+          borderBottom: "1px solid #dce5e6",
         }}
       />
 

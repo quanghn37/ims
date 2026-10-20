@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import {
@@ -78,7 +78,7 @@ export default function RequisitionDetailDrawer({
       key: "itemCode",
       width: 130,
       render: (val: string) => (
-        <span style={{ fontWeight: 600, color: "#7C3AED", fontFamily: "monospace" }}>{val}</span>
+        <span style={{ fontWeight: 600, color: "#008f89", fontFamily: "monospace" }}>{val}</span>
       ),
     },
     {
@@ -86,7 +86,7 @@ export default function RequisitionDetailDrawer({
       dataIndex: "itemName",
       key: "itemName",
       width: 260,
-      render: (val: string) => <span style={{ fontWeight: 600, color: "#0F172A" }}>{val}</span>,
+      render: (val: string) => <span style={{ fontWeight: 600, color: "#123443" }}>{val}</span>,
     },
     {
       title: t.lov.colUnit,
@@ -115,7 +115,7 @@ export default function RequisitionDetailDrawer({
       width: 105,
       align: "right",
       render: (val: number) => (
-        <span style={{ fontWeight: 700, color: "#0F172A" }}>
+        <span style={{ fontWeight: 700, color: "#123443" }}>
           {Number(val || 0).toLocaleString(numLocale)}
         </span>
       ),
@@ -128,7 +128,7 @@ export default function RequisitionDetailDrawer({
       align: "right",
       render: (val: number) =>
         val !== undefined && val !== null ? (
-          <span style={{ color: "#7C3AED", fontWeight: 700 }}>
+          <span style={{ color: "#008f89", fontWeight: 700 }}>
             {Number(val).toLocaleString(numLocale)}
           </span>
         ) : (
@@ -156,9 +156,9 @@ export default function RequisitionDetailDrawer({
       <Drawer
         title={
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <FileTextOutlined style={{ color: "#7C3AED", fontSize: 18 }} />
+            <FileTextOutlined style={{ color: "#008f89", fontSize: 18 }} />
             <div>
-              <Title level={5} style={{ margin: 0, color: "#0F172A", fontSize: 15 }}>
+              <Title level={5} style={{ margin: 0, color: "#123443", fontSize: 15 }}>
                 {language === "en" ? "Requisition Details: " : "Chi tiết Phiếu yêu cầu: "}{requisition.requisitionCode}
               </Title>
               <Text type="secondary" style={{ fontSize: 12 }}>
@@ -182,7 +182,7 @@ export default function RequisitionDetailDrawer({
                   type="primary"
                   icon={<SendOutlined />}
                   onClick={() => onSubmitForApproval(requisition.id)}
-                  style={{ background: "#7C3AED", borderColor: "#7C3AED", borderRadius: 6 }}
+                  style={{ background: "#008f89", borderColor: "#008f89", borderRadius: 6 }}
                 >
                   {language === "en" ? "Submit for Approval" : "Gửi duyệt"}
                 </Button>
@@ -217,28 +217,28 @@ export default function RequisitionDetailDrawer({
           </div>
         }
       >
-        <Card size="small" style={{ borderRadius: 8, marginBottom: 16, background: "#F8FAFC" }}>
+        <Card size="small" style={{ borderRadius: 8, marginBottom: 16, background: "#f7fbfa" }}>
           <Row gutter={[16, 12]}>
             <Col span={6}>
-              <div style={{ fontSize: 12, color: "#64748B" }}>{language === "en" ? "Requisition Code (MR):" : "Mã yêu cầu (MR):"}</div>
-              <div style={{ fontWeight: 600, color: "#7C3AED", fontSize: 13.5 }}>
+              <div style={{ fontSize: 12, color: "#718894" }}>{language === "en" ? "Requisition Code (MR):" : "Mã yêu cầu (MR):"}</div>
+              <div style={{ fontWeight: 600, color: "#008f89", fontSize: 13.5 }}>
                 {requisition.requisitionCode}
               </div>
             </Col>
             <Col span={6}>
-              <div style={{ fontSize: 12, color: "#64748B" }}>{language === "en" ? "Created Date:" : "Ngày lập phiếu:"}</div>
-              <div style={{ fontWeight: 500, color: "#0F172A" }}>
+              <div style={{ fontSize: 12, color: "#718894" }}>{language === "en" ? "Created Date:" : "Ngày lập phiếu:"}</div>
+              <div style={{ fontWeight: 500, color: "#123443" }}>
                 {dayjs(requisition.requisitionDate).format("DD/MM/YYYY")}
               </div>
             </Col>
             <Col span={6}>
-              <div style={{ fontSize: 12, color: "#64748B" }}>{language === "en" ? "Required Date:" : "Ngày cần có vật tư:"}</div>
+              <div style={{ fontSize: 12, color: "#718894" }}>{language === "en" ? "Required Date:" : "Ngày cần có vật tư:"}</div>
               <div style={{ fontWeight: 600, color: "#EF4444" }}>
                 {dayjs(requisition.expectedDate).format("DD/MM/YYYY")}
               </div>
             </Col>
             <Col span={6}>
-              <div style={{ fontSize: 12, color: "#64748B" }}>{language === "en" ? "Status:" : "Trạng thái:"}</div>
+              <div style={{ fontSize: 12, color: "#718894" }}>{language === "en" ? "Status:" : "Trạng thái:"}</div>
               <div style={{ marginTop: 2 }}>
                 <Tag color={requisition.status === "APPROVED" ? "success" : requisition.status === "PENDING" ? "warning" : "default"}>
                   {requisition.status}
@@ -247,28 +247,28 @@ export default function RequisitionDetailDrawer({
             </Col>
 
             <Col span={6}>
-              <div style={{ fontSize: 12, color: "#64748B" }}>{language === "en" ? "Issuing Warehouse:" : "Kho xuất cấp:"}</div>
-              <div style={{ fontWeight: 500, color: "#0F172A" }}>{requisition.warehouseName}</div>
+              <div style={{ fontSize: 12, color: "#718894" }}>{language === "en" ? "Issuing Warehouse:" : "Kho xuất cấp:"}</div>
+              <div style={{ fontWeight: 500, color: "#123443" }}>{requisition.warehouseName}</div>
             </Col>
             <Col span={6}>
-              <div style={{ fontSize: 12, color: "#64748B" }}>{language === "en" ? "Requester:" : "Kỹ sư yêu cầu:"}</div>
-              <div style={{ fontWeight: 500, color: "#0F172A" }}>
+              <div style={{ fontSize: 12, color: "#718894" }}>{language === "en" ? "Requester:" : "Kỹ sư yêu cầu:"}</div>
+              <div style={{ fontWeight: 500, color: "#123443" }}>
                 {requisition.requesterName} {requisition.requesterPhone ? `(${requisition.requesterPhone})` : ""}
               </div>
             </Col>
             <Col span={6}>
-              <div style={{ fontSize: 12, color: "#64748B" }}>{language === "en" ? "Contractor / Team:" : "Đội / Đơn vị thi công:"}</div>
-              <div style={{ fontWeight: 500, color: "#0F172A" }}>{requisition.contractorName}</div>
+              <div style={{ fontSize: 12, color: "#718894" }}>{language === "en" ? "Contractor / Team:" : "Đội / Đơn vị thi công:"}</div>
+              <div style={{ fontWeight: 500, color: "#123443" }}>{requisition.contractorName}</div>
             </Col>
             <Col span={6}>
-              <div style={{ fontSize: 12, color: "#64748B" }}>{language === "en" ? "Approver:" : "Người duyệt:"}</div>
-              <div style={{ fontWeight: 500, color: "#0F172A" }}>
+              <div style={{ fontSize: 12, color: "#718894" }}>{language === "en" ? "Approver:" : "Người duyệt:"}</div>
+              <div style={{ fontWeight: 500, color: "#123443" }}>
                 {requisition.approverName || (language === "en" ? "None" : "Chưa có")}
               </div>
             </Col>
 
             <Col span={24}>
-              <div style={{ fontSize: 12, color: "#64748B" }}>{language === "en" ? "Description / Purpose:" : "Diễn giải / Mục đích xuất:"}</div>
+              <div style={{ fontSize: 12, color: "#718894" }}>{language === "en" ? "Description / Purpose:" : "Diễn giải / Mục đích xuất:"}</div>
               <div style={{ color: "#334155", fontSize: 13, marginTop: 2 }}>
                 {requisition.description || "-"}
               </div>
@@ -287,7 +287,7 @@ export default function RequisitionDetailDrawer({
         <Card
           size="small"
           title={
-            <span style={{ fontWeight: 600, color: "#0F172A" }}>
+            <span style={{ fontWeight: 600, color: "#123443" }}>
               {language === "en"
                 ? `Requested Materials (${requisition.items?.length || 0} items)`
                 : `Danh mục vật tư yêu cầu (${requisition.items?.length || 0} mặt hàng)`}
@@ -316,7 +316,7 @@ export default function RequisitionDetailDrawer({
         okButtonProps={{ danger: true }}
       >
         <div style={{ padding: "8px 0" }}>
-          <div style={{ fontSize: 12, color: "#64748B", marginBottom: 6 }}>
+          <div style={{ fontSize: 12, color: "#718894", marginBottom: 6 }}>
             {language === "en" ? "Please enter rejection reason:" : "Vui lòng nhập lý do từ chối phiếu yêu cầu:"}
           </div>
           <Input.TextArea

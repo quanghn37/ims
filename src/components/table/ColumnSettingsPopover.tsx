@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import { Popover, Button, Checkbox, Space, Typography, Tooltip, Divider, Tag } from "antd";
@@ -71,7 +71,7 @@ export const ColumnSettingsPopover: React.FC<ColumnSettingsPopoverProps> = ({
             size="small"
             icon={<IconRefresh size={14} strokeWidth={1.8} />}
             onClick={onReset}
-            style={{ padding: 0, fontSize: 12, color: "#7C3AED" }}
+            style={{ padding: 0, fontSize: 12, color: "#008f89" }}
           >
             {language === "en" ? "Default" : "Mặc định"}
           </Button>
@@ -191,7 +191,7 @@ export const ColumnSettingsPopover: React.FC<ColumnSettingsPopoverProps> = ({
             size="small"
             icon={<IconEye size={14} strokeWidth={1.8} />}
             onClick={onShowAll}
-            style={{ fontSize: 12, color: "#7C3AED" }}
+            style={{ fontSize: 12, color: "#008f89" }}
           >
             {language === "en" ? "Show All" : "Hiện tất cả"}
           </Button>
@@ -223,7 +223,7 @@ export const ColumnSettingsPopover: React.FC<ColumnSettingsPopoverProps> = ({
               cursor: "pointer",
               padding: "2px 4px",
               borderRadius: 4,
-              color: "#7C3AED",
+              color: "#008f89",
               transition: "all 0.2s ease",
             }}
           >
@@ -232,7 +232,7 @@ export const ColumnSettingsPopover: React.FC<ColumnSettingsPopoverProps> = ({
         </Tooltip>
       ) : (
         <Tooltip title={language === "en" ? "Customize table column order & visibility" : "Tùy chỉnh thứ tự và ẩn/hiện các cột trong bảng"}>
-          <Button icon={<IconSettings size={16} strokeWidth={1.8} style={{ color: "#7C3AED" }} />}>
+          <Button icon={<IconSettings size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />}>
             {language === "en" ? "Columns" : "Tùy chỉnh cột"}
           </Button>
         </Tooltip>

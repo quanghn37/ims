@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import {
@@ -166,16 +166,16 @@ export default function ContractFormDrawer({
             alignItems: "center",
             marginBottom: 8,
             paddingBottom: 6,
-            borderBottom: "1px solid #E2E8F0",
+            borderBottom: "1px solid #dce5e6",
           }}
         >
-          <Text strong style={{ fontSize: 13, color: "#7C3AED", fontWeight: 700, textTransform: "uppercase" }}>
+          <Text strong style={{ fontSize: 13, color: "#008f89", fontWeight: 700, textTransform: "uppercase" }}>
             {t.section.generalInfo}
           </Text>
 
           <Space size={8}>
             <Button
-              icon={<IconPaperclip size={16} strokeWidth={1.8} style={{ color: "#7C3AED" }} />}
+              icon={<IconPaperclip size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />}
               onClick={() => setIsAttachmentModalOpen(true)}
               style={{
                 display: "inline-flex",
@@ -184,7 +184,7 @@ export default function ContractFormDrawer({
                 fontWeight: 500,
                 height: 32,
                 borderRadius: 6,
-                borderColor: "#E2E8F0",
+                borderColor: "#dce5e6",
                 background: "#FFFFFF",
                 color: "#334155",
               }}
@@ -193,8 +193,8 @@ export default function ContractFormDrawer({
               {attachments.length > 0 && (
                 <span
                   style={{
-                    background: "#EDE9FE",
-                    color: "#7C3AED",
+                    background: "#dce5e6",
+                    color: "#008f89",
                     borderRadius: 10,
                     padding: "1px 7px",
                     fontSize: 11,
@@ -207,14 +207,14 @@ export default function ContractFormDrawer({
               )}
             </Button>
             <Button
-              icon={<IconX size={15} strokeWidth={1.8} style={{ color: "#64748B" }} />}
+              icon={<IconX size={15} strokeWidth={1.8} style={{ color: "#718894" }} />}
               onClick={onClose}
               style={{
                 height: 32,
                 fontSize: 13,
                 fontWeight: 500,
                 borderRadius: 6,
-                borderColor: "#E2E8F0",
+                borderColor: "#dce5e6",
                 background: "#FFFFFF",
                 color: "#334155",
               }}
@@ -228,14 +228,14 @@ export default function ContractFormDrawer({
                 loading={submitting}
                 onClick={() => form.submit()}
                 style={{
-                  background: "#7C3AED",
-                  borderColor: "#7C3AED",
+                  background: "#008f89",
+                  borderColor: "#008f89",
                   height: 32,
                   fontSize: 13,
                   fontWeight: 500,
                   borderRadius: 6,
                   color: "#FFFFFF",
-                  boxShadow: "0 2px 4px rgba(124, 58, 237, 0.2)",
+                  boxShadow: "0 2px 4px rgba(0, 143, 137, 0.2)",
                 }}
               >
                 {isEditing ? t.contract.updateContract : t.contract.saveContract}
@@ -247,7 +247,7 @@ export default function ContractFormDrawer({
         <div
           style={{
             background: "#FFFFFF",
-            border: "1px solid #E2E8F0",
+            border: "1px solid #dce5e6",
             borderRadius: 6,
             padding: "5px 12px",
             boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
@@ -257,8 +257,8 @@ export default function ContractFormDrawer({
           {/* Hàng 1: 5 Cột */}
           <Row gutter={[0, 0]} align="middle">
             {/* Cột 1: HĐ chủ đầu tư */}
-            <Col span={5} style={{ paddingRight: 8, borderRight: "1px solid #E2E8F0" }}>
-              <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+            <Col span={5} style={{ paddingRight: 8, borderRight: "1px solid #dce5e6" }}>
+              <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                 {t.contract.mainContract} {!isEditing && <span style={{ color: "#ff4d4f" }}>*</span>}
               </div>
               <div
@@ -268,7 +268,7 @@ export default function ContractFormDrawer({
                   fontWeight: 600,
                   fontSize: 13,
                   lineHeight: "18px",
-                  color: selectedMainContractDisplay ? "#0F172A" : "#94A3B8",
+                  color: selectedMainContractDisplay ? "#123443" : "#94A3B8",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
@@ -299,8 +299,8 @@ export default function ContractFormDrawer({
             </Col>
 
             {/* Cột 2: Đối tượng (NCC) */}
-            <Col span={6} style={{ paddingLeft: 8, paddingRight: 8, borderRight: "1px solid #E2E8F0" }}>
-              <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+            <Col span={6} style={{ paddingLeft: 8, paddingRight: 8, borderRight: "1px solid #dce5e6" }}>
+              <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                 {t.contract.vendor} {!isEditing && <span style={{ color: "#ff4d4f" }}>*</span>}
               </div>
               <div
@@ -310,7 +310,7 @@ export default function ContractFormDrawer({
                   fontWeight: 600,
                   fontSize: 13,
                   lineHeight: "18px",
-                  color: selectedClientDisplay ? "#0F172A" : "#94A3B8",
+                  color: selectedClientDisplay ? "#123443" : "#94A3B8",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
@@ -341,8 +341,8 @@ export default function ContractFormDrawer({
             </Col>
 
             {/* Cột 3: Số hợp đồng NCC */}
-            <Col span={4} style={{ paddingLeft: 8, paddingRight: 8, borderRight: "1px solid #E2E8F0" }}>
-              <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+            <Col span={4} style={{ paddingLeft: 8, paddingRight: 8, borderRight: "1px solid #dce5e6" }}>
+              <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                 {t.contract.code}
               </div>
               <Form.Item name="ContractCode" style={{ margin: 0 }}>
@@ -355,7 +355,7 @@ export default function ContractFormDrawer({
                     fontWeight: 600,
                     fontSize: 13,
                     lineHeight: "18px",
-                    color: "#0F172A",
+                    color: "#123443",
                     fontFamily: "monospace",
                   }}
                 />
@@ -363,8 +363,8 @@ export default function ContractFormDrawer({
             </Col>
 
             {/* Cột 4: PLHĐ của */}
-            <Col span={3} style={{ paddingLeft: 8, paddingRight: 8, borderRight: "1px solid #E2E8F0" }}>
-              <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+            <Col span={3} style={{ paddingLeft: 8, paddingRight: 8, borderRight: "1px solid #dce5e6" }}>
+              <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                 {t.contract.addendumOf}
               </div>
               <Form.Item name="ParentContractCode" style={{ margin: 0 }}>
@@ -373,7 +373,7 @@ export default function ContractFormDrawer({
                   disabled={isEditing}
                   placeholder={isEditing ? "" : t.contract.originalContractPlaceholder}
                   allowClear={!isEditing}
-                  style={{ padding: 0, fontWeight: 500, fontSize: 13, lineHeight: "18px", color: "#0F172A" }}
+                  style={{ padding: 0, fontWeight: 500, fontSize: 13, lineHeight: "18px", color: "#123443" }}
                   onChange={(e) => {
                     if (!isEditing && !e.target.value) {
                       form.setFieldsValue({ ParentContractId: undefined });
@@ -385,7 +385,7 @@ export default function ContractFormDrawer({
 
             {/* Cột 5: Diễn giải hợp đồng */}
             <Col span={6} style={{ paddingLeft: 8 }}>
-              <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                 {t.contract.description} <span style={{ color: "#ff4d4f" }}>*</span>
               </div>
               <Form.Item
@@ -396,19 +396,19 @@ export default function ContractFormDrawer({
                 <Input
                   variant="borderless"
                   placeholder={t.contract.descriptionPlaceholder}
-                  style={{ padding: 0, fontWeight: 500, fontSize: 13, lineHeight: "18px", color: "#0F172A" }}
+                  style={{ padding: 0, fontWeight: 500, fontSize: 13, lineHeight: "18px", color: "#123443" }}
                 />
               </Form.Item>
             </Col>
           </Row>
 
-          <Divider style={{ margin: "3px 0", borderColor: "#E2E8F0" }} />
+          <Divider style={{ margin: "3px 0", borderColor: "#dce5e6" }} />
 
           {/* Hàng 2: 7 Cột */}
           <Row gutter={[0, 0]} align="middle">
             {/* Cột 1: Ngày ký */}
-            <Col span={3} style={{ paddingRight: 8, borderRight: "1px solid #E2E8F0" }}>
-              <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+            <Col span={3} style={{ paddingRight: 8, borderRight: "1px solid #dce5e6" }}>
+              <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                 {t.contract.signDate}
               </div>
               <Form.Item name="SignDate" style={{ margin: 0 }}>
@@ -416,14 +416,14 @@ export default function ContractFormDrawer({
                   variant="borderless"
                   format="DD-MM-YYYY"
                   placeholder="DD-MM-YYYY"
-                  style={{ padding: 0, width: "100%", fontWeight: 500, fontSize: 13, color: "#0F172A" }}
+                  style={{ padding: 0, width: "100%", fontWeight: 500, fontSize: 13, color: "#123443" }}
                 />
               </Form.Item>
             </Col>
 
             {/* Cột 2: Ngày bắt đầu */}
-            <Col span={3} style={{ paddingLeft: 8, paddingRight: 8, borderRight: "1px solid #E2E8F0" }}>
-              <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+            <Col span={3} style={{ paddingLeft: 8, paddingRight: 8, borderRight: "1px solid #dce5e6" }}>
+              <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                 {t.contract.startDate}
               </div>
               <Form.Item name="FromDate" style={{ margin: 0 }}>
@@ -431,14 +431,14 @@ export default function ContractFormDrawer({
                   variant="borderless"
                   format="DD-MM-YYYY"
                   placeholder="DD-MM-YYYY"
-                  style={{ padding: 0, width: "100%", fontWeight: 500, fontSize: 13, color: "#0F172A" }}
+                  style={{ padding: 0, width: "100%", fontWeight: 500, fontSize: 13, color: "#123443" }}
                 />
               </Form.Item>
             </Col>
 
             {/* Cột 3: Ngày kết thúc */}
-            <Col span={3} style={{ paddingLeft: 8, paddingRight: 8, borderRight: "1px solid #E2E8F0" }}>
-              <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+            <Col span={3} style={{ paddingLeft: 8, paddingRight: 8, borderRight: "1px solid #dce5e6" }}>
+              <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                 {t.contract.endDate}
               </div>
               <Form.Item name="ToDate" style={{ margin: 0 }}>
@@ -447,14 +447,14 @@ export default function ContractFormDrawer({
                   format="DD-MM-YYYY"
                   placeholder="DD-MM-YYYY"
                   allowClear
-                  style={{ padding: 0, width: "100%", fontWeight: 500, fontSize: 13, color: "#0F172A" }}
+                  style={{ padding: 0, width: "100%", fontWeight: 500, fontSize: 13, color: "#123443" }}
                 />
               </Form.Item>
             </Col>
 
             {/* Cột 4: Điều khoản TT */}
-            <Col span={4} style={{ paddingLeft: 8, paddingRight: 8, borderRight: "1px solid #E2E8F0" }}>
-              <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+            <Col span={4} style={{ paddingLeft: 8, paddingRight: 8, borderRight: "1px solid #dce5e6" }}>
+              <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                 {t.contract.paymentTerm}
               </div>
               <Form.Item name="PayTerms" style={{ margin: 0 }}>
@@ -463,21 +463,21 @@ export default function ContractFormDrawer({
                   showSearch
                   allowClear
                   placeholder={t.contract.selectPaymentTerm}
-                  style={{ padding: 0, width: "100%", fontWeight: 500, fontSize: 13, color: "#0F172A" }}
+                  style={{ padding: 0, width: "100%", fontWeight: 500, fontSize: 13, color: "#123443" }}
                   options={payTermsOptions}
                 />
               </Form.Item>
             </Col>
 
             {/* Cột 5: Giá trị hợp đồng */}
-            <Col span={4} style={{ paddingLeft: 8, paddingRight: 8, borderRight: "1px solid #E2E8F0" }}>
-              <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+            <Col span={4} style={{ paddingLeft: 8, paddingRight: 8, borderRight: "1px solid #dce5e6" }}>
+              <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                 {t.contract.amount}
               </div>
               <Form.Item name="Amount" style={{ margin: 0 }}>
                 <InputNumber
                   variant="borderless"
-                  style={{ padding: 0, width: "100%", fontWeight: 600, fontSize: 13, color: "#0F172A" }}
+                  style={{ padding: 0, width: "100%", fontWeight: 600, fontSize: 13, color: "#123443" }}
                   min={0}
                   placeholder="0"
                   formatter={(val) => String(val || "").replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
@@ -487,14 +487,14 @@ export default function ContractFormDrawer({
             </Col>
 
             {/* Cột 6: Loại tiền */}
-            <Col span={2} style={{ paddingLeft: 8, paddingRight: 8, borderRight: "1px solid #E2E8F0" }}>
-              <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+            <Col span={2} style={{ paddingLeft: 8, paddingRight: 8, borderRight: "1px solid #dce5e6" }}>
+              <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                 {t.contract.currency}
               </div>
               <Form.Item name="Currency" style={{ margin: 0 }}>
                 <Select
                   variant="borderless"
-                  style={{ padding: 0, width: "100%", fontWeight: 500, fontSize: 13, color: "#0F172A" }}
+                  style={{ padding: 0, width: "100%", fontWeight: 500, fontSize: 13, color: "#123443" }}
                   options={[
                     { value: "VND", label: "VND" },
                     { value: "USD", label: "USD" },
@@ -505,7 +505,7 @@ export default function ContractFormDrawer({
 
             {/* Cột 7: Hình thức hợp đồng */}
             <Col span={5} style={{ paddingLeft: 8 }}>
-              <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                 {t.contract.contractType}
               </div>
               <Form.Item
@@ -514,7 +514,7 @@ export default function ContractFormDrawer({
                 style={{ margin: 0, minHeight: 20, display: "flex", alignItems: "center" }}
               >
                 <Checkbox>
-                  <span style={{ color: "#7C3AED", fontSize: 12, fontWeight: 500 }}>
+                  <span style={{ color: "#008f89", fontSize: 12, fontWeight: 500 }}>
                     {t.contract.vcontract}
                   </span>
                 </Checkbox>

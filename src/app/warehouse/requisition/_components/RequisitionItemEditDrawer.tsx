@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect, useState, useMemo } from "react";
 import { Drawer, Form, Button, Select, InputNumber, Input, Checkbox, message } from "antd";
@@ -202,11 +202,11 @@ export default function RequisitionItemEditDrawer({
   return (
     <Drawer
       closable={true}
-      closeIcon={<CloseOutlined style={{ fontSize: 16, color: "#64748B" }} />}
+      closeIcon={<CloseOutlined style={{ fontSize: 16, color: "#718894" }} />}
       title={
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <EditOutlined style={{ color: "#7C3AED", fontSize: 18 }} />
-          <span style={{ fontSize: 16, fontWeight: 700, color: "#0F172A" }}>
+          <EditOutlined style={{ color: "#008f89", fontSize: 18 }} />
+          <span style={{ fontSize: 16, fontWeight: 700, color: "#123443" }}>
             {language === "en" ? "Edit Material Requisition Item" : "Chỉnh sửa Mặt hàng trong Phiếu yêu cầu xuất"}
           </span>
         </div>
@@ -223,7 +223,7 @@ export default function RequisitionItemEditDrawer({
             style={{
               height: 38,
               borderRadius: 8,
-              borderColor: "#E2E8F0",
+              borderColor: "#dce5e6",
               color: "#334155",
               padding: "0 18px",
             }}
@@ -236,13 +236,13 @@ export default function RequisitionItemEditDrawer({
             onClick={handleSave}
             loading={submitting}
             style={{
-              background: "#7C3AED",
-              borderColor: "#7C3AED",
+              background: "#008f89",
+              borderColor: "#008f89",
               height: 38,
               borderRadius: 8,
               fontWeight: 500,
               padding: "0 20px",
-              boxShadow: "0 2px 6px rgba(124, 58, 237, 0.25)",
+              boxShadow: "0 2px 6px rgba(0, 143, 137, 0.25)",
             }}
           >
             {language === "en" ? "Save Changes" : "Lưu thay đổi"}
@@ -254,8 +254,8 @@ export default function RequisitionItemEditDrawer({
         {/* Khối Thẻ thông tin mặt hàng (Header Box) */}
         <div
           style={{
-            background: "#F8FAFC",
-            border: "1px solid #E2E8F0",
+            background: "#f7fbfa",
+            border: "1px solid #dce5e6",
             borderRadius: 8,
             padding: "12px 14px",
             marginBottom: 16,
@@ -266,7 +266,7 @@ export default function RequisitionItemEditDrawer({
             <div
               style={{
                 fontSize: 12,
-                color: "#64748B",
+                color: "#718894",
                 fontWeight: 500,
                 marginBottom: 3,
                 lineHeight: "16px",
@@ -278,7 +278,7 @@ export default function RequisitionItemEditDrawer({
               style={{
                 fontWeight: 600,
                 fontSize: 14,
-                color: "#0F172A",
+                color: "#123443",
                 lineHeight: "20px",
                 wordBreak: "break-word",
               }}
@@ -293,13 +293,13 @@ export default function RequisitionItemEditDrawer({
           <div
             style={{
               paddingTop: 10,
-              borderTop: "1px solid #E2E8F0",
+              borderTop: "1px solid #dce5e6",
             }}
           >
             <div
               style={{
                 fontSize: 12,
-                color: "#64748B",
+                color: "#718894",
                 fontWeight: 500,
                 marginBottom: 3,
                 lineHeight: "16px",
@@ -311,7 +311,7 @@ export default function RequisitionItemEditDrawer({
               style={{
                 fontWeight: 600,
                 fontSize: 14,
-                color: "#0F172A",
+                color: "#123443",
                 lineHeight: "20px",
               }}
             >
@@ -370,7 +370,7 @@ export default function RequisitionItemEditDrawer({
               width: "100%",
               height: 38,
               borderRadius: 8,
-              borderColor: "#E2E8F0",
+              borderColor: "#dce5e6",
               fontWeight: 600,
             }}
             min={0}
@@ -396,7 +396,7 @@ export default function RequisitionItemEditDrawer({
             placeholder={language === "en" ? "Reason for adjustment notes..." : "Ghi chú lý do điều chỉnh..."}
             style={{
               borderRadius: 8,
-              borderColor: "#E2E8F0",
+              borderColor: "#dce5e6",
               padding: "10px 12px",
             }}
           />

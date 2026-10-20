@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useMemo } from "react";
 import {
@@ -74,7 +74,7 @@ export default function InventoryTable({
       width: 55,
       align: "center",
       render: (_, __, index) => (
-        <span style={{ color: "#64748B", fontSize: 13 }}>
+        <span style={{ color: "#718894", fontSize: 13 }}>
           {(pagination.current - 1) * pagination.pageSize + index + 1}
         </span>
       ),
@@ -91,7 +91,7 @@ export default function InventoryTable({
             fontFamily: "monospace",
             fontSize: 12,
             fontWeight: 600,
-            color: "#7C3AED",
+            color: "#008f89",
             cursor: "pointer",
           }}
           title={t.inventory.stockCardTooltip}
@@ -106,7 +106,7 @@ export default function InventoryTable({
       key: "ItemName",
       width: 280,
       render: (val: string) => (
-        <span style={{ fontWeight: 500, fontSize: 13, color: "#0F172A", lineHeight: "18px" }}>
+        <span style={{ fontWeight: 500, fontSize: 13, color: "#123443", lineHeight: "18px" }}>
           {val}
         </span>
       ),
@@ -137,7 +137,7 @@ export default function InventoryTable({
       width: 110,
       align: "right",
       render: (val: number) => (
-        <span style={{ fontWeight: 600, fontSize: 13, color: val === 0 ? "#DC2626" : "#0F172A" }}>
+        <span style={{ fontWeight: 600, fontSize: 13, color: val === 0 ? "#DC2626" : "#123443" }}>
           {Number(val || 0).toLocaleString("vi-VN")}
         </span>
       ),
@@ -149,7 +149,7 @@ export default function InventoryTable({
       width: 105,
       align: "right",
       render: (val: number) => (
-        <span style={{ color: "#64748B", fontSize: 13 }}>
+        <span style={{ color: "#718894", fontSize: 13 }}>
           {Number(val || 0).toLocaleString("vi-VN")}
         </span>
       ),
@@ -185,7 +185,7 @@ export default function InventoryTable({
       width: 155,
       align: "right",
       render: (val: number) => (
-        <span style={{ fontWeight: 600, color: "#7C3AED", fontSize: 13 }}>
+        <span style={{ fontWeight: 600, color: "#008f89", fontSize: 13 }}>
           {Number(val || 0).toLocaleString("vi-VN")}
         </span>
       ),
@@ -197,7 +197,7 @@ export default function InventoryTable({
       width: 120,
       align: "center",
       render: (val: string | null) => (
-        <span style={{ color: "#64748B", fontSize: 13 }}>
+        <span style={{ color: "#718894", fontSize: 13 }}>
           {val ? dayjs(val).format("DD/MM/YYYY") : "---"}
         </span>
       ),
@@ -213,7 +213,7 @@ export default function InventoryTable({
           <Button
             type="text"
             size="small"
-            icon={<HistoryOutlined style={{ color: "#7C3AED", fontSize: 15 }} />}
+            icon={<HistoryOutlined style={{ color: "#008f89", fontSize: 15 }} />}
             onClick={() => onOpenStockCard(record)}
           />
         </Tooltip>
@@ -227,7 +227,7 @@ export default function InventoryTable({
       <div
         style={{
           background: "#FFFFFF",
-          border: "1px solid #E2E8F0",
+          border: "1px solid #dce5e6",
           borderRadius: 8,
           padding: "12px 16px",
           marginBottom: 16,
@@ -267,8 +267,8 @@ export default function InventoryTable({
             icon={<SearchOutlined />}
             onClick={() => onPageChange(1, pagination.pageSize)}
             style={{
-              background: "#7C3AED",
-              borderColor: "#7C3AED",
+              background: "#008f89",
+              borderColor: "#008f89",
               borderRadius: 6,
             }}
           >
@@ -301,7 +301,7 @@ export default function InventoryTable({
       <div
         style={{
           background: "#FFFFFF",
-          border: "1px solid #E2E8F0",
+          border: "1px solid #dce5e6",
           borderRadius: 8,
           overflow: "hidden",
         }}
@@ -328,14 +328,14 @@ export default function InventoryTable({
             const pageTotalValue = pageData.reduce((acc, it) => acc + (Number(it.TotalCost) || 0), 0);
 
             return (
-              <Table.Summary.Row style={{ background: "#F5F3FF" }}>
+              <Table.Summary.Row style={{ background: "#eef8f6" }}>
                 <Table.Summary.Cell index={0} colSpan={5}>
-                  <span style={{ fontWeight: 600, color: "#0F172A", fontSize: 13 }}>
+                  <span style={{ fontWeight: 600, color: "#123443", fontSize: 13 }}>
                     {t.table.total}
                   </span>
                 </Table.Summary.Cell>
                 <Table.Summary.Cell index={1} align="right">
-                  <span style={{ fontWeight: 700, color: "#0F172A", fontSize: 13 }}>
+                  <span style={{ fontWeight: 700, color: "#123443", fontSize: 13 }}>
                     {pageTotalQty.toLocaleString("vi-VN")}
                   </span>
                 </Table.Summary.Cell>
@@ -351,7 +351,7 @@ export default function InventoryTable({
                   <span>-</span>
                 </Table.Summary.Cell>
                 <Table.Summary.Cell index={5} align="right">
-                  <span style={{ fontWeight: 700, color: "#7C3AED", fontSize: 13 }}>
+                  <span style={{ fontWeight: 700, color: "#008f89", fontSize: 13 }}>
                     {pageTotalValue.toLocaleString("vi-VN")}
                   </span>
                 </Table.Summary.Cell>

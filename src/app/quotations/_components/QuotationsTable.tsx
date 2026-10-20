@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+﻿import { useMemo } from "react";
 import { Button, Input, Popconfirm, Space, Table, Tag, Tooltip, Typography } from "antd";
 import {
   IconSearch,
@@ -65,7 +65,7 @@ export default function QuotationsTable({
           style={{
             cursor: "pointer",
             fontWeight: 600,
-            color: "#7C3AED",
+            color: "#008f89",
             fontFamily: "monospace",
             fontSize: 13,
           }}
@@ -81,7 +81,7 @@ export default function QuotationsTable({
       key: "Description",
       width: 260,
       render: (value: string) => (
-        <span style={{ fontWeight: 500, color: "#0F172A", fontSize: 13 }}>
+        <span style={{ fontWeight: 500, color: "#123443", fontSize: 13 }}>
           {value || "Bảng giá vật tư NCC"}
         </span>
       ),
@@ -92,7 +92,7 @@ export default function QuotationsTable({
       key: "Venname",
       width: 220,
       render: (_: any, record: any) => (
-        <span style={{ color: "#0F172A", fontSize: 13 }}>
+        <span style={{ color: "#123443", fontSize: 13 }}>
           {record.Venname || "---"}
         </span>
       ),
@@ -105,7 +105,7 @@ export default function QuotationsTable({
       render: (_: any, record: any) => {
         const text = record.MainContractCode || record.MainContractName || (record.MainContractId ? `#${record.MainContractId}` : "");
         return text ? (
-          <span style={{ color: "#0F172A", fontSize: 13 }}>{text}</span>
+          <span style={{ color: "#123443", fontSize: 13 }}>{text}</span>
         ) : (
           <span style={{ color: "#94A3B8", fontSize: 13 }}>---</span>
         );
@@ -117,7 +117,7 @@ export default function QuotationsTable({
       key: "EffectiveDate",
       width: 140,
       render: (_: any, record: ContractItem) => (
-        <span style={{ color: "#64748B", fontSize: 13, whiteSpace: "nowrap" }}>
+        <span style={{ color: "#718894", fontSize: 13, whiteSpace: "nowrap" }}>
           {record.StartDate && record.StartDate !== "01-01-1900" ? record.StartDate : "---"}
         </span>
       ),
@@ -128,7 +128,7 @@ export default function QuotationsTable({
       key: "Contractdate",
       width: 130,
       render: (value: string) => (
-        <span style={{ color: "#64748B", fontSize: 13, whiteSpace: "nowrap" }}>
+        <span style={{ color: "#718894", fontSize: 13, whiteSpace: "nowrap" }}>
           {value || "---"}
         </span>
       ),
@@ -139,7 +139,7 @@ export default function QuotationsTable({
       key: "CreatedBy",
       width: 130,
       render: (value: string) => (
-        <span style={{ color: "#64748B", fontSize: 13 }}>
+        <span style={{ color: "#718894", fontSize: 13 }}>
           {value || "Hệ thống"}
         </span>
       ),
@@ -174,7 +174,7 @@ export default function QuotationsTable({
           onClear={() => setColumnFilters((previous) => { const next = { ...previous }; delete next[key]; return next; })}
         />
       ),
-      filterIcon: () => <IconSearch size={14} strokeWidth={1.8} style={{ color: activeValue ? "#7C3AED" : undefined }} />,
+      filterIcon: () => <IconSearch size={14} strokeWidth={1.8} style={{ color: activeValue ? "#008f89" : undefined }} />,
       filtered: !!activeValue,
       onHeaderCell,
     };
@@ -195,30 +195,30 @@ export default function QuotationsTable({
           font-family: inherit;
         }
         .quotation-main-table .ant-table-thead > tr > th {
-          background-color: #F8FAFC !important;
+          background-color: #f7fbfa !important;
           color: #475569 !important;
           font-size: 13px !important;
           font-weight: 600 !important;
           line-height: 18px !important;
-          border-color: #E2E8F0 !important;
+          border-color: #dce5e6 !important;
           padding: 10px 12px !important;
         }
         .quotation-main-table .ant-table-tbody > tr > td {
-          color: #0F172A !important;
+          color: #123443 !important;
           font-size: 13px !important;
           line-height: 18px !important;
-          border-color: #E2E8F0 !important;
+          border-color: #dce5e6 !important;
           padding: 10px 12px !important;
           height: 46px !important;
         }
         .quotation-main-table .ant-table-container {
-          border: 1px solid #E2E8F0 !important;
+          border: 1px solid #dce5e6 !important;
           border-radius: 8px !important;
           overflow: hidden;
         }
         .quotation-main-table .ant-pagination .ant-pagination-item-active {
-          border-color: #7C3AED !important;
-          background-color: #7C3AED !important;
+          border-color: #008f89 !important;
+          background-color: #008f89 !important;
         }
         .quotation-main-table .ant-pagination .ant-pagination-item-active a {
           color: #FFFFFF !important;
@@ -235,13 +235,13 @@ export default function QuotationsTable({
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <Text strong style={{ fontSize: 18, color: "#7C3AED", fontWeight: 700, lineHeight: "28px" }}>
+          <Text strong style={{ fontSize: 18, color: "#008f89", fontWeight: 700, lineHeight: "28px" }}>
             {t.pageTitles.quotations}
           </Text>
           <Tag
             style={{
-              background: "#EDE9FE",
-              color: "#7C3AED",
+              background: "#dce5e6",
+              color: "#008f89",
               borderRadius: 12,
               border: "none",
               fontSize: 12,
@@ -266,9 +266,9 @@ export default function QuotationsTable({
               width: 240,
               height: 36,
               borderRadius: 8,
-              borderColor: "#E2E8F0",
+              borderColor: "#dce5e6",
               fontSize: 14,
-              color: "#0F172A",
+              color: "#123443",
             }}
           />
           {isFiltering && (
@@ -289,12 +289,12 @@ export default function QuotationsTable({
             </Button>
           )}
           <Button
-            icon={<IconRefresh size={16} strokeWidth={1.8} style={{ color: "#7C3AED" }} />}
+            icon={<IconRefresh size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />}
             onClick={() => onRefresh(pagination.current, pagination.pageSize)}
             style={{
               height: 36,
               borderRadius: 8,
-              borderColor: "#E2E8F0",
+              borderColor: "#dce5e6",
               background: "#FFFFFF",
               color: "#334155",
               fontSize: 14,
@@ -307,8 +307,8 @@ export default function QuotationsTable({
             type="primary"
             icon={<IconPlus size={16} strokeWidth={2} />}
             style={{
-              background: "#7C3AED",
-              borderColor: "#7C3AED",
+              background: "#008f89",
+              borderColor: "#008f89",
               height: 36,
               borderRadius: 8,
               fontSize: 14,

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useMemo, useEffect, useCallback } from "react";
 import {
@@ -305,7 +305,7 @@ export default function ContractPriceListReconcileModal({
                   verticalAlign: "middle",
                 }}
               >
-                <strong style={{ color: "#7C3AED", fontSize: 13, fontFamily: "monospace", flexShrink: 0 }}>
+                <strong style={{ color: "#008f89", fontSize: 13, fontFamily: "monospace", flexShrink: 0 }}>
                   {r.code}
                 </strong>
                 {clean ? (
@@ -323,11 +323,11 @@ export default function ContractPriceListReconcileModal({
           const sCode = r.ItemCode;
           return (
             <div style={{ lineHeight: "16px", margin: 0, padding: 0 }}>
-              <div style={{ fontWeight: 500, color: "#0F172A", fontSize: 12 }}>
+              <div style={{ fontWeight: 500, color: "#123443", fontSize: 12 }}>
                 {r.ItemName || (language === "en" ? "Material" : "Vật tư")}
               </div>
               {sCode && (
-                <div style={{ fontSize: 11, color: "#64748B", fontFamily: "monospace", marginTop: 1 }}>
+                <div style={{ fontSize: 11, color: "#718894", fontFamily: "monospace", marginTop: 1 }}>
                   ({sCode})
                 </div>
               )}
@@ -351,7 +351,7 @@ export default function ContractPriceListReconcileModal({
         align: "right" as const,
         render: (val: number, r: TreeRowItem) =>
           r.isParent ? "" : (
-            <span style={{ color: "#64748B", fontSize: 12 }}>
+            <span style={{ color: "#718894", fontSize: 12 }}>
               {val !== undefined && val !== null ? Number(val).toLocaleString(language === "en" ? "en-US" : "vi-VN") : 0}
             </span>
           ),
@@ -446,8 +446,8 @@ export default function ContractPriceListReconcileModal({
     <Modal
       title={
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <IconScale size={18} strokeWidth={1.8} style={{ color: "#7C3AED" }} />
-          <span style={{ fontWeight: 600, color: "#0F172A", fontSize: 15 }}>
+          <IconScale size={18} strokeWidth={1.8} style={{ color: "#008f89" }} />
+          <span style={{ fontWeight: 600, color: "#123443", fontSize: 15 }}>
             {language === "en" ? "Reconcile Price Lists (Select Materials)" : "Đối chiếu bảng giá (Chọn chi tiết vật tư)"}
           </span>
         </div>
@@ -459,9 +459,9 @@ export default function ContractPriceListReconcileModal({
       footer={
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", padding: "2px 0" }}>
           <div>
-            <span style={{ fontSize: 12.5, color: "#64748B" }}>
+            <span style={{ fontSize: 12.5, color: "#718894" }}>
               {language === "en" ? "Selected: " : "Đã chọn: "}
-              <strong style={{ color: "#7C3AED", fontSize: 13.5 }}>{selectedChildItems.length}</strong> {language === "en" ? "items" : "mặt hàng"}
+              <strong style={{ color: "#008f89", fontSize: 13.5 }}>{selectedChildItems.length}</strong> {language === "en" ? "items" : "mặt hàng"}
               {selectedParentPriceLists.length > 0 && (
                 <span style={{ marginLeft: 6 }}>
                   {language === "en"
@@ -470,7 +470,7 @@ export default function ContractPriceListReconcileModal({
                 </span>
               )}
               {totalSelectedAmount > 0 && (
-                <span style={{ marginLeft: 10, color: "#0F172A", fontWeight: 600 }}>
+                <span style={{ marginLeft: 10, color: "#123443", fontWeight: 600 }}>
                   | {language === "en" ? "Total: " : "Tổng tiền: "}{totalSelectedAmount.toLocaleString(language === "en" ? "en-US" : "vi-VN")} VND
                 </span>
               )}
@@ -479,7 +479,7 @@ export default function ContractPriceListReconcileModal({
 
           <Space size={8}>
             <Button
-              style={{ borderRadius: 6, height: 30, fontSize: 12.5, borderColor: "#E2E8F0" }}
+              style={{ borderRadius: 6, height: 30, fontSize: 12.5, borderColor: "#dce5e6" }}
               onClick={onClose}
             >
               {t.common.cancel}
@@ -487,13 +487,13 @@ export default function ContractPriceListReconcileModal({
             <Button
               type="primary"
               style={{
-                background: "#7C3AED",
-                borderColor: "#7C3AED",
+                background: "#008f89",
+                borderColor: "#008f89",
                 borderRadius: 6,
                 height: 30,
                 fontSize: 12.5,
                 fontWeight: 500,
-                boxShadow: "0 2px 4px rgba(124, 58, 237, 0.2)",
+                boxShadow: "0 2px 4px rgba(0, 143, 137, 0.2)",
               }}
               loading={submitting}
               disabled={selectedChildItems.length === 0}
@@ -509,7 +509,7 @@ export default function ContractPriceListReconcileModal({
     >
       <div style={{ padding: "4px 0" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-          <div style={{ fontSize: 12, color: "#64748B" }}>
+          <div style={{ fontSize: 12, color: "#718894" }}>
             {language === "en"
               ? "💡 Select detailed material items inside each Price List to import into contract"
               : "💡 Tích chọn các dòng vật tư chi tiết bên trong từng Bảng giá để nhập vào hợp đồng"}
@@ -526,7 +526,7 @@ export default function ContractPriceListReconcileModal({
 
         <style>{`
           .reconcile-tree-table .ant-table-thead > tr > th {
-            background: #F8FAFC !important;
+            background: #f7fbfa !important;
             font-weight: 600 !important;
             color: #475569 !important;
             font-size: 12px !important;
@@ -588,9 +588,9 @@ export default function ContractPriceListReconcileModal({
                     height: 18,
                     minWidth: 18,
                     borderRadius: 4,
-                    backgroundColor: expanded ? "#EDE9FE" : "#F8FAFC",
-                    border: `1px solid ${expanded ? "#7C3AED" : "#CBD5E1"}`,
-                    color: expanded ? "#7C3AED" : "#64748B",
+                    backgroundColor: expanded ? "#dce5e6" : "#f7fbfa",
+                    border: `1px solid ${expanded ? "#008f89" : "#CBD5E1"}`,
+                    color: expanded ? "#008f89" : "#718894",
                     fontSize: 13,
                     fontWeight: 700,
                     lineHeight: 1,

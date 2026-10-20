@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import { Modal, Table, Input, Button, Space, Typography } from "antd";
@@ -42,7 +42,7 @@ export function BaseLovModal<T = any>({
   columns,
   rowKey,
   width = 850,
-  primaryColor = "#7C3AED",
+  primaryColor = "#008f89",
   pagination,
   zIndex = 1300,
 }: BaseLovModalProps<T>) {

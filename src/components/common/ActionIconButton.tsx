@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import { Tooltip } from "antd";
@@ -117,7 +117,7 @@ export const SYSTEM_ACTION_CONFIGS: Record<SystemActionType, ActionConfig> = {
     label: "Thêm vật tư / mới",
     defaultTooltip: "Thêm mới",
     icon: IconPlus,
-    color: "#7C3AED",
+    color: "#008f89",
     bg: "#F3E8FF",
     hoverBg: "#E9D5FF",
     border: "#E9D5FF",
@@ -127,7 +127,7 @@ export const SYSTEM_ACTION_CONFIGS: Record<SystemActionType, ActionConfig> = {
     label: "Sửa",
     defaultTooltip: "Chỉnh sửa",
     icon: IconPencil,
-    color: "#7C3AED",
+    color: "#008f89",
     bg: "#F3E8FF",
     hoverBg: "#E9D5FF",
     border: "#E9D5FF",
@@ -149,8 +149,8 @@ export const SYSTEM_ACTION_CONFIGS: Record<SystemActionType, ActionConfig> = {
     icon: IconEye,
     color: "#475569",
     bg: "#F1F5F9",
-    hoverBg: "#E2E8F0",
-    border: "#E2E8F0",
+    hoverBg: "#dce5e6",
+    border: "#dce5e6",
   },
   workflow: {
     key: "workflow",
@@ -159,15 +159,15 @@ export const SYSTEM_ACTION_CONFIGS: Record<SystemActionType, ActionConfig> = {
     icon: IconRoute,
     color: "#475569",
     bg: "#F1F5F9",
-    hoverBg: "#E2E8F0",
-    border: "#E2E8F0",
+    hoverBg: "#dce5e6",
+    border: "#dce5e6",
   },
   send: {
     key: "send",
     label: "Gửi duyệt",
     defaultTooltip: "Gửi duyệt",
     icon: IconSend,
-    color: "#7C3AED",
+    color: "#008f89",
     bg: "#F3E8FF",
     hoverBg: "#E9D5FF",
     border: "#E9D5FF",
@@ -197,10 +197,10 @@ export const SYSTEM_ACTION_CONFIGS: Record<SystemActionType, ActionConfig> = {
     label: "Đã khóa (BR-05)",
     defaultTooltip: "Đã khóa",
     icon: IconLock,
-    color: "#64748B",
+    color: "#718894",
     bg: "#F1F5F9",
-    hoverBg: "#E2E8F0",
-    border: "#E2E8F0",
+    hoverBg: "#dce5e6",
+    border: "#dce5e6",
   },
   "import-excel": {
     key: "import-excel",
@@ -219,8 +219,8 @@ export const SYSTEM_ACTION_CONFIGS: Record<SystemActionType, ActionConfig> = {
     icon: IconDownload,
     color: "#475569",
     bg: "#F1F5F9",
-    hoverBg: "#E2E8F0",
-    border: "#E2E8F0",
+    hoverBg: "#dce5e6",
+    border: "#dce5e6",
   },
   "compare-price": {
     key: "compare-price",
@@ -229,8 +229,8 @@ export const SYSTEM_ACTION_CONFIGS: Record<SystemActionType, ActionConfig> = {
     icon: IconScale,
     color: "#475569",
     bg: "#F1F5F9",
-    hoverBg: "#E2E8F0",
-    border: "#E2E8F0",
+    hoverBg: "#dce5e6",
+    border: "#dce5e6",
   },
   refresh: {
     key: "refresh",
@@ -239,8 +239,8 @@ export const SYSTEM_ACTION_CONFIGS: Record<SystemActionType, ActionConfig> = {
     icon: IconRefresh,
     color: "#475569",
     bg: "#F1F5F9",
-    hoverBg: "#E2E8F0",
-    border: "#E2E8F0",
+    hoverBg: "#dce5e6",
+    border: "#dce5e6",
   },
   history: {
     key: "history",
@@ -249,8 +249,8 @@ export const SYSTEM_ACTION_CONFIGS: Record<SystemActionType, ActionConfig> = {
     icon: IconHistory,
     color: "#475569",
     bg: "#F1F5F9",
-    hoverBg: "#E2E8F0",
-    border: "#E2E8F0",
+    hoverBg: "#dce5e6",
+    border: "#dce5e6",
   },
   copy: {
     key: "copy",
@@ -259,8 +259,8 @@ export const SYSTEM_ACTION_CONFIGS: Record<SystemActionType, ActionConfig> = {
     icon: IconCopy,
     color: "#475569",
     bg: "#F1F5F9",
-    hoverBg: "#E2E8F0",
-    border: "#E2E8F0",
+    hoverBg: "#dce5e6",
+    border: "#dce5e6",
   },
 };
 
@@ -338,7 +338,7 @@ export const ActionIconButton: React.FC<ActionIconButtonProps> = ({
           gap: 12,
           padding: "10px 14px",
           backgroundColor: "#ffffff",
-          border: "1px solid #E2E8F0",
+          border: "1px solid #dce5e6",
           borderRadius: 12,
           boxShadow: "0 1px 3px rgba(0,0,0,0.03)",
           cursor: disabled ? "not-allowed" : "pointer",
@@ -364,7 +364,7 @@ export const ActionIconButton: React.FC<ActionIconButtonProps> = ({
           <IconComp size={20} strokeWidth={1.8} />
         </div>
         <div style={{ display: "flex", flexDirection: "column" }}>
-          <span style={{ fontSize: 13, fontWeight: 600, color: "#1E293B" }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: "#123443" }}>
             {actualLabel}
           </span>
           <span style={{ fontSize: 11, color: "#94A3B8" }}>

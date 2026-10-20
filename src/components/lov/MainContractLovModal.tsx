@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useMemo } from "react";
 import { Button, Typography } from "antd";
@@ -87,7 +87,7 @@ export default function MainContractLovModal({
           <Button
             type="primary"
             size="small"
-            style={{ background: "#7C3AED", borderColor: "#7C3AED", borderRadius: 6 }}
+            style={{ background: "#008f89", borderColor: "#008f89", borderRadius: 6 }}
             onClick={(e) => {
               e.stopPropagation();
               onSelectMainContract(record);
@@ -106,7 +106,7 @@ export default function MainContractLovModal({
       open={open}
       onClose={onClose}
       title={t.lov.mainContractTitle}
-      icon={<IconFileText size={20} strokeWidth={1.8} style={{ color: "#7C3AED" }} />}
+      icon={<IconFileText size={20} strokeWidth={1.8} style={{ color: "#008f89" }} />}
       searchPlaceholder={t.lov.mainContractSearchPlaceholder}
       searchInput={mainContractSearchInput}
       setSearchInput={setMainContractSearchInput}
@@ -117,7 +117,7 @@ export default function MainContractLovModal({
       columns={columns}
       rowKey={(r, index) => r.MainContractId ?? r.ContractId ?? r.Id ?? `main_contract_${index}`}
       width={900}
-      primaryColor="#7C3AED"
+      primaryColor="#008f89"
       pagination={
         pagination && pagination.total > pagination.pageSize
           ? {

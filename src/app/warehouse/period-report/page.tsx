@@ -132,7 +132,7 @@ export default function InventoryPeriodReportPage() {
         width: 50,
         align: "center",
         render: (_, __, index) => (
-          <span style={{ color: "#64748B", fontSize: 13 }}>
+          <span style={{ color: "#718894", fontSize: 13 }}>
             {(pagination.current - 1) * pagination.pageSize + index + 1}
           </span>
         ),
@@ -155,7 +155,7 @@ export default function InventoryPeriodReportPage() {
               style={{
                 fontWeight: 500,
                 fontSize: 13,
-                color: "#0F172A",
+                color: "#123443",
                 lineHeight: "18px",
                 marginBottom: 2,
               }}
@@ -167,7 +167,7 @@ export default function InventoryPeriodReportPage() {
                 fontFamily: "monospace",
                 fontSize: 12,
                 fontWeight: 600,
-                color: "#7C3AED",
+                color: "#008f89",
               }}
             >
               {record.ItemCode}
@@ -296,7 +296,7 @@ export default function InventoryPeriodReportPage() {
             width: 100,
             align: "right",
             render: (val: number) => (
-              <span style={{ fontWeight: 600, color: "#0F172A", fontSize: 13 }}>
+              <span style={{ fontWeight: 600, color: "#123443", fontSize: 13 }}>
                 {Number(val || 0).toLocaleString("vi-VN")}
               </span>
             ),
@@ -308,7 +308,7 @@ export default function InventoryPeriodReportPage() {
             width: 130,
             align: "right",
             render: (val: number) => (
-              <span style={{ fontWeight: 600, color: "#7C3AED", fontSize: 13 }}>
+              <span style={{ fontWeight: 600, color: "#008f89", fontSize: 13 }}>
                 {Number(val || 0).toLocaleString("vi-VN")}
               </span>
             ),
@@ -344,7 +344,7 @@ export default function InventoryPeriodReportPage() {
   };
 
   return (
-    <div style={{ padding: "20px 24px", background: "#F8FAFC", minHeight: "100vh" }}>
+    <div style={{ padding: "20px 24px", background: "#FFFFFF", borderRadius: 16, border: "1px solid #dce5e6", minHeight: "calc(100vh - 100px)", boxShadow: "0 1px 3px rgba(18, 52, 67, 0.04)" }}>
       {/* 1. TIÊU ĐỀ TRANG */}
       <div
         style={{
@@ -360,17 +360,17 @@ export default function InventoryPeriodReportPage() {
               width: 36,
               height: 36,
               borderRadius: 8,
-              background: "#EDE9FE",
+              background: "#eef8f6",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#7C3AED",
+              color: "#008f89",
             }}
           >
             <BarChartOutlined style={{ fontSize: 20 }} />
           </div>
           <div>
-            <Title level={4} style={{ margin: 0, color: "#0F172A", fontWeight: 700 }}>
+            <Title level={4} style={{ margin: 0, color: "#123443", fontWeight: 700 }}>
               {t.periodReport.title}
             </Title>
             <Text type="secondary" style={{ fontSize: 13 }}>
@@ -384,7 +384,7 @@ export default function InventoryPeriodReportPage() {
       <div
         style={{
           background: "#FFFFFF",
-          border: "1px solid #E2E8F0",
+          border: "1px solid #dce5e6",
           borderRadius: 8,
           padding: "12px 16px",
           marginBottom: 16,
@@ -439,8 +439,8 @@ export default function InventoryPeriodReportPage() {
             icon={<SearchOutlined />}
             onClick={handleSearch}
             style={{
-              background: "#7C3AED",
-              borderColor: "#7C3AED",
+              background: "#008f89",
+              borderColor: "#008f89",
               borderRadius: 6,
             }}
           >
@@ -473,7 +473,7 @@ export default function InventoryPeriodReportPage() {
       <div
         style={{
           background: "#FFFFFF",
-          border: "1px solid #E2E8F0",
+          border: "1px solid #dce5e6",
           borderRadius: 8,
           overflow: "hidden",
         }}
@@ -508,18 +508,18 @@ export default function InventoryPeriodReportPage() {
             const sumClosingValue = pageData.reduce((acc, it) => acc + (Number(it.ClosingValue) || 0), 0);
 
             return (
-              <Table.Summary.Row style={{ background: "#F5F3FF", fontWeight: 600 }}>
+              <Table.Summary.Row style={{ background: "#eef8f6", fontWeight: 600 }}>
                 <Table.Summary.Cell index={0} colSpan={4} align="center">
-                  <span style={{ fontWeight: 700, color: "#0F172A", fontSize: 13 }}>
+                  <span style={{ fontWeight: 700, color: "#123443", fontSize: 13 }}>
                     {t.periodReport.totalSummary}
                   </span>
                 </Table.Summary.Cell>
                 {/* Tồn đầu */}
                 <Table.Summary.Cell index={1} align="right">
-                  <span style={{ color: "#0F172A" }}>{sumOpeningQty.toLocaleString("vi-VN")}</span>
+                  <span style={{ color: "#123443" }}>{sumOpeningQty.toLocaleString("vi-VN")}</span>
                 </Table.Summary.Cell>
                 <Table.Summary.Cell index={2} align="right">
-                  <span style={{ color: "#0F172A" }}>{sumOpeningValue.toLocaleString("vi-VN")}</span>
+                  <span style={{ color: "#123443" }}>{sumOpeningValue.toLocaleString("vi-VN")}</span>
                 </Table.Summary.Cell>
                 {/* Nhập */}
                 <Table.Summary.Cell index={3} align="right">
@@ -537,10 +537,10 @@ export default function InventoryPeriodReportPage() {
                 </Table.Summary.Cell>
                 {/* Tồn cuối */}
                 <Table.Summary.Cell index={7} align="right">
-                  <span style={{ color: "#0F172A" }}>{sumClosingQty.toLocaleString("vi-VN")}</span>
+                  <span style={{ color: "#123443" }}>{sumClosingQty.toLocaleString("vi-VN")}</span>
                 </Table.Summary.Cell>
                 <Table.Summary.Cell index={8} align="right">
-                  <span style={{ color: "#7C3AED", fontWeight: 700 }}>
+                  <span style={{ color: "#008f89", fontWeight: 700 }}>
                     {sumClosingValue.toLocaleString("vi-VN")}
                   </span>
                 </Table.Summary.Cell>

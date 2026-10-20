@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
@@ -354,7 +354,7 @@ export default function RequisitionPendingDrawer({
         key: "ItemName",
         width: 260,
         render: (val: string) => (
-          <span style={{ fontWeight: 600, color: "#0F172A" }}>{val || "---"}</span>
+          <span style={{ fontWeight: 600, color: "#123443" }}>{val || "---"}</span>
         ),
       },
       {
@@ -372,7 +372,7 @@ export default function RequisitionPendingDrawer({
         width: 90,
         align: "right",
         render: (val: number) => (
-          <span style={{ fontWeight: 500, color: "#0F172A" }}>
+          <span style={{ fontWeight: 500, color: "#123443" }}>
             {Number(val || 0).toLocaleString(language === "en" ? "en-US" : "vi-VN")}
           </span>
         ),
@@ -384,7 +384,7 @@ export default function RequisitionPendingDrawer({
         width: 80,
         align: "right",
         render: (val: number) => (
-          <span style={{ color: "#64748B" }}>
+          <span style={{ color: "#718894" }}>
             {Number(val || 0).toLocaleString(language === "en" ? "en-US" : "vi-VN")}
           </span>
         ),
@@ -467,18 +467,18 @@ export default function RequisitionPendingDrawer({
       onClose={onClose}
       destroyOnClose
       closable={true}
-      closeIcon={<CloseOutlined style={{ fontSize: 16, color: "#64748B" }} />}
+      closeIcon={<CloseOutlined style={{ fontSize: 16, color: "#718894" }} />}
       title={
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <InboxOutlined style={{ color: "#7C3AED", fontSize: 18 }} />
-          <span style={{ fontSize: 16, fontWeight: 700, color: "#7C3AED" }}>
+          <InboxOutlined style={{ color: "#008f89", fontSize: 18 }} />
+          <span style={{ fontSize: 16, fontWeight: 700, color: "#008f89" }}>
             {language === "en" ? "Add Materials from Warehouse" : "Thêm vật tư từ kho xuất"}
           </span>
           {warehouseName && (
             <Tag
               style={{
-                background: "#EDE9FE",
-                color: "#7C3AED",
+                background: "#dce5e6",
+                color: "#008f89",
                 border: "none",
                 borderRadius: 12,
                 fontSize: 12,
@@ -502,9 +502,9 @@ export default function RequisitionPendingDrawer({
           }}
         >
           <Space size={18} align="center">
-            <span style={{ fontSize: 13, color: "#64748B" }}>
+            <span style={{ fontSize: 13, color: "#718894" }}>
               {language === "en" ? "Selected " : "Đã chọn "}
-              <strong style={{ color: "#7C3AED" }}>{selectedPendingKeys.length}</strong> {language === "en" ? "materials" : "vật tư"}
+              <strong style={{ color: "#008f89" }}>{selectedPendingKeys.length}</strong> {language === "en" ? "materials" : "vật tư"}
             </span>
             <Checkbox
               checked={pendingStartProcessNow}
@@ -518,7 +518,7 @@ export default function RequisitionPendingDrawer({
           <Space size={8}>
             <Button
               onClick={onClose}
-              style={{ height: 36, borderRadius: 8, borderColor: "#E2E8F0" }}
+              style={{ height: 36, borderRadius: 8, borderColor: "#dce5e6" }}
             >
               {t.common.cancel}
             </Button>
@@ -527,12 +527,12 @@ export default function RequisitionPendingDrawer({
               icon={<PlusOutlined />}
               loading={submittingConfirm}
               style={{
-                background: "#7C3AED",
-                borderColor: "#7C3AED",
+                background: "#008f89",
+                borderColor: "#008f89",
                 height: 36,
                 borderRadius: 8,
                 fontWeight: 500,
-                boxShadow: "0 2px 4px rgba(124, 58, 237, 0.2)",
+                boxShadow: "0 2px 4px rgba(0, 143, 137, 0.2)",
               }}
               onClick={handleConfirm}
               disabled={selectedPendingKeys.length === 0 || submittingConfirm}
@@ -550,9 +550,9 @@ export default function RequisitionPendingDrawer({
         style={{
           marginBottom: 12,
           padding: "10px 14px",
-          background: "#F8FAFC",
+          background: "#f7fbfa",
           borderRadius: 8,
-          border: "1px solid #E2E8F0",
+          border: "1px solid #dce5e6",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
@@ -579,8 +579,8 @@ export default function RequisitionPendingDrawer({
             }
             loading={loadingPending}
             style={{
-              background: "#7C3AED",
-              borderColor: "#7C3AED",
+              background: "#008f89",
+              borderColor: "#008f89",
               borderRadius: 6,
               fontWeight: 500,
             }}
@@ -599,7 +599,7 @@ export default function RequisitionPendingDrawer({
             )
           }
           loading={loadingPending}
-          style={{ borderRadius: 6, borderColor: "#E2E8F0" }}
+          style={{ borderRadius: 6, borderColor: "#dce5e6" }}
         >
           {t.common.refresh}
         </Button>

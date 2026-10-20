@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect } from "react";
 import { Modal, Form, Row, Col, Select, Input, InputNumber } from "antd";
@@ -94,7 +94,7 @@ export default function StockOutItemModal({
       okText={t.common.confirm || (language === "en" ? "Confirm" : "Xác nhận")}
       cancelText={t.common.cancel}
       okButtonProps={{
-        style: { background: "#7C3AED", borderColor: "#7C3AED" },
+        style: { background: "#008f89", borderColor: "#008f89" },
       }}
       width={680}
       destroyOnClose

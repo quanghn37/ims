@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import {
@@ -34,7 +34,7 @@ function getFileIcon(fileName: string) {
   if (ext === "pdf") return <IconFileTypePdf size={18} strokeWidth={1.8} style={{ color: "#EF4444" }} />;
   if (["xls", "xlsx", "csv"].includes(ext || "")) return <IconFileTypeXls size={18} strokeWidth={1.8} style={{ color: "#10B981" }} />;
   if (["doc", "docx"].includes(ext || "")) return <IconFileTypeDoc size={18} strokeWidth={1.8} style={{ color: "#2563EB" }} />;
-  return <IconFile size={18} strokeWidth={1.8} style={{ color: "#64748B" }} />;
+  return <IconFile size={18} strokeWidth={1.8} style={{ color: "#718894" }} />;
 }
 
 function renderSignStatus(record: AttachmentFile, language: string) {
@@ -78,7 +78,7 @@ export default function ContractAttachmentsModal({
     <Modal
       title={
         <Space>
-          <IconPaperclip size={18} strokeWidth={1.8} style={{ color: "#7C3AED" }} />
+          <IconPaperclip size={18} strokeWidth={1.8} style={{ color: "#008f89" }} />
           <Text strong style={{ fontSize: 16 }}>
             {language === "en" ? "Contract Attachments" : "Danh sách tệp đính kèm"} ({attachments.length})
           </Text>
@@ -121,7 +121,7 @@ export default function ContractAttachmentsModal({
             </Button>
           </Upload>
 
-          <Button type="primary" onClick={onCancel} style={{ background: "#7C3AED", borderColor: "#7C3AED" }}>
+          <Button type="primary" onClick={onCancel} style={{ background: "#008f89", borderColor: "#008f89" }}>
             {t.common.close}
           </Button>
         </div>

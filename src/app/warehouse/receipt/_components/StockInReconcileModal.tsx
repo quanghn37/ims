@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Modal, Table, Button, Space, Typography, Tag, Checkbox, Input, InputNumber, message } from "antd";
@@ -224,7 +224,7 @@ export default function StockInReconcileModal({
 
           if (!orgName) {
             return (
-              <span style={{ fontWeight: 600, color: "#0F172A", fontSize: 13 }}>
+              <span style={{ fontWeight: 600, color: "#123443", fontSize: 13 }}>
                 {orgCode}
               </span>
             );
@@ -232,11 +232,11 @@ export default function StockInReconcileModal({
 
           return (
             <div>
-              <div style={{ fontWeight: 600, color: "#0F172A", fontSize: 13, lineHeight: "17px" }}>
+              <div style={{ fontWeight: 600, color: "#123443", fontSize: 13, lineHeight: "17px" }}>
                 {orgName}
               </div>
               {orgCode && (
-                <div style={{ fontSize: 11.5, color: "#64748B", marginTop: 2 }}>
+                <div style={{ fontSize: 11.5, color: "#718894", marginTop: 2 }}>
                   {orgCode.startsWith("(") ? orgCode : `(${orgCode})`}
                 </div>
               )}
@@ -254,9 +254,9 @@ export default function StockInReconcileModal({
           const code = record.ItemCode || record.itemCode || record.SystemCode || "";
           return (
             <div>
-              <div style={{ fontWeight: 500, color: "#1E293B" }}>{name}</div>
+              <div style={{ fontWeight: 500, color: "#123443" }}>{name}</div>
               {code && (
-                <div style={{ fontSize: 12, color: "#64748B" }}>
+                <div style={{ fontSize: 12, color: "#718894" }}>
                   {code}
                 </div>
               )}
@@ -394,14 +394,14 @@ export default function StockInReconcileModal({
     <Modal
       title={
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ fontSize: 16, fontWeight: 700, color: "#7C3AED" }}>
+          <span style={{ fontSize: 16, fontWeight: 700, color: "#008f89" }}>
             {language === "en" ? "Reconcile Purchase Order (PO)" : "Đối chiếu đơn hàng PO"}
           </span>
           {poCode && (
             <Tag
               style={{
-                background: "#EDE9FE",
-                color: "#7C3AED",
+                background: "#dce5e6",
+                color: "#008f89",
                 border: "none",
                 borderRadius: 12,
                 fontSize: 12,
@@ -412,7 +412,7 @@ export default function StockInReconcileModal({
               {poCode}
             </Tag>
           )}
-          <Tag style={{ fontSize: 12, borderRadius: 12, border: "1px solid #E2E8F0" }}>
+          <Tag style={{ fontSize: 12, borderRadius: 12, border: "1px solid #dce5e6" }}>
             ReferenceId: {contractId || "---"}
           </Tag>
         </div>
@@ -430,9 +430,9 @@ export default function StockInReconcileModal({
           }}
         >
           <Space size={18} align="center">
-            <span style={{ fontSize: 13, color: "#64748B" }}>
+            <span style={{ fontSize: 13, color: "#718894" }}>
               {language === "en" ? "Selected " : "Đã chọn "}
-              <strong style={{ color: "#7C3AED" }}>{selectedPoRowKeys.length}</strong> {language === "en" ? "materials" : "vật tư"}
+              <strong style={{ color: "#008f89" }}>{selectedPoRowKeys.length}</strong> {language === "en" ? "materials" : "vật tư"}
             </span>
             <Checkbox
               checked={startProcessNow}
@@ -446,7 +446,7 @@ export default function StockInReconcileModal({
           <Space size={8}>
             <Button
               onClick={onClose}
-              style={{ height: 36, borderRadius: 8, borderColor: "#E2E8F0" }}
+              style={{ height: 36, borderRadius: 8, borderColor: "#dce5e6" }}
             >
               {t.common.close}
             </Button>
@@ -454,12 +454,12 @@ export default function StockInReconcileModal({
               type="primary"
               icon={<CheckCircleOutlined />}
               style={{
-                background: "#7C3AED",
-                borderColor: "#7C3AED",
+                background: "#008f89",
+                borderColor: "#008f89",
                 height: 36,
                 borderRadius: 8,
                 fontWeight: 500,
-                boxShadow: "0 2px 4px rgba(124, 58, 237, 0.2)",
+                boxShadow: "0 2px 4px rgba(0, 143, 137, 0.2)",
               }}
               onClick={handleConfirmReconcile}
               disabled={selectedPoRowKeys.length === 0}
@@ -475,15 +475,15 @@ export default function StockInReconcileModal({
         style={{
           marginBottom: 12,
           padding: "10px 14px",
-          background: "#F5F3FF",
+          background: "#eef8f6",
           borderRadius: 8,
-          border: "1px solid #DDD6FE",
+          border: "1px solid #b2ded9",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
         }}
       >
-        <Text style={{ fontSize: 13, color: "#7C3AED", fontWeight: 500 }}>
+        <Text style={{ fontSize: 13, color: "#008f89", fontWeight: 500 }}>
           {language === "en"
             ? "Select items from PO to reconcile and import into stock-in details:"
             : "Chọn các mặt hàng từ đơn hàng PO để đối chiếu và đưa vào bảng chi tiết phiếu nhập kho:"}
@@ -493,7 +493,7 @@ export default function StockInReconcileModal({
           icon={<ReloadOutlined />}
           onClick={fetchPoReconcile}
           loading={loadingReconcile}
-          style={{ borderRadius: 6, borderColor: "#DDD6FE", color: "#7C3AED" }}
+          style={{ borderRadius: 6, borderColor: "#b2ded9", color: "#008f89" }}
         >
           {language === "en" ? "Reload PO" : "Tải lại PO"}
         </Button>

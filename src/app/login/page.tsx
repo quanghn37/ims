@@ -68,20 +68,20 @@ export default function LoginPage() {
         minHeight: "100vh",
         alignItems: "center",
         justifyContent: "center",
-        background: "linear-gradient(135deg, #001529 0%, #003a70 50%, #0d47a1 100%)",
+        background: "linear-gradient(135deg, #082a39 0%, #0e2631 50%, #123443 100%)",
         padding: "20px",
       }}
     >
       <Card
         style={{
           width: 440,
-          boxShadow: "0 12px 32px rgba(0, 0, 0, 0.25)",
-          borderRadius: 8,
-          border: "none",
+          boxShadow: "0 12px 32px rgba(8, 42, 57, 0.35)",
+          borderRadius: 16,
+          border: "1px solid #dce5e6",
         }}
       >
         <div style={{ textAlign: "center", marginBottom: 28 }}>
-          <IconBuildingCommunity size={48} strokeWidth={1.5} style={{ color: "#7C3AED", marginBottom: 12 }} />
+          <IconBuildingCommunity size={48} strokeWidth={1.5} style={{ color: "#008f89", marginBottom: 12 }} />
           <Title level={3} style={{ margin: 0, fontWeight: 700 }}>
             {t.login.systemTitle}
           </Title>
@@ -149,8 +149,8 @@ export default function LoginPage() {
               loading={loading}
               icon={<IconLogin size={18} strokeWidth={1.8} />}
               style={{
-                background: "#7C3AED",
-                borderColor: "#7C3AED",
+                background: "#008f89",
+                borderColor: "#008f89",
               }}
             >
               {t.login.loginButton}

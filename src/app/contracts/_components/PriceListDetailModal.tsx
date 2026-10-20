@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import { Modal, Button, Space } from "antd";
@@ -18,7 +18,7 @@ export default function PriceListDetailModal({ priceList, onClose }: PriceListDe
     <Modal
       title={
         <Space>
-          <IconEye size={18} strokeWidth={1.8} style={{ color: "#7C3AED" }} />
+          <IconEye size={18} strokeWidth={1.8} style={{ color: "#008f89" }} />
           <span>{language === "en" ? "Price List Details" : "Chi tiết Bảng giá"}</span>
         </Space>
       }
@@ -28,7 +28,7 @@ export default function PriceListDetailModal({ priceList, onClose }: PriceListDe
         <Button
           key="close"
           type="primary"
-          style={{ background: "#7C3AED", borderColor: "#7C3AED", borderRadius: 6 }}
+          style={{ background: "#008f89", borderColor: "#008f89", borderRadius: 6 }}
           onClick={onClose}
         >
           {t.common.close}

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect, useMemo } from "react";
 import {
@@ -144,8 +144,8 @@ export default function ContractMaterialEditDrawer({
     <Drawer
       title={
         <Space>
-          <IconPencil size={18} strokeWidth={1.8} style={{ color: "#7C3AED" }} />
-          <Text strong style={{ fontSize: 16, color: "#0F172A", fontWeight: 700 }}>
+          <IconPencil size={18} strokeWidth={1.8} style={{ color: "#008f89" }} />
+          <Text strong style={{ fontSize: 16, color: "#123443", fontWeight: 700 }}>
             {language === "en" ? "Edit Contract Material Item" : "Chỉnh sửa Vật tư trong Hợp đồng"}
           </Text>
         </Space>
@@ -194,7 +194,7 @@ export default function ContractMaterialEditDrawer({
               style={{
                 borderRadius: 6,
                 height: 32,
-                borderColor: "#E2E8F0",
+                borderColor: "#dce5e6",
                 background: "#FFFFFF",
                 color: "#334155",
                 fontSize: 13,
@@ -207,8 +207,8 @@ export default function ContractMaterialEditDrawer({
               type="primary"
               icon={<IconDeviceFloppy size={16} strokeWidth={2} />}
               style={{
-                background: "#7C3AED",
-                borderColor: "#7C3AED",
+                background: "#008f89",
+                borderColor: "#008f89",
                 borderRadius: 6,
                 height: 32,
                 fontSize: 13,
@@ -240,7 +240,7 @@ export default function ContractMaterialEditDrawer({
           line-height: 20px !important;
           font-weight: 600 !important;
           font-size: 13px !important;
-          color: #0F172A !important;
+          color: #123443 !important;
         }
         .contract-item-compact-card .ant-picker {
           padding: 0 !important;
@@ -249,7 +249,7 @@ export default function ContractMaterialEditDrawer({
         .contract-item-compact-card .ant-picker-input > input {
           font-weight: 500 !important;
           font-size: 13px !important;
-          color: #0F172A !important;
+          color: #123443 !important;
           line-height: 20px !important;
         }
         .contract-item-compact-card .ant-select-single {
@@ -262,7 +262,7 @@ export default function ContractMaterialEditDrawer({
         .contract-item-compact-card .ant-select-selection-item {
           font-weight: 500 !important;
           font-size: 13px !important;
-          color: #0F172A !important;
+          color: #123443 !important;
           line-height: 20px !important;
         }
         .contract-item-compact-card .ant-input-disabled,
@@ -274,8 +274,8 @@ export default function ContractMaterialEditDrawer({
         .contract-item-compact-card .ant-input-disabled input,
         .contract-item-compact-card .ant-input-number-disabled input,
         .contract-item-compact-card .ant-picker-disabled input {
-          color: #64748B !important;
-          -webkit-text-fill-color: #64748B !important;
+          color: #718894 !important;
+          -webkit-text-fill-color: #718894 !important;
           cursor: not-allowed !important;
         }
       `}</style>
@@ -289,7 +289,7 @@ export default function ContractMaterialEditDrawer({
           className="contract-item-compact-card"
           style={{
             background: "#FFFFFF",
-            border: "1px solid #E2E8F0",
+            border: "1px solid #dce5e6",
             borderRadius: 6,
             overflow: "hidden",
             boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
@@ -300,8 +300,8 @@ export default function ContractMaterialEditDrawer({
           <div
             style={{
               padding: "6px 10px",
-              borderBottom: "1px solid #E2E8F0",
-              background: "#F8FAFC",
+              borderBottom: "1px solid #dce5e6",
+              background: "#f7fbfa",
             }}
           >
             <div style={{ fontSize: 11, color: "#94A3B8", marginBottom: 2, fontWeight: 500, lineHeight: "14px" }}>
@@ -323,13 +323,13 @@ export default function ContractMaterialEditDrawer({
           </div>
 
           {/* Hàng 2: Đơn vị tính (Xám) | Số lượng (CHO SỬA) | Đơn giá (Xám) */}
-          <Row gutter={[0, 0]} align="stretch" style={{ borderBottom: "1px solid #E2E8F0" }}>
+          <Row gutter={[0, 0]} align="stretch" style={{ borderBottom: "1px solid #dce5e6" }}>
             <Col
               span={8}
               style={{
                 padding: "6px 10px",
-                borderRight: "1px solid #E2E8F0",
-                background: "#F8FAFC",
+                borderRight: "1px solid #dce5e6",
+                background: "#f7fbfa",
               }}
             >
               <div style={{ fontSize: 11, color: "#94A3B8", marginBottom: 2, fontWeight: 500, lineHeight: "14px" }}>
@@ -349,7 +349,7 @@ export default function ContractMaterialEditDrawer({
                     fontWeight: 500,
                     fontSize: 13,
                     lineHeight: "20px",
-                    color: "#64748B",
+                    color: "#718894",
                     cursor: "not-allowed",
                   }}
                 />
@@ -360,7 +360,7 @@ export default function ContractMaterialEditDrawer({
               span={8}
               style={{
                 padding: "6px 10px",
-                borderRight: "1px solid #E2E8F0",
+                borderRight: "1px solid #dce5e6",
                 background: "#FFFFFF",
               }}
             >
@@ -389,13 +389,13 @@ export default function ContractMaterialEditDrawer({
                     height: 20,
                     fontWeight: 600,
                     fontSize: 13,
-                    color: "#0F172A",
+                    color: "#123443",
                   }}
                 />
               </Form.Item>
             </Col>
 
-            <Col span={8} style={{ padding: "6px 10px", background: "#F8FAFC" }}>
+            <Col span={8} style={{ padding: "6px 10px", background: "#f7fbfa" }}>
               <div style={{ fontSize: 11, color: "#94A3B8", marginBottom: 2, fontWeight: 500, lineHeight: "14px" }}>
                 {t.itemDrawer.unitPrice}
               </div>
@@ -420,7 +420,7 @@ export default function ContractMaterialEditDrawer({
                     height: 20,
                     fontWeight: 500,
                     fontSize: 13,
-                    color: "#64748B",
+                    color: "#718894",
                     cursor: "not-allowed",
                   }}
                 />
@@ -429,8 +429,8 @@ export default function ContractMaterialEditDrawer({
           </Row>
 
           {/* Hàng 3: Ngày hiệu lực (Xám) | Ngày hết hiệu lực (Xám) | Thuế suất (CHO SỬA) */}
-          <Row gutter={[0, 0]} align="stretch" style={{ borderBottom: "1px solid #E2E8F0" }}>
-            <Col span={8} style={{ padding: "6px 10px", borderRight: "1px solid #E2E8F0", background: "#F8FAFC" }}>
+          <Row gutter={[0, 0]} align="stretch" style={{ borderBottom: "1px solid #dce5e6" }}>
+            <Col span={8} style={{ padding: "6px 10px", borderRight: "1px solid #dce5e6", background: "#f7fbfa" }}>
               <div style={{ fontSize: 11, color: "#94A3B8", marginBottom: 2, fontWeight: 500, lineHeight: "14px" }}>
                 {t.itemDrawer.effectiveDate}
               </div>
@@ -446,14 +446,14 @@ export default function ContractMaterialEditDrawer({
                     height: 20,
                     fontWeight: 500,
                     fontSize: 13,
-                    color: "#64748B",
+                    color: "#718894",
                     cursor: "not-allowed",
                   }}
                 />
               </Form.Item>
             </Col>
 
-            <Col span={8} style={{ padding: "6px 10px", borderRight: "1px solid #E2E8F0", background: "#F8FAFC" }}>
+            <Col span={8} style={{ padding: "6px 10px", borderRight: "1px solid #dce5e6", background: "#f7fbfa" }}>
               <div style={{ fontSize: 11, color: "#94A3B8", marginBottom: 2, fontWeight: 500, lineHeight: "14px" }}>
                 {t.itemDrawer.expiryDate}
               </div>
@@ -470,7 +470,7 @@ export default function ContractMaterialEditDrawer({
                     height: 20,
                     fontWeight: 500,
                     fontSize: 13,
-                    color: "#64748B",
+                    color: "#718894",
                     cursor: "not-allowed",
                   }}
                 />
@@ -490,7 +490,7 @@ export default function ContractMaterialEditDrawer({
                     height: 20,
                     fontWeight: 600,
                     fontSize: 13,
-                    color: "#0F172A",
+                    color: "#123443",
                   }}
                   options={[
                     { value: 0, label: "0%" },
@@ -518,42 +518,42 @@ export default function ContractMaterialEditDrawer({
                   fontSize: 13,
                   fontWeight: 500,
                   lineHeight: "20px",
-                  color: "#0F172A",
+                  color: "#123443",
                 }}
               />
             </Form.Item>
           </div>
         </div>
 
-        {/* KHỐI TỔNG TIỀN (CHUẨN DESIGN SYSTEM TÍM NHẠT #F5F3FF) */}
+        {/* KHỐI TỔNG TIỀN (CHUẨN DESIGN SYSTEM TÍM NHẠT #eef8f6) */}
         <div
           style={{
-            background: "#F5F3FF",
-            border: "1px solid #DDD6FE",
+            background: "#eef8f6",
+            border: "1px solid #b2ded9",
             borderRadius: 6,
             padding: "10px 12px",
           }}
         >
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-            <Text style={{ fontSize: 12.5, color: "#64748B" }}>{t.itemDrawer.subtotal}</Text>
-            <Text strong style={{ fontSize: 13, color: "#0F172A" }}>
+            <Text style={{ fontSize: 12.5, color: "#718894" }}>{t.itemDrawer.subtotal}</Text>
+            <Text strong style={{ fontSize: 13, color: "#123443" }}>
               {rawItemTotal.toLocaleString(language === "en" ? "en-US" : "vi-VN")}
             </Text>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-            <Text style={{ fontSize: 12.5, color: "#64748B" }}>
+            <Text style={{ fontSize: 12.5, color: "#718894" }}>
               {t.itemDrawer.taxAmount} ({((watchedTaxRate || 0) * 100).toFixed(0)}%):
             </Text>
-            <Text style={{ fontSize: 13, color: "#0F172A" }}>
+            <Text style={{ fontSize: 13, color: "#123443" }}>
               {taxItemTotal.toLocaleString(language === "en" ? "en-US" : "vi-VN")}
             </Text>
           </div>
-          <Divider style={{ margin: "6px 0", borderColor: "#DDD6FE" }} />
+          <Divider style={{ margin: "6px 0", borderColor: "#b2ded9" }} />
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <Text strong style={{ fontSize: 13, color: "#0F172A" }}>
+            <Text strong style={{ fontSize: 13, color: "#123443" }}>
               {t.itemDrawer.totalAmount}
             </Text>
-            <Text strong style={{ fontSize: 16, color: "#7C3AED", fontWeight: 700 }}>
+            <Text strong style={{ fontSize: 16, color: "#008f89", fontWeight: 700 }}>
               {grandItemTotal.toLocaleString(language === "en" ? "en-US" : "vi-VN")}
             </Text>
           </div>

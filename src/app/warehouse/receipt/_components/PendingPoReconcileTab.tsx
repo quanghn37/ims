@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
@@ -376,9 +376,9 @@ export default function PendingPoReconcileTab({
         width: 220,
         render: (text: string, record) => (
           <div>
-            <div style={{ fontWeight: 500, color: "#1E293B" }}>{text || "---"}</div>
+            <div style={{ fontWeight: 500, color: "#123443" }}>{text || "---"}</div>
             {record.ClientName && (
-              <div style={{ fontSize: 12, color: "#64748B" }}>
+              <div style={{ fontSize: 12, color: "#718894" }}>
                 {record.ClientName}
               </div>
             )}
@@ -413,7 +413,7 @@ export default function PendingPoReconcileTab({
 
           if (!orgName) {
             return (
-              <span style={{ fontWeight: 600, color: "#0F172A", fontSize: 13 }}>
+              <span style={{ fontWeight: 600, color: "#123443", fontSize: 13 }}>
                 {orgCode}
               </span>
             );
@@ -421,11 +421,11 @@ export default function PendingPoReconcileTab({
 
           return (
             <div>
-              <div style={{ fontWeight: 600, color: "#0F172A", fontSize: 13, lineHeight: "17px" }}>
+              <div style={{ fontWeight: 600, color: "#123443", fontSize: 13, lineHeight: "17px" }}>
                 {orgName}
               </div>
               {orgCode && (
-                <div style={{ fontSize: 11.5, color: "#64748B", marginTop: 2 }}>
+                <div style={{ fontSize: 11.5, color: "#718894", marginTop: 2 }}>
                   {orgCode.startsWith("(") ? orgCode : `(${orgCode})`}
                 </div>
               )}
@@ -440,9 +440,9 @@ export default function PendingPoReconcileTab({
         width: 280,
         render: (text: string, record) => (
           <div>
-            <div style={{ fontWeight: 500, color: "#1E293B" }}>{text || "---"}</div>
+            <div style={{ fontWeight: 500, color: "#123443" }}>{text || "---"}</div>
             {record.ItemCode && (
-              <div style={{ fontSize: 12, color: "#64748B" }}>
+              <div style={{ fontSize: 12, color: "#718894" }}>
                 {record.ItemCode}
               </div>
             )}

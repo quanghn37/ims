@@ -502,7 +502,7 @@ export default function ContractsPage() {
       key: "list",
       label: (
         <Space size={6}>
-          <IconFileText size={16} strokeWidth={1.8} style={{ color: "#7C3AED" }} />
+          <IconFileText size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />
           <span>{t.contract.tabList}</span>
         </Space>
       ),
@@ -534,7 +534,7 @@ export default function ContractsPage() {
             key: "edit",
             label: (
               <Space size={6}>
-                <IconPencil size={16} strokeWidth={1.8} style={{ color: "#7C3AED" }} />
+                <IconPencil size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />
                 <span>
                   {editingContract
                     ? `${t.contract.tabEdit}: ${editingContract.ContractCode || editingContract.Description || ""}`
@@ -584,30 +584,30 @@ export default function ContractsPage() {
   ];
 
   return (
-    <div style={{ padding: 0, width: "100%", height: "100%", background: "#fff" }}>
+    <div style={{ padding: 0, width: "100%", minHeight: "calc(100vh - 100px)", background: "#FFFFFF", borderRadius: 16, border: "1px solid #dce5e6", overflow: "hidden", boxShadow: "0 1px 3px rgba(18, 52, 67, 0.04)" }}>
       <style>{`
         .contracts-page-tabs .ant-tabs-nav {
           margin-bottom: 0 !important;
         }
         .contracts-page-tabs .ant-tabs-tab {
-          background: #F8FAFC !important;
-          border-color: #E2E8F0 !important;
+          background: #f7fbfa !important;
+          border-color: #dce5e6 !important;
           border-radius: 8px 8px 0 0 !important;
-          color: #64748B !important;
+          color: #718894 !important;
           font-weight: 500 !important;
           transition: all 0.2s ease !important;
         }
         .contracts-page-tabs .ant-tabs-tab:hover {
-          color: #7C3AED !important;
+          color: #008f89 !important;
         }
         .contracts-page-tabs .ant-tabs-tab-active {
           background: #FFFFFF !important;
-          border-color: #E2E8F0 #E2E8F0 #FFFFFF !important;
-          color: #7C3AED !important;
+          border-color: #dce5e6 #dce5e6 #FFFFFF !important;
+          color: #008f89 !important;
           font-weight: 600 !important;
         }
         .contracts-page-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
-          color: #7C3AED !important;
+          color: #008f89 !important;
         }
         .contracts-page-tabs .ant-tabs-tab .ant-tabs-tab-remove {
           color: #94A3B8 !important;
@@ -632,7 +632,7 @@ export default function ContractsPage() {
           margin: 0,
           background: "#FFFFFF",
           padding: "8px 24px 0 24px",
-          borderBottom: "1px solid #E2E8F0",
+          borderBottom: "1px solid #dce5e6",
         }}
       />
 

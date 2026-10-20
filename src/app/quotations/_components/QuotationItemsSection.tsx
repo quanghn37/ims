@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect, useState, useMemo } from "react";
 import {
@@ -60,7 +60,7 @@ export default function QuotationItemsSection({
         width: 42,
         align: "center" as const,
         render: (_: any, __: any, idx: number) => (
-          <span style={{ fontWeight: 500, color: "#64748B", fontSize: 12 }}>{idx + 1}</span>
+          <span style={{ fontWeight: 500, color: "#718894", fontSize: 12 }}>{idx + 1}</span>
         ),
       },
       {
@@ -77,7 +77,7 @@ export default function QuotationItemsSection({
               <div
                 style={{
                   fontWeight: 600,
-                  color: "#0F172A",
+                  color: "#123443",
                   fontSize: 12,
                   wordBreak: "break-word",
                 }}
@@ -88,7 +88,7 @@ export default function QuotationItemsSection({
                 <div
                   style={{
                     fontSize: 11,
-                    color: "#64748B",
+                    color: "#718894",
                     marginTop: 2,
                     wordBreak: "break-word",
                     fontFamily: "monospace",
@@ -108,7 +108,7 @@ export default function QuotationItemsSection({
         width: 55,
         align: "center" as const,
         render: (val: string) => (
-          <span style={{ color: "#0F172A", fontSize: 12 }}>{val || "Cái"}</span>
+          <span style={{ color: "#123443", fontSize: 12 }}>{val || "Cái"}</span>
         ),
       },
       {
@@ -118,7 +118,7 @@ export default function QuotationItemsSection({
         align: "right" as const,
         width: 75,
         render: (val: number) => (
-          <span style={{ color: "#0F172A", fontSize: 12 }}>
+          <span style={{ color: "#123443", fontSize: 12 }}>
             {Number(val || 0).toLocaleString("vi-VN")}
           </span>
         ),
@@ -130,7 +130,7 @@ export default function QuotationItemsSection({
         align: "right" as const,
         width: 95,
         render: (val: number) => (
-          <span style={{ color: "#0F172A", fontSize: 12 }}>
+          <span style={{ color: "#123443", fontSize: 12 }}>
             {Number(val || 0).toLocaleString("vi-VN")}
           </span>
         ),
@@ -146,7 +146,7 @@ export default function QuotationItemsSection({
             val ?? Number(r.UnitPrice || 0) * Number(r.Qnty || 0)
           );
           return (
-            <span style={{ color: "#0F172A", fontSize: 12 }}>
+            <span style={{ color: "#123443", fontSize: 12 }}>
               {rawAmount.toLocaleString("vi-VN")}
             </span>
           );
@@ -179,7 +179,7 @@ export default function QuotationItemsSection({
               ? Number(val)
               : rawAmount * (Number(r.TaxRate) || 0);
           return (
-            <span style={{ color: "#0F172A", fontSize: 12 }}>
+            <span style={{ color: "#123443", fontSize: 12 }}>
               {taxVal.toLocaleString("vi-VN")}
             </span>
           );
@@ -200,7 +200,7 @@ export default function QuotationItemsSection({
               : rawAmount * (Number(r.TaxRate) || 0);
           const totalVat = rawAmount + taxVal;
           return (
-            <span style={{ color: "#0F172A", fontWeight: 600, fontSize: 12 }}>
+            <span style={{ color: "#123443", fontWeight: 600, fontSize: 12 }}>
               {totalVat.toLocaleString("vi-VN")}
             </span>
           );
@@ -246,7 +246,7 @@ export default function QuotationItemsSection({
       {
         title: (
           <Tooltip title={t.table.action}>
-            <IconSettings size={15} strokeWidth={1.8} style={{ color: "#64748B" }} />
+            <IconSettings size={15} strokeWidth={1.8} style={{ color: "#718894" }} />
           </Tooltip>
         ),
         key: "action",
@@ -405,7 +405,7 @@ export default function QuotationItemsSection({
     <div
       style={{
         background: "#FFFFFF",
-        border: "1px solid #E2E8F0",
+        border: "1px solid #dce5e6",
         borderRadius: 8,
         padding: "12px 14px",
         boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
@@ -424,7 +424,7 @@ export default function QuotationItemsSection({
             strong
             style={{
               fontSize: 13,
-              color: "#7C3AED",
+              color: "#008f89",
               fontWeight: 700,
               textTransform: "uppercase",
               lineHeight: "20px",
@@ -434,8 +434,8 @@ export default function QuotationItemsSection({
           </Text>
           <Tag
             style={{
-              background: "#EDE9FE",
-              color: "#7C3AED",
+              background: "#dce5e6",
+              color: "#008f89",
               borderRadius: 12,
               border: "none",
               fontSize: 11,
@@ -456,7 +456,7 @@ export default function QuotationItemsSection({
                 icon={<ExcelIcon />}
                 onClick={onOpenImportExcel}
                 style={{
-                  borderColor: "#E2E8F0",
+                  borderColor: "#dce5e6",
                   background: "#FFFFFF",
                   color: "#334155",
                   fontSize: 14,
@@ -470,9 +470,9 @@ export default function QuotationItemsSection({
             )}
             {onOpenAddItem && (
               <Button
-                icon={<IconPlus size={16} strokeWidth={2} style={{ color: "#7C3AED" }} />}
+                icon={<IconPlus size={16} strokeWidth={2} style={{ color: "#008f89" }} />}
                 style={{
-                  borderColor: "#E2E8F0",
+                  borderColor: "#dce5e6",
                   background: "#FFFFFF",
                   color: "#334155",
                   fontSize: 14,
@@ -531,12 +531,12 @@ export default function QuotationItemsSection({
 
           return (
             <Table.Summary fixed>
-              <Table.Summary.Row style={{ background: "#F5F3FF", fontWeight: "bold" }}>
+              <Table.Summary.Row style={{ background: "#eef8f6", fontWeight: "bold" }}>
                 <Table.Summary.Cell index={0} align="center">
                   <Text style={{ color: "#94A3B8" }}>-</Text>
                 </Table.Summary.Cell>
                 <Table.Summary.Cell index={1} align="right">
-                  <Text strong style={{ color: "#0F172A", fontSize: 13.5 }}>
+                  <Text strong style={{ color: "#123443", fontSize: 13.5 }}>
                     {t.table.total}
                   </Text>
                 </Table.Summary.Cell>
@@ -544,7 +544,7 @@ export default function QuotationItemsSection({
                   <Text style={{ color: "#94A3B8" }}>-</Text>
                 </Table.Summary.Cell>
                 <Table.Summary.Cell index={3} align="right">
-                  <Text style={{ color: "#0F172A", fontSize: 13.5 }}>
+                  <Text style={{ color: "#123443", fontSize: 13.5 }}>
                     {totalQnty.toLocaleString("vi-VN")}
                   </Text>
                 </Table.Summary.Cell>
@@ -552,7 +552,7 @@ export default function QuotationItemsSection({
                   <Text style={{ color: "#94A3B8" }}>-</Text>
                 </Table.Summary.Cell>
                 <Table.Summary.Cell index={5} align="right">
-                  <Text strong style={{ color: "#0F172A", fontSize: 13.5 }}>
+                  <Text strong style={{ color: "#123443", fontSize: 13.5 }}>
                     {totalAmount.toLocaleString("vi-VN")}
                   </Text>
                 </Table.Summary.Cell>
@@ -560,12 +560,12 @@ export default function QuotationItemsSection({
                   <Text style={{ color: "#475569", fontSize: 13 }}>-</Text>
                 </Table.Summary.Cell>
                 <Table.Summary.Cell index={7} align="right">
-                  <Text style={{ color: "#0F172A", fontSize: 13.5 }}>
+                  <Text style={{ color: "#123443", fontSize: 13.5 }}>
                     {totalTax.toLocaleString("vi-VN")}
                   </Text>
                 </Table.Summary.Cell>
                 <Table.Summary.Cell index={8} align="right">
-                  <Text strong style={{ color: "#0F172A", fontSize: 13.5 }}>
+                  <Text strong style={{ color: "#123443", fontSize: 13.5 }}>
                     {grandTotal.toLocaleString("vi-VN")}
                   </Text>
                 </Table.Summary.Cell>

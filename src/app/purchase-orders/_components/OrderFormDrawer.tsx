@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import {
@@ -127,24 +127,24 @@ export default function OrderFormDrawer({
           font-family: inherit;
         }
         .po-order-table .ant-table-thead > tr > th {
-          background-color: #F8FAFC !important;
+          background-color: #f7fbfa !important;
           color: #475569 !important;
           font-size: 13px !important;
           font-weight: 600 !important;
           line-height: 18px !important;
-          border-color: #E2E8F0 !important;
+          border-color: #dce5e6 !important;
           padding: 10px 12px !important;
         }
         .po-order-table .ant-table-tbody > tr > td {
-          color: #0F172A !important;
+          color: #123443 !important;
           font-size: 13px !important;
           line-height: 18px !important;
-          border-color: #E2E8F0 !important;
+          border-color: #dce5e6 !important;
           padding: 10px 12px !important;
           height: 46px !important;
         }
         .po-order-table .ant-table-container {
-          border: 1px solid #E2E8F0 !important;
+          border: 1px solid #dce5e6 !important;
           border-radius: 8px !important;
           overflow: hidden;
         }
@@ -158,18 +158,18 @@ export default function OrderFormDrawer({
           alignItems: "center",
           marginBottom: 10,
           paddingBottom: 8,
-          borderBottom: "1px solid #E2E8F0",
+          borderBottom: "1px solid #dce5e6",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <Text strong style={{ fontSize: 13, color: "#7C3AED", fontWeight: 700, textTransform: "uppercase" }}>
+          <Text strong style={{ fontSize: 13, color: "#008f89", fontWeight: 700, textTransform: "uppercase" }}>
             {t.section.generalInfoOrder}
           </Text>
         </div>
 
         <Space size={8}>
           <Button
-            icon={<IconPaperclip size={16} strokeWidth={1.8} style={{ color: "#7C3AED" }} />}
+            icon={<IconPaperclip size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />}
             onClick={() => setIsAttachmentModalOpen(true)}
             style={{
               display: "inline-flex",
@@ -178,7 +178,7 @@ export default function OrderFormDrawer({
               fontWeight: 500,
               height: 32,
               borderRadius: 6,
-              borderColor: "#E2E8F0",
+              borderColor: "#dce5e6",
               background: "#FFFFFF",
               color: "#334155",
             }}
@@ -187,8 +187,8 @@ export default function OrderFormDrawer({
             {attachments.length > 0 ? (
               <span
                 style={{
-                  background: "#EDE9FE",
-                  color: "#7C3AED",
+                  background: "#dce5e6",
+                  color: "#008f89",
                   borderRadius: 10,
                   padding: "1px 7px",
                   fontSize: 11,
@@ -201,14 +201,14 @@ export default function OrderFormDrawer({
             ) : null}
           </Button>
           <Button
-            icon={<IconX size={15} strokeWidth={1.8} style={{ color: "#64748B" }} />}
+            icon={<IconX size={15} strokeWidth={1.8} style={{ color: "#718894" }} />}
             onClick={onClose}
             style={{
               height: 32,
               fontSize: 13,
               fontWeight: 500,
               borderRadius: 6,
-              borderColor: "#E2E8F0",
+              borderColor: "#dce5e6",
               background: "#FFFFFF",
               color: "#334155",
             }}
@@ -220,14 +220,14 @@ export default function OrderFormDrawer({
               type="primary"
               icon={<IconDeviceFloppy size={16} strokeWidth={2} />}
               style={{
-                background: "#7C3AED",
-                borderColor: "#7C3AED",
+                background: "#008f89",
+                borderColor: "#008f89",
                 height: 32,
                 fontSize: 13,
                 fontWeight: 500,
                 borderRadius: 6,
                 color: "#FFFFFF",
-                boxShadow: "0 2px 4px rgba(124, 58, 237, 0.2)",
+                boxShadow: "0 2px 4px rgba(0, 143, 137, 0.2)",
               }}
               onClick={() => form.submit()}
               loading={submitting}
@@ -252,7 +252,7 @@ export default function OrderFormDrawer({
           <div
             style={{
               background: "#FFFFFF",
-              border: "1px solid #E2E8F0",
+              border: "1px solid #dce5e6",
               borderRadius: 6,
               padding: "5px 12px",
               boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
@@ -261,8 +261,8 @@ export default function OrderFormDrawer({
             {/* Hàng 1: 4 Cột */}
             <Row gutter={[0, 0]} align="middle">
               {/* Cột 1: Hợp đồng */}
-              <Col span={6} style={{ paddingRight: 10, borderRight: "1px solid #E2E8F0" }}>
-                <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={6} style={{ paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
+                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                   {t.purchaseOrder.mainContract} <span style={{ color: "#ff4d4f" }}>*</span>
                 </div>
                 <div
@@ -272,7 +272,7 @@ export default function OrderFormDrawer({
                     fontWeight: 600,
                     fontSize: 13,
                     lineHeight: "18px",
-                    color: selectedContractDisplay ? "#0F172A" : "#94A3B8",
+                    color: selectedContractDisplay ? "#123443" : "#94A3B8",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
@@ -290,8 +290,8 @@ export default function OrderFormDrawer({
               </Col>
 
               {/* Cột 2: Nhà Cung Cấp */}
-              <Col span={6} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #E2E8F0" }}>
-                <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={6} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
+                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                   {t.purchaseOrder.vendor}
                 </div>
                 <div
@@ -299,7 +299,7 @@ export default function OrderFormDrawer({
                     fontWeight: 600,
                     fontSize: 13,
                     lineHeight: "18px",
-                    color: selectedClientDisplay ? "#0F172A" : "#94A3B8",
+                    color: selectedClientDisplay ? "#123443" : "#94A3B8",
                     overflow: "hidden",
                     textOverflow: "ellipsis",
                     whiteSpace: "nowrap",
@@ -312,8 +312,8 @@ export default function OrderFormDrawer({
               </Col>
 
               {/* Cột 3: Bảng giá */}
-              <Col span={6} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #E2E8F0" }}>
-                <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={6} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
+                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                   {t.purchaseOrder.priceList}
                 </div>
                 <div
@@ -326,7 +326,7 @@ export default function OrderFormDrawer({
                     fontWeight: 600,
                     fontSize: 13,
                     lineHeight: "18px",
-                    color: selectedPriceListDisplay ? "#0F172A" : "#94A3B8",
+                    color: selectedPriceListDisplay ? "#123443" : "#94A3B8",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
@@ -345,7 +345,7 @@ export default function OrderFormDrawer({
 
               {/* Cột 4: Kho nhận hàng */}
               <Col span={6} style={{ paddingLeft: 10 }}>
-                <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                   {t.purchaseOrder.deliveryWarehouse}
                 </div>
                 <div
@@ -355,7 +355,7 @@ export default function OrderFormDrawer({
                     fontWeight: 600,
                     fontSize: 13,
                     lineHeight: "18px",
-                    color: selectedWarehouseDisplay ? "#0F172A" : "#94A3B8",
+                    color: selectedWarehouseDisplay ? "#123443" : "#94A3B8",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
@@ -371,13 +371,13 @@ export default function OrderFormDrawer({
               </Col>
             </Row>
 
-            <Divider style={{ margin: "3px 0", borderColor: "#E2E8F0" }} />
+            <Divider style={{ margin: "3px 0", borderColor: "#dce5e6" }} />
 
             {/* Hàng 2: 6 Cột */}
             <Row gutter={[0, 0]} align="middle">
               {/* Cột 1: Số đơn hàng */}
-              <Col span={4} style={{ paddingRight: 10, borderRight: "1px solid #E2E8F0" }}>
-                <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={4} style={{ paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
+                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                   {t.purchaseOrder.orderCode}
                 </div>
                 <Form.Item name="ContractCode" style={{ margin: 0 }}>
@@ -390,7 +390,7 @@ export default function OrderFormDrawer({
                       fontWeight: 600,
                       fontSize: 13,
                       lineHeight: "18px",
-                      color: "#0F172A",
+                      color: "#123443",
                       fontFamily: "monospace",
                     }}
                   />
@@ -398,8 +398,8 @@ export default function OrderFormDrawer({
               </Col>
 
               {/* Cột 2: Diễn giải * */}
-              <Col span={6} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #E2E8F0" }}>
-                <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={6} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
+                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                   {t.purchaseOrder.orderDesc} <span style={{ color: "#ff4d4f" }}>*</span>
                 </div>
                 <Form.Item
@@ -410,14 +410,14 @@ export default function OrderFormDrawer({
                   <Input
                     variant="borderless"
                     placeholder={t.purchaseOrder.orderDescPlaceholder}
-                    style={{ padding: 0, fontWeight: 500, fontSize: 13, lineHeight: "18px", color: "#0F172A" }}
+                    style={{ padding: 0, fontWeight: 500, fontSize: 13, lineHeight: "18px", color: "#123443" }}
                   />
                 </Form.Item>
               </Col>
 
               {/* Cột 3: Ngày đơn hàng */}
-              <Col span={3} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #E2E8F0" }}>
-                <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={3} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
+                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                   {t.purchaseOrder.orderDate}
                 </div>
                 <Form.Item name="ContractDate" style={{ margin: 0 }}>
@@ -425,14 +425,14 @@ export default function OrderFormDrawer({
                     variant="borderless"
                     format="DD/MM/YYYY"
                     placeholder={t.quotation.selectDate}
-                    style={{ padding: 0, width: "100%", fontWeight: 500, fontSize: 13, color: "#0F172A" }}
+                    style={{ padding: 0, width: "100%", fontWeight: 500, fontSize: 13, color: "#123443" }}
                   />
                 </Form.Item>
               </Col>
 
               {/* Cột 4: Ngày giao hàng */}
-              <Col span={3} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #E2E8F0" }}>
-                <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={3} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
+                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                   {t.purchaseOrder.deliveryDate}
                 </div>
                 <Form.Item name="DeliveryDate" style={{ margin: 0 }}>
@@ -440,20 +440,20 @@ export default function OrderFormDrawer({
                     variant="borderless"
                     format="DD/MM/YYYY"
                     placeholder={t.quotation.selectDate}
-                    style={{ padding: 0, width: "100%", fontWeight: 500, fontSize: 13, color: "#0F172A" }}
+                    style={{ padding: 0, width: "100%", fontWeight: 500, fontSize: 13, color: "#123443" }}
                   />
                 </Form.Item>
               </Col>
 
               {/* Cột 5: Giá trị đơn hàng */}
-              <Col span={5} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #E2E8F0" }}>
-                <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={5} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
+                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                   {t.table.amount}
                 </div>
                 <Form.Item name="Amount" style={{ margin: 0 }}>
                   <InputNumber
                     variant="borderless"
-                    style={{ padding: 0, width: "100%", fontWeight: 600, fontSize: 13, color: "#0F172A" }}
+                    style={{ padding: 0, width: "100%", fontWeight: 600, fontSize: 13, color: "#123443" }}
                     min={0}
                     placeholder="0"
                     formatter={(val) => String(val || "").replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
@@ -464,13 +464,13 @@ export default function OrderFormDrawer({
 
               {/* Cột 6: Loại tiền */}
               <Col span={3} style={{ paddingLeft: 10 }}>
-                <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                   {t.quotation.currency}
                 </div>
                 <Form.Item name="Currency" style={{ margin: 0 }}>
                   <Select
                     variant="borderless"
-                    style={{ padding: 0, width: "100%", fontWeight: 500, fontSize: 13, color: "#0F172A" }}
+                    style={{ padding: 0, width: "100%", fontWeight: 500, fontSize: 13, color: "#123443" }}
                     options={[
                       { value: "VND", label: "VND" },
                       { value: "USD", label: "USD" },

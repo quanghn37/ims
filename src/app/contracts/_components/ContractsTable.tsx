@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+﻿import React, { useMemo } from "react";
 import { Button, Card, Input, Popconfirm, Space, Table, Tag, Tooltip, Typography } from "antd";
 import {
   IconCircleX,
@@ -56,7 +56,7 @@ export default function ContractsTable({ filteredContracts, loading, searchKeywo
               style={{
                 cursor: "pointer",
                 fontWeight: 600,
-                color: "#7C3AED",
+                color: "#008f89",
                 fontSize: 13,
               }}
               title="Bấm để xem chi tiết / chỉnh sửa"
@@ -149,12 +149,12 @@ export default function ContractsTable({ filteredContracts, loading, searchKeywo
         dataIndex: "CreatedBy",
         key: "CreatedBy",
         width: 120,
-        render: (val: string, r: any) => <span style={{ color: "#0F172A", fontSize: 13 }}>{val || r.Createdby || "Hệ thống"}</span>,
+        render: (val: string, r: any) => <span style={{ color: "#123443", fontSize: 13 }}>{val || r.Createdby || "Hệ thống"}</span>,
       },
       {
         title: (
           <Tooltip title={t.table.action}>
-            <IconSettings size={15} strokeWidth={1.8} style={{ color: "#64748B" }} />
+            <IconSettings size={15} strokeWidth={1.8} style={{ color: "#718894" }} />
           </Tooltip>
         ),
         key: "action",
@@ -218,7 +218,7 @@ export default function ContractsTable({ filteredContracts, loading, searchKeywo
           onClear={() => setColumnFilters((previous) => { const next = { ...previous }; delete next[key]; return next; })}
         />
       ),
-      filterIcon: () => <IconSearch size={14} strokeWidth={1.8} style={{ color: activeValue ? "#7C3AED" : undefined }} />,
+      filterIcon: () => <IconSearch size={14} strokeWidth={1.8} style={{ color: activeValue ? "#008f89" : undefined }} />,
       filtered: !!activeValue,
       onHeaderCell,
     };
@@ -239,30 +239,30 @@ export default function ContractsTable({ filteredContracts, loading, searchKeywo
           font-family: inherit;
         }
         .contract-main-table .ant-table-thead > tr > th {
-          background-color: #F8FAFC !important;
+          background-color: #f7fbfa !important;
           color: #475569 !important;
           font-size: 13px !important;
           font-weight: 600 !important;
           line-height: 18px !important;
-          border-color: #E2E8F0 !important;
+          border-color: #dce5e6 !important;
           padding: 10px 12px !important;
         }
         .contract-main-table .ant-table-tbody > tr > td {
-          color: #0F172A !important;
+          color: #123443 !important;
           font-size: 13px !important;
           line-height: 18px !important;
-          border-color: #E2E8F0 !important;
+          border-color: #dce5e6 !important;
           padding: 10px 12px !important;
           height: 46px !important;
         }
         .contract-main-table .ant-table-container {
-          border: 1px solid #E2E8F0 !important;
+          border: 1px solid #dce5e6 !important;
           border-radius: 8px !important;
           overflow: hidden;
         }
         .contract-main-table .ant-pagination .ant-pagination-item-active {
-          border-color: #7C3AED !important;
-          background-color: #7C3AED !important;
+          border-color: #008f89 !important;
+          background-color: #008f89 !important;
         }
         .contract-main-table .ant-pagination .ant-pagination-item-active a {
           color: #FFFFFF !important;
@@ -279,13 +279,13 @@ export default function ContractsTable({ filteredContracts, loading, searchKeywo
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <Text strong style={{ fontSize: 18, color: "#7C3AED", fontWeight: 700, lineHeight: "28px" }}>
+          <Text strong style={{ fontSize: 18, color: "#008f89", fontWeight: 700, lineHeight: "28px" }}>
             {t.pageTitles.contracts}
           </Text>
           <Tag
             style={{
-              background: "#EDE9FE",
-              color: "#7C3AED",
+              background: "#dce5e6",
+              color: "#008f89",
               borderRadius: 12,
               border: "none",
               fontSize: 12,
@@ -310,9 +310,9 @@ export default function ContractsTable({ filteredContracts, loading, searchKeywo
               width: 240,
               height: 36,
               borderRadius: 8,
-              borderColor: "#E2E8F0",
+              borderColor: "#dce5e6",
               fontSize: 14,
-              color: "#0F172A",
+              color: "#123443",
             }}
           />
           {isFiltering && (
@@ -333,12 +333,12 @@ export default function ContractsTable({ filteredContracts, loading, searchKeywo
             </Button>
           )}
           <Button
-            icon={<IconRefresh size={16} strokeWidth={1.8} style={{ color: "#7C3AED" }} />}
+            icon={<IconRefresh size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />}
             onClick={() => onRefresh(pagination.current, pagination.pageSize)}
             style={{
               height: 36,
               borderRadius: 8,
-              borderColor: "#E2E8F0",
+              borderColor: "#dce5e6",
               background: "#FFFFFF",
               color: "#334155",
               fontSize: 14,
@@ -351,8 +351,8 @@ export default function ContractsTable({ filteredContracts, loading, searchKeywo
             type="primary"
             icon={<IconPlus size={16} strokeWidth={2} />}
             style={{
-              background: "#7C3AED",
-              borderColor: "#7C3AED",
+              background: "#008f89",
+              borderColor: "#008f89",
               height: 36,
               borderRadius: 8,
               fontSize: 14,
@@ -382,12 +382,12 @@ export default function ContractsTable({ filteredContracts, loading, searchKeywo
           let totalAmount = 0;
           pageData.forEach((item: any) => { totalAmount += Number(item.ContractedAmount ?? item.Amount ?? 0); });
           return (
-            <Table.Summary.Row style={{ background: "#F5F3FF" }}>
+            <Table.Summary.Row style={{ background: "#eef8f6" }}>
               <Table.Summary.Cell index={0} colSpan={5}>
-                <span style={{ fontWeight: 600, color: "#0F172A", fontSize: 13 }}>{t.common.total}:</span>
+                <span style={{ fontWeight: 600, color: "#123443", fontSize: 13 }}>{t.common.total}:</span>
               </Table.Summary.Cell>
               <Table.Summary.Cell index={1} align="right">
-                <span style={{ fontWeight: 700, color: "#7C3AED", fontSize: 14 }}>
+                <span style={{ fontWeight: 700, color: "#008f89", fontSize: 14 }}>
                   {totalAmount.toLocaleString("vi-VN")}
                 </span>
               </Table.Summary.Cell>

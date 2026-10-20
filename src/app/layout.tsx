@@ -17,7 +17,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="vi">
-      <body style={{ margin: 0, padding: 0, background: "#f5f5f5", fontFamily: "Segoe UI, -apple-system, Roboto, sans-serif" }}>
+      <body style={{ margin: 0, padding: 0, background: "#f2f6f5", color: "#123443", fontFamily: "Segoe UI, -apple-system, Roboto, sans-serif" }}>
         <AntdRegistry>
           <AuthProvider>
             <LanguageProvider>

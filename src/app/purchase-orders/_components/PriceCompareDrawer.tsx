@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useMemo, useEffect } from "react";
 import {
@@ -159,7 +159,7 @@ export default function PriceCompareDrawer({
           return (
             <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                <Text strong style={{ color: "#1E293B" }}>
+                <Text strong style={{ color: "#123443" }}>
                   {val || r.Description || "---"}
                 </Text>
                 {isAlreadyAdded && (
@@ -169,7 +169,7 @@ export default function PriceCompareDrawer({
                 )}
               </div>
               {itemCode && (
-                <Text type="secondary" style={{ fontSize: 12, color: "#64748B" }}>
+                <Text type="secondary" style={{ fontSize: 12, color: "#718894" }}>
                   {itemCode}
                 </Text>
               )}
@@ -351,9 +351,9 @@ export default function PriceCompareDrawer({
             width: 320,
             height: 36,
             borderRadius: 8,
-            borderColor: "#E2E8F0",
+            borderColor: "#dce5e6",
             fontSize: 14,
-            color: "#0F172A",
+            color: "#123443",
           }}
         />
         {searchText.trim() && (

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useMemo } from "react";
 import { Button, Typography } from "antd";
@@ -101,7 +101,7 @@ export default function ContractLovModal({
           <Button
             type="primary"
             size="small"
-            style={{ background: "#7C3AED", borderColor: "#7C3AED", borderRadius: 6 }}
+            style={{ background: "#008f89", borderColor: "#008f89", borderRadius: 6 }}
             onClick={(e) => {
               e.stopPropagation();
               onSelectContract(record);
@@ -120,7 +120,7 @@ export default function ContractLovModal({
       open={open}
       onClose={onClose}
       title={language === "en" ? "Contract Directory (LOV)" : "Danh sách Hợp đồng"}
-      icon={<FileTextOutlined style={{ color: "#7C3AED", fontSize: 18 }} />}
+      icon={<FileTextOutlined style={{ color: "#008f89", fontSize: 18 }} />}
       searchPlaceholder={language === "en" ? "Enter contract code, description, remarks..." : "Nhập mã hợp đồng, diễn giải, ghi chú..."}
       searchInput={contractSearchInput}
       setSearchInput={setContractSearchInput}
@@ -131,7 +131,7 @@ export default function ContractLovModal({
       columns={columns}
       rowKey={(r, index) => r.ContractId ?? r.Id ?? `contract_${index}`}
       width={900}
-      primaryColor="#7C3AED"
+      primaryColor="#008f89"
     />
   );
 }

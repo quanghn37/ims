@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useMemo, useEffect } from "react";
 import { Button } from "antd";
@@ -49,14 +49,14 @@ export default function ItemLovModal({
           const code = r.ItemCode || r.SystemCode || r.Code || (r.MaterialId ? String(r.MaterialId) : "");
           return (
             <div>
-              <div style={{ color: "#0F172A", fontWeight: 600, fontSize: 13, wordBreak: "break-word" }}>
+              <div style={{ color: "#123443", fontWeight: 600, fontSize: 13, wordBreak: "break-word" }}>
                 {name}
               </div>
               {code && (
                 <div
                   style={{
                     fontSize: 12,
-                    color: "#64748B",
+                    color: "#718894",
                     marginTop: 2,
                     fontFamily: "monospace",
                     wordBreak: "break-word",
@@ -75,7 +75,7 @@ export default function ItemLovModal({
         key: "Unit",
         width: 90,
         align: "center" as const,
-        render: (val: any) => <span style={{ color: "#0F172A", fontSize: 13 }}>{val || "Cái"}</span>,
+        render: (val: any) => <span style={{ color: "#123443", fontSize: 13 }}>{val || "Cái"}</span>,
       },
       {
         title: t.lov.colAction,
@@ -87,8 +87,8 @@ export default function ItemLovModal({
             type="primary"
             size="small"
             style={{
-              background: "#7C3AED",
-              borderColor: "#7C3AED",
+              background: "#008f89",
+              borderColor: "#008f89",
               borderRadius: 6,
               fontSize: 12,
               fontWeight: 500,
@@ -108,7 +108,7 @@ export default function ItemLovModal({
       open={open}
       onClose={onClose}
       title={t.lov.itemTitle}
-      icon={<AppstoreOutlined style={{ color: "#7C3AED", fontSize: 18 }} />}
+      icon={<AppstoreOutlined style={{ color: "#008f89", fontSize: 18 }} />}
       searchPlaceholder={t.lov.itemSearchPlaceholder}
       searchInput={itemSearchInput}
       setSearchInput={setItemSearchInput}
@@ -118,7 +118,7 @@ export default function ItemLovModal({
       loading={loadingItems}
       columns={columns}
       width={780}
-      primaryColor="#7C3AED"
+      primaryColor="#008f89"
       zIndex={zIndex}
       rowKey={(r, idx) => r.MaterialId ?? r.ItemId ?? r.Id ?? `mat_${idx}`}
     />

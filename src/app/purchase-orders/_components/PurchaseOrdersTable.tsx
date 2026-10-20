@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+﻿import { useMemo } from "react";
 import { Button, Input, Popconfirm, Space, Table, Tag, Tooltip, Typography } from "antd";
 import {
   IconSettings,
@@ -55,7 +55,7 @@ export default function PurchaseOrdersTable({
           style={{
             cursor: "pointer",
             fontWeight: 600,
-            color: "#7C3AED",
+            color: "#008f89",
             fontFamily: "monospace",
             fontSize: 13,
           }}
@@ -71,7 +71,7 @@ export default function PurchaseOrdersTable({
       key: "Description",
       width: 260,
       render: (val: string) => (
-        <span style={{ fontWeight: 500, color: "#0F172A", fontSize: 13 }}>
+        <span style={{ fontWeight: 500, color: "#123443", fontSize: 13 }}>
           {val || "Đơn đặt hàng vật tư & thiết bị"}
         </span>
       ),
@@ -81,7 +81,7 @@ export default function PurchaseOrdersTable({
       key: "Venname",
       width: 220,
       render: (_: any, record: any) => (
-        <span style={{ color: "#0F172A", fontSize: 13 }}>
+        <span style={{ color: "#123443", fontSize: 13 }}>
           {record.Venname || record.ClientId || "---"}
         </span>
       ),
@@ -99,7 +99,7 @@ export default function PurchaseOrdersTable({
           (record.ParentId ? String(record.ParentId) : "");
         const clean = text ? String(text).replace(/^#+/, "").trim() : "";
         return clean ? (
-          <span style={{ color: "#0F172A", fontSize: 13 }}>{clean}</span>
+          <span style={{ color: "#123443", fontSize: 13 }}>{clean}</span>
         ) : (
           <span style={{ color: "#94A3B8", fontSize: 13 }}>---</span>
         );
@@ -117,7 +117,7 @@ export default function PurchaseOrdersTable({
           (record.SourceId ? String(record.SourceId) : "");
         const clean = text ? String(text).replace(/^#+/, "").trim() : "";
         return clean ? (
-          <span style={{ color: "#0F172A", fontSize: 13 }}>{clean}</span>
+          <span style={{ color: "#123443", fontSize: 13 }}>{clean}</span>
         ) : (
           <span style={{ color: "#94A3B8", fontSize: 13 }}>---</span>
         );
@@ -131,7 +131,7 @@ export default function PurchaseOrdersTable({
       render: (val: any, record: any) => {
         const text = val || record.WarehouseName || (record.WarehouseId ? `Kho #${record.WarehouseId}` : "");
         return text ? (
-          <span style={{ color: "#0F172A", fontSize: 13 }}>{text}</span>
+          <span style={{ color: "#123443", fontSize: 13 }}>{text}</span>
         ) : (
           <span style={{ color: "#94A3B8", fontSize: 13 }}>---</span>
         );
@@ -145,7 +145,7 @@ export default function PurchaseOrdersTable({
         const raw = record.ContractDate || record.Contractdate || record.FromDate;
         const date = parseDateSafe(raw);
         return (
-          <span style={{ color: "#64748B", fontSize: 13, whiteSpace: "nowrap" }}>
+          <span style={{ color: "#718894", fontSize: 13, whiteSpace: "nowrap" }}>
             {date ? date.format("DD/MM/YYYY") : raw || "---"}
           </span>
         );
@@ -159,7 +159,7 @@ export default function PurchaseOrdersTable({
         const raw = record.DeliveryDate || record.Deliverydate || record.ToDate;
         const date = parseDateSafe(raw);
         return (
-          <span style={{ color: "#64748B", fontSize: 13, whiteSpace: "nowrap" }}>
+          <span style={{ color: "#718894", fontSize: 13, whiteSpace: "nowrap" }}>
             {date ? date.format("DD/MM/YYYY") : raw || "---"}
           </span>
         );
@@ -171,7 +171,7 @@ export default function PurchaseOrdersTable({
       key: "CreatedBy",
       width: 120,
       render: (val: string) => (
-        <span style={{ color: "#64748B", fontSize: 13 }}>{val || "Hệ thống"}</span>
+        <span style={{ color: "#718894", fontSize: 13 }}>{val || "Hệ thống"}</span>
       ),
     },
     {
@@ -242,30 +242,30 @@ export default function PurchaseOrdersTable({
           font-family: inherit;
         }
         .po-main-table .ant-table-thead > tr > th {
-          background-color: #F8FAFC !important;
+          background-color: #f7fbfa !important;
           color: #475569 !important;
           font-size: 13px !important;
           font-weight: 600 !important;
           line-height: 18px !important;
-          border-color: #E2E8F0 !important;
+          border-color: #dce5e6 !important;
           padding: 10px 12px !important;
         }
         .po-main-table .ant-table-tbody > tr > td {
-          color: #0F172A !important;
+          color: #123443 !important;
           font-size: 13px !important;
           line-height: 18px !important;
-          border-color: #E2E8F0 !important;
+          border-color: #dce5e6 !important;
           padding: 10px 12px !important;
           height: 46px !important;
         }
         .po-main-table .ant-table-container {
-          border: 1px solid #E2E8F0 !important;
+          border: 1px solid #dce5e6 !important;
           border-radius: 8px !important;
           overflow: hidden;
         }
         .po-main-table .ant-pagination .ant-pagination-item-active {
-          border-color: #7C3AED !important;
-          background-color: #7C3AED !important;
+          border-color: #008f89 !important;
+          background-color: #008f89 !important;
         }
         .po-main-table .ant-pagination .ant-pagination-item-active a {
           color: #FFFFFF !important;
@@ -282,13 +282,13 @@ export default function PurchaseOrdersTable({
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <Text strong style={{ fontSize: 18, color: "#7C3AED", fontWeight: 700, lineHeight: "28px" }}>
+          <Text strong style={{ fontSize: 18, color: "#008f89", fontWeight: 700, lineHeight: "28px" }}>
             {t.pageTitles.purchaseOrders}
           </Text>
           <Tag
             style={{
-              background: "#EDE9FE",
-              color: "#7C3AED",
+              background: "#dce5e6",
+              color: "#008f89",
               borderRadius: 12,
               border: "none",
               fontSize: 12,
@@ -312,18 +312,18 @@ export default function PurchaseOrdersTable({
               width: 240,
               height: 36,
               borderRadius: 8,
-              borderColor: "#E2E8F0",
+              borderColor: "#dce5e6",
               fontSize: 14,
-              color: "#0F172A",
+              color: "#123443",
             }}
           />
           <Button
-            icon={<IconRefresh size={16} strokeWidth={1.8} style={{ color: "#7C3AED" }} />}
+            icon={<IconRefresh size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />}
             onClick={() => onRefresh(pagination.current, pagination.pageSize)}
             style={{
               height: 36,
               borderRadius: 8,
-              borderColor: "#E2E8F0",
+              borderColor: "#dce5e6",
               background: "#FFFFFF",
               color: "#334155",
               fontSize: 14,
@@ -336,8 +336,8 @@ export default function PurchaseOrdersTable({
             type="primary"
             icon={<IconPlus size={16} strokeWidth={2} />}
             style={{
-              background: "#7C3AED",
-              borderColor: "#7C3AED",
+              background: "#008f89",
+              borderColor: "#008f89",
               height: 36,
               borderRadius: 8,
               fontSize: 14,

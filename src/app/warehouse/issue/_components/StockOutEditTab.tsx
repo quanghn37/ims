@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, useMemo } from "react";
 import {
@@ -194,7 +194,7 @@ export default function StockOutEditTab({
         align: "center",
         cannotHide: true,
         render: (_, __, index) => (
-          <span style={{ color: "#64748B", fontSize: 12 }}>{index + 1}</span>
+          <span style={{ color: "#718894", fontSize: 12 }}>{index + 1}</span>
         ),
       },
       {
@@ -208,7 +208,7 @@ export default function StockOutEditTab({
               fontFamily: "monospace",
               fontSize: 12,
               fontWeight: 600,
-              color: "#7C3AED",
+              color: "#008f89",
             }}
           >
             {val}
@@ -221,7 +221,7 @@ export default function StockOutEditTab({
         key: "itemName",
         width: 220,
         render: (val) => (
-          <span style={{ fontWeight: 500, color: "#0F172A", fontSize: 12 }}>{val}</span>
+          <span style={{ fontWeight: 500, color: "#123443", fontSize: 12 }}>{val}</span>
         ),
       },
       {
@@ -241,7 +241,7 @@ export default function StockOutEditTab({
         width: 75,
         align: "right",
         render: (val) => (
-          <span style={{ color: "#64748B", fontSize: 12 }}>
+          <span style={{ color: "#718894", fontSize: 12 }}>
             {Number(val || 0).toLocaleString("vi-VN")}
           </span>
         ),
@@ -265,7 +265,7 @@ export default function StockOutEditTab({
         width: 85,
         align: "right",
         render: (val) => (
-          <span style={{ fontWeight: 600, color: "#0F172A", fontSize: 12 }}>
+          <span style={{ fontWeight: 600, color: "#123443", fontSize: 12 }}>
             {Number(val || 0).toLocaleString("vi-VN")}
           </span>
         ),
@@ -289,7 +289,7 @@ export default function StockOutEditTab({
         width: 105,
         align: "right",
         render: (val) => (
-          <span style={{ color: "#0F172A", fontSize: 12, fontWeight: 500 }}>
+          <span style={{ color: "#123443", fontSize: 12, fontWeight: 500 }}>
             {Number(val || 0).toLocaleString("vi-VN")}
           </span>
         ),
@@ -310,7 +310,7 @@ export default function StockOutEditTab({
         width: 130,
         ellipsis: true,
         render: (val) => (
-          <span style={{ color: "#64748B", fontSize: 12 }}>{val || "---"}</span>
+          <span style={{ color: "#718894", fontSize: 12 }}>{val || "---"}</span>
         ),
       },
       {
@@ -326,8 +326,8 @@ export default function StockOutEditTab({
               <Button
                 type="default"
                 size="small"
-                icon={<EditOutlined style={{ color: "#7C3AED" }} />}
-                style={{ borderColor: "#DDD6FE", borderRadius: 6 }}
+                icon={<EditOutlined style={{ color: "#008f89" }} />}
+                style={{ borderColor: "#b2ded9", borderRadius: 6 }}
                 onClick={() => handleOpenItemModal(record)}
               />
             </Tooltip>
@@ -380,7 +380,7 @@ export default function StockOutEditTab({
             strong
             style={{
               fontSize: 18,
-              color: "#7C3AED",
+              color: "#008f89",
               fontWeight: 700,
               lineHeight: "28px",
               display: "flex",
@@ -388,7 +388,7 @@ export default function StockOutEditTab({
               gap: 8,
             }}
           >
-            <ExportOutlined style={{ color: "#7C3AED" }} />
+            <ExportOutlined style={{ color: "#008f89" }} />
             {isEditing
               ? `${editingIssue?.issueCode || t.issue.code}`
               : t.common.createIssue}
@@ -396,8 +396,8 @@ export default function StockOutEditTab({
           {isEditing && (
             <Tag
               style={{
-                background: "#EDE9FE",
-                color: "#7C3AED",
+                background: "#dce5e6",
+                color: "#008f89",
                 borderRadius: 12,
                 border: "none",
                 fontSize: 12,
@@ -420,7 +420,7 @@ export default function StockOutEditTab({
           <Button
             icon={<CloseOutlined />}
             onClick={onClose}
-            style={{ height: 32, borderRadius: 6, borderColor: "#E2E8F0", fontSize: 13 }}
+            style={{ height: 32, borderRadius: 6, borderColor: "#dce5e6", fontSize: 13 }}
           >
             {t.common.close}
           </Button>
@@ -429,13 +429,13 @@ export default function StockOutEditTab({
             icon={<SaveOutlined />}
             loading={submitting}
             style={{
-              background: "#7C3AED",
-              borderColor: "#7C3AED",
+              background: "#008f89",
+              borderColor: "#008f89",
               height: 32,
               borderRadius: 6,
               fontWeight: 500,
               fontSize: 13,
-              boxShadow: "0 2px 4px rgba(124, 58, 237, 0.2)",
+              boxShadow: "0 2px 4px rgba(0, 143, 137, 0.2)",
             }}
             onClick={() => form.submit()}
           >
@@ -450,7 +450,7 @@ export default function StockOutEditTab({
           <div
             style={{
               background: "#FFFFFF",
-              border: "1px solid #E2E8F0",
+              border: "1px solid #dce5e6",
               borderRadius: 6,
               padding: "8px 12px",
               boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
@@ -459,8 +459,8 @@ export default function StockOutEditTab({
             {/* Hàng 1: 4 Cột */}
             <Row gutter={[0, 0]} align="middle">
               {/* Cột 1: Loại xuất kho */}
-              <Col span={6} style={{ paddingRight: 10, borderRight: "1px solid #E2E8F0" }}>
-                <div style={{ fontSize: 11, color: "#64748B", marginBottom: 2, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={6} style={{ paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
+                <div style={{ fontSize: 11, color: "#718894", marginBottom: 2, fontWeight: 500, lineHeight: "14px" }}>
                   Loại xuất kho <span style={{ color: "#ff4d4f" }}>*</span>
                 </div>
                 <Form.Item
@@ -475,7 +475,7 @@ export default function StockOutEditTab({
                       width: "100%",
                       fontWeight: 600,
                       fontSize: 13,
-                      color: "#0F172A",
+                      color: "#123443",
                     }}
                     options={[
                       { value: "CONSTRUCTION", label: "Xuất thi công công trình" },
@@ -488,8 +488,8 @@ export default function StockOutEditTab({
               </Col>
 
               {/* Cột 2: Mã yêu cầu MR */}
-              <Col span={5} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #E2E8F0" }}>
-                <div style={{ fontSize: 11, color: "#64748B", marginBottom: 2, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={5} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
+                <div style={{ fontSize: 11, color: "#718894", marginBottom: 2, fontWeight: 500, lineHeight: "14px" }}>
                   Mã YC Vật tư (MR)
                 </div>
                 <Form.Item name="requisitionNo" style={{ margin: 0 }}>
@@ -501,15 +501,15 @@ export default function StockOutEditTab({
                       fontWeight: 600,
                       fontSize: 13,
                       lineHeight: "18px",
-                      color: "#0F172A",
+                      color: "#123443",
                     }}
                   />
                 </Form.Item>
               </Col>
 
               {/* Cột 3: Dự án / Đơn vị nhận */}
-              <Col span={7} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #E2E8F0" }}>
-                <div style={{ fontSize: 11, color: "#64748B", marginBottom: 2, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={7} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
+                <div style={{ fontSize: 11, color: "#718894", marginBottom: 2, fontWeight: 500, lineHeight: "14px" }}>
                   Dự án / Đơn vị nhận <span style={{ color: "#ff4d4f" }}>*</span>
                 </div>
                 <Form.Item
@@ -525,7 +525,7 @@ export default function StockOutEditTab({
                       fontWeight: 600,
                       fontSize: 13,
                       lineHeight: "18px",
-                      color: "#0F172A",
+                      color: "#123443",
                     }}
                   />
                 </Form.Item>
@@ -533,7 +533,7 @@ export default function StockOutEditTab({
 
               {/* Cột 4: Gói thầu / Hạng mục */}
               <Col span={6} style={{ paddingLeft: 10 }}>
-                <div style={{ fontSize: 11, color: "#64748B", marginBottom: 2, fontWeight: 500, lineHeight: "14px" }}>
+                <div style={{ fontSize: 11, color: "#718894", marginBottom: 2, fontWeight: 500, lineHeight: "14px" }}>
                   Gói thầu / Hạng mục
                 </div>
                 <Form.Item name="workPackage" style={{ margin: 0 }}>
@@ -545,7 +545,7 @@ export default function StockOutEditTab({
                       fontWeight: 600,
                       fontSize: 13,
                       lineHeight: "18px",
-                      color: "#0F172A",
+                      color: "#123443",
                     }}
                   />
                 </Form.Item>
@@ -553,13 +553,13 @@ export default function StockOutEditTab({
             </Row>
 
             {/* Đường phân cách giữa 2 hàng */}
-            <div style={{ height: 1, background: "#E2E8F0", margin: "6px 0" }} />
+            <div style={{ height: 1, background: "#dce5e6", margin: "6px 0" }} />
 
             {/* Hàng 2: 5 Cột */}
             <Row gutter={[0, 0]} align="middle">
               {/* Cột 1: Kho xuất */}
-              <Col span={6} style={{ paddingRight: 10, borderRight: "1px solid #E2E8F0" }}>
-                <div style={{ fontSize: 11, color: "#64748B", marginBottom: 2, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={6} style={{ paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
+                <div style={{ fontSize: 11, color: "#718894", marginBottom: 2, fontWeight: 500, lineHeight: "14px" }}>
                   Kho lưu trữ xuất <span style={{ color: "#ff4d4f" }}>*</span>
                 </div>
                 <Form.Item
@@ -574,7 +574,7 @@ export default function StockOutEditTab({
                       width: "100%",
                       fontWeight: 600,
                       fontSize: 13,
-                      color: "#0F172A",
+                      color: "#123443",
                     }}
                     options={warehouseOptions}
                   />
@@ -582,8 +582,8 @@ export default function StockOutEditTab({
               </Col>
 
               {/* Cột 2: Ngày xuất */}
-              <Col span={4} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #E2E8F0" }}>
-                <div style={{ fontSize: 11, color: "#64748B", marginBottom: 2, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={4} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
+                <div style={{ fontSize: 11, color: "#718894", marginBottom: 2, fontWeight: 500, lineHeight: "14px" }}>
                   Ngày xuất kho <span style={{ color: "#ff4d4f" }}>*</span>
                 </div>
                 <Form.Item
@@ -599,15 +599,15 @@ export default function StockOutEditTab({
                       width: "100%",
                       fontWeight: 600,
                       fontSize: 13,
-                      color: "#0F172A",
+                      color: "#123443",
                     }}
                   />
                 </Form.Item>
               </Col>
 
               {/* Cột 3: Mã phiếu xuất */}
-              <Col span={4} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #E2E8F0" }}>
-                <div style={{ fontSize: 11, color: "#64748B", marginBottom: 2, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={4} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
+                <div style={{ fontSize: 11, color: "#718894", marginBottom: 2, fontWeight: 500, lineHeight: "14px" }}>
                   Mã phiếu xuất <span style={{ color: "#ff4d4f" }}>*</span>
                 </div>
                 <Form.Item
@@ -623,15 +623,15 @@ export default function StockOutEditTab({
                       fontWeight: 600,
                       fontSize: 13,
                       lineHeight: "18px",
-                      color: "#0F172A",
+                      color: "#123443",
                     }}
                   />
                 </Form.Item>
               </Col>
 
               {/* Cột 4: Người nhận */}
-              <Col span={4} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #E2E8F0" }}>
-                <div style={{ fontSize: 11, color: "#64748B", marginBottom: 2, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={4} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
+                <div style={{ fontSize: 11, color: "#718894", marginBottom: 2, fontWeight: 500, lineHeight: "14px" }}>
                   Người nhận hàng
                 </div>
                 <Form.Item name="receiver" style={{ margin: 0 }}>
@@ -643,7 +643,7 @@ export default function StockOutEditTab({
                       fontWeight: 600,
                       fontSize: 13,
                       lineHeight: "18px",
-                      color: "#0F172A",
+                      color: "#123443",
                     }}
                   />
                 </Form.Item>
@@ -651,7 +651,7 @@ export default function StockOutEditTab({
 
               {/* Cột 5: Diễn giải */}
               <Col span={6} style={{ paddingLeft: 10 }}>
-                <div style={{ fontSize: 11, color: "#64748B", marginBottom: 2, fontWeight: 500, lineHeight: "14px" }}>
+                <div style={{ fontSize: 11, color: "#718894", marginBottom: 2, fontWeight: 500, lineHeight: "14px" }}>
                   Diễn giải xuất kho
                 </div>
                 <Form.Item name="description" style={{ margin: 0 }}>
@@ -663,7 +663,7 @@ export default function StockOutEditTab({
                       fontWeight: 600,
                       fontSize: 13,
                       lineHeight: "18px",
-                      color: "#0F172A",
+                      color: "#123443",
                     }}
                   />
                 </Form.Item>
@@ -677,7 +677,7 @@ export default function StockOutEditTab({
       <div
         style={{
           background: "#FFFFFF",
-          border: "1px solid #E2E8F0",
+          border: "1px solid #dce5e6",
           borderRadius: 8,
           padding: 16,
           boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
@@ -692,13 +692,13 @@ export default function StockOutEditTab({
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <Text strong style={{ fontSize: 13, color: "#7C3AED", fontWeight: 700, textTransform: "uppercase" }}>
+            <Text strong style={{ fontSize: 13, color: "#008f89", fontWeight: 700, textTransform: "uppercase" }}>
               {t.section.detailListIssue}
             </Text>
             <Tag
               style={{
-                background: "#EDE9FE",
-                color: "#7C3AED",
+                background: "#dce5e6",
+                color: "#008f89",
                 borderRadius: 12,
                 border: "none",
                 fontSize: 12,
@@ -717,8 +717,8 @@ export default function StockOutEditTab({
               icon={<PlusOutlined />}
               onClick={() => handleOpenItemModal()}
               style={{
-                background: "#7C3AED",
-                borderColor: "#7C3AED",
+                background: "#008f89",
+                borderColor: "#008f89",
                 borderRadius: 6,
                 fontWeight: 500,
               }}
@@ -741,12 +741,12 @@ export default function StockOutEditTab({
           summary={() => {
             return (
               <Table.Summary fixed="bottom">
-                <Table.Summary.Row style={{ background: "#F8FAFC", fontWeight: 600 }}>
+                <Table.Summary.Row style={{ background: "#f7fbfa", fontWeight: 600 }}>
                   <Table.Summary.Cell index={0} colSpan={6} align="right">
-                    <span style={{ color: "#0F172A" }}>{t.table.total}</span>
+                    <span style={{ color: "#123443" }}>{t.table.total}</span>
                   </Table.Summary.Cell>
                   <Table.Summary.Cell index={6} align="right">
-                    <span style={{ color: "#7C3AED", fontSize: 14 }}>
+                    <span style={{ color: "#008f89", fontSize: 14 }}>
                       {totalQty.toLocaleString("vi-VN")}
                     </span>
                   </Table.Summary.Cell>
@@ -754,7 +754,7 @@ export default function StockOutEditTab({
                     <span>---</span>
                   </Table.Summary.Cell>
                   <Table.Summary.Cell index={8} align="right">
-                    <span style={{ color: "#0F172A", fontSize: 14 }}>
+                    <span style={{ color: "#123443", fontSize: 14 }}>
                       {totalAmount.toLocaleString("vi-VN")}
                     </span>
                   </Table.Summary.Cell>

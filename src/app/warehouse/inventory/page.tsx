@@ -34,7 +34,7 @@ export default function InventoryPage() {
   } = useInventory();
 
   return (
-    <div style={{ padding: "20px 24px", background: "#F8FAFC", minHeight: "100vh" }}>
+    <div style={{ padding: "20px 24px", background: "#FFFFFF", borderRadius: 16, border: "1px solid #dce5e6", minHeight: "calc(100vh - 100px)", boxShadow: "0 1px 3px rgba(18, 52, 67, 0.04)" }}>
       {/* TIÊU ĐỀ TRANG */}
       <div
         style={{
@@ -50,17 +50,17 @@ export default function InventoryPage() {
               width: 36,
               height: 36,
               borderRadius: 8,
-              background: "#EDE9FE",
+              background: "#eef8f6",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#7C3AED",
+              color: "#008f89",
             }}
           >
             <InboxOutlined style={{ fontSize: 20 }} />
           </div>
           <div>
-            <Title level={4} style={{ margin: 0, color: "#0F172A", fontWeight: 700 }}>
+            <Title level={4} style={{ margin: 0, color: "#123443", fontWeight: 700 }}>
               {t.inventory.title}
             </Title>
             <Text type="secondary" style={{ fontSize: 13 }}>

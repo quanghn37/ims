@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import {
@@ -156,7 +156,7 @@ export default function RequisitionCreateModal({
       key: "itemCode",
       width: 130,
       render: (val: string) => (
-        <span style={{ fontWeight: 600, color: "#7C3AED", fontFamily: "monospace" }}>{val}</span>
+        <span style={{ fontWeight: 600, color: "#008f89", fontFamily: "monospace" }}>{val}</span>
       ),
     },
     {
@@ -261,7 +261,7 @@ export default function RequisitionCreateModal({
   return (
     <Modal
       title={
-        <span style={{ fontWeight: 600, color: "#7C3AED", fontSize: 16 }}>
+        <span style={{ fontWeight: 600, color: "#008f89", fontSize: 16 }}>
           {language === "en" ? "Create Material Requisition" : "Lập Phiếu Yêu Cầu Xuất Vật Tư (Material Requisition)"}
         </span>
       }
@@ -273,7 +273,7 @@ export default function RequisitionCreateModal({
       okText={language === "en" ? "Submit Requisition" : "Lập & Gửi duyệt"}
       cancelText={t.common.cancel}
       okButtonProps={{
-        style: { background: "#7C3AED", borderColor: "#7C3AED", borderRadius: 6 },
+        style: { background: "#008f89", borderColor: "#008f89", borderRadius: 6 },
       }}
     >
       <Form form={form} layout="vertical" style={{ marginTop: 12 }}>
@@ -359,7 +359,7 @@ export default function RequisitionCreateModal({
                 size="small"
                 icon={<PlusOutlined />}
                 onClick={handleAddItem}
-                style={{ color: "#7C3AED", borderColor: "#DDD6FE" }}
+                style={{ color: "#008f89", borderColor: "#b2ded9" }}
               >
                 {language === "en" ? "Add Item" : "Thêm vật tư"}
               </Button>

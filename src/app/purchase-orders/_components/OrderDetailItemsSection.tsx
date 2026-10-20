@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useMemo, useEffect } from "react";
 import {
@@ -165,7 +165,7 @@ export default function OrderDetailItemsSection({
         width: 50,
         align: "center",
         render: (_, __, idx) => (
-          <span style={{ fontWeight: 500, color: "#64748B", fontSize: 13 }}>{idx + 1}</span>
+          <span style={{ fontWeight: 500, color: "#718894", fontSize: 13 }}>{idx + 1}</span>
         ),
       },
       {
@@ -196,7 +196,7 @@ export default function OrderDetailItemsSection({
 
           if (!orgName) {
             return (
-              <span style={{ fontWeight: 500, color: "#0F172A", fontSize: 13 }}>
+              <span style={{ fontWeight: 500, color: "#123443", fontSize: 13 }}>
                 {orgCode}
               </span>
             );
@@ -204,11 +204,11 @@ export default function OrderDetailItemsSection({
 
           return (
             <div>
-              <div style={{ fontWeight: 600, color: "#0F172A", fontSize: 13 }}>
+              <div style={{ fontWeight: 600, color: "#123443", fontSize: 13 }}>
                 {orgName}
               </div>
               {orgCode && (
-                <div style={{ fontSize: 11.5, color: "#64748B", marginTop: 2 }}>
+                <div style={{ fontSize: 11.5, color: "#718894", marginTop: 2 }}>
                   {orgCode.startsWith("(") ? orgCode : `(${orgCode})`}
                 </div>
               )}
@@ -234,11 +234,11 @@ export default function OrderDetailItemsSection({
           }
           return (
             <div>
-              <div style={{ fontWeight: 600, color: "#0F172A", fontSize: 13 }}>
+              <div style={{ fontWeight: 600, color: "#123443", fontSize: 13 }}>
                 {mainTitle || "---"}
               </div>
               {subTitle && (
-                <div style={{ fontSize: 11.5, color: "#64748B", marginTop: 2 }}>
+                <div style={{ fontSize: 11.5, color: "#718894", marginTop: 2 }}>
                   {subTitle.startsWith("(") ? subTitle : `(${subTitle})`}
                 </div>
               )}
@@ -253,7 +253,7 @@ export default function OrderDetailItemsSection({
         width: 70,
         align: "center",
         render: (val, record) => (
-          <span style={{ color: "#0F172A", fontSize: 13 }}>
+          <span style={{ color: "#123443", fontSize: 13 }}>
             {val || record.Unit || "---"}
           </span>
         ),
@@ -265,7 +265,7 @@ export default function OrderDetailItemsSection({
         width: 95,
         align: "right",
         render: (val) => (
-          <span style={{ color: "#0F172A", fontSize: 13 }}>
+          <span style={{ color: "#123443", fontSize: 13 }}>
             {Number(val || 0).toLocaleString("vi-VN")}
           </span>
         ),
@@ -277,7 +277,7 @@ export default function OrderDetailItemsSection({
         width: 110,
         align: "right",
         render: (val) => (
-          <span style={{ color: "#0F172A", fontSize: 13 }}>
+          <span style={{ color: "#123443", fontSize: 13 }}>
             {Number(val || 0).toLocaleString("vi-VN")}
           </span>
         ),
@@ -296,7 +296,7 @@ export default function OrderDetailItemsSection({
               ? r.TotalPrice
               : Number(r.Qnty || 0) * Number(r.UnitPrice || 0);
           return (
-            <span style={{ color: "#0F172A", fontSize: 13 }}>
+            <span style={{ color: "#123443", fontSize: 13 }}>
               {Number(total || 0).toLocaleString("vi-VN")}
             </span>
           );
@@ -336,7 +336,7 @@ export default function OrderDetailItemsSection({
               : rawAmount * taxRate;
           const totalWithVat = rawAmount + taxVal;
           return (
-            <span style={{ color: "#0F172A", fontWeight: 600, fontSize: 13 }}>
+            <span style={{ color: "#123443", fontWeight: 600, fontSize: 13 }}>
               {totalWithVat.toLocaleString("vi-VN")}
             </span>
           );
@@ -480,7 +480,7 @@ export default function OrderDetailItemsSection({
     <div
       style={{
         background: "#FFFFFF",
-        border: "1px solid #E2E8F0",
+        border: "1px solid #dce5e6",
         borderRadius: 8,
         padding: "12px 14px",
         boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
@@ -499,7 +499,7 @@ export default function OrderDetailItemsSection({
             strong
             style={{
               fontSize: 13,
-              color: "#7C3AED",
+              color: "#008f89",
               fontWeight: 700,
               textTransform: "uppercase",
               lineHeight: "20px",
@@ -509,8 +509,8 @@ export default function OrderDetailItemsSection({
           </Text>
           <Tag
             style={{
-              background: "#EDE9FE",
-              color: "#7C3AED",
+              background: "#dce5e6",
+              color: "#008f89",
               borderRadius: 12,
               border: "none",
               fontSize: 11,
@@ -526,11 +526,11 @@ export default function OrderDetailItemsSection({
         <Space size={8}>
           {onRefreshItems && (
             <Button
-              icon={<IconRefresh size={16} strokeWidth={1.8} style={{ color: "#7C3AED" }} />}
+              icon={<IconRefresh size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />}
               onClick={onRefreshItems}
               loading={loadingItems}
               style={{
-                borderColor: "#E2E8F0",
+                borderColor: "#dce5e6",
                 background: "#FFFFFF",
                 color: "#334155",
                 fontSize: 14,
@@ -544,9 +544,9 @@ export default function OrderDetailItemsSection({
           )}
           {onOpenPriceCompare && (
             <Button
-              icon={<IconScale size={16} strokeWidth={1.8} style={{ color: "#7C3AED" }} />}
+              icon={<IconScale size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />}
               style={{
-                borderColor: "#E2E8F0",
+                borderColor: "#dce5e6",
                 background: "#FFFFFF",
                 color: "#334155",
                 fontSize: 14,
@@ -578,7 +578,7 @@ export default function OrderDetailItemsSection({
         scroll={{ x: detailScrollX, y: 450 }}
         summary={() => (
           <Table.Summary fixed>
-            <Table.Summary.Row style={{ background: "#F5F3FF", fontWeight: "bold" }}>
+            <Table.Summary.Row style={{ background: "#eef8f6", fontWeight: "bold" }}>
               <Table.Summary.Cell index={0} align="center">
                 <Text style={{ color: "#94A3B8" }}>-</Text>
               </Table.Summary.Cell>
@@ -589,12 +589,12 @@ export default function OrderDetailItemsSection({
                 <Text style={{ color: "#94A3B8" }}>-</Text>
               </Table.Summary.Cell>
               <Table.Summary.Cell index={3} align="right">
-                <Text strong style={{ color: "#0F172A", fontSize: 13.5 }}>
+                <Text strong style={{ color: "#123443", fontSize: 13.5 }}>
                   {t.table.total}
                 </Text>
               </Table.Summary.Cell>
               <Table.Summary.Cell index={4} align="right">
-                <Text style={{ color: "#0F172A", fontSize: 13.5 }}>
+                <Text style={{ color: "#123443", fontSize: 13.5 }}>
                   {totalQty.toLocaleString("vi-VN")}
                 </Text>
               </Table.Summary.Cell>
@@ -602,7 +602,7 @@ export default function OrderDetailItemsSection({
                 <Text style={{ color: "#94A3B8" }}>-</Text>
               </Table.Summary.Cell>
               <Table.Summary.Cell index={6} align="right">
-                <Text strong style={{ color: "#0F172A", fontSize: 13.5 }}>
+                <Text strong style={{ color: "#123443", fontSize: 13.5 }}>
                   {totalAmount.toLocaleString("vi-VN")}
                 </Text>
               </Table.Summary.Cell>
@@ -610,7 +610,7 @@ export default function OrderDetailItemsSection({
                 <Text style={{ color: "#475569", fontSize: 13 }}>8%</Text>
               </Table.Summary.Cell>
               <Table.Summary.Cell index={8} align="right">
-                <Text strong style={{ color: "#0F172A", fontSize: 13.5 }}>
+                <Text strong style={{ color: "#123443", fontSize: 13.5 }}>
                   {(totalAmount + totalTax).toLocaleString("vi-VN")}
                 </Text>
               </Table.Summary.Cell>

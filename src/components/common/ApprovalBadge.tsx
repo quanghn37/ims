@@ -65,7 +65,7 @@ export const renderApprovalBadge = (val: any, record?: any, language: string = "
   let displayLabel = cleanStatus || rawStatus;
 
   if (isDone) {
-    bg = "#0d9488";
+    bg = "#008f89";
     IconComp = IconCheck;
     displayLabel = cleanStatus || (language === "en" ? "Approved" : "Chấp thuận");
   } else if (isProcessing) {

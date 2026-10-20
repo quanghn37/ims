@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import {
@@ -45,7 +45,7 @@ function renderSignStatus(record: AttachmentFile) {
         href={record.fileUrl}
         target="_blank"
         rel="noreferrer"
-        style={{ color: "#7C3AED", fontSize: 13 }}
+        style={{ color: "#008f89", fontSize: 13 }}
       >
         <SafetyCertificateOutlined style={{ marginRight: 4 }} />
         View
@@ -88,7 +88,7 @@ export default function QuotationAttachmentsModal({
     <Modal
       title={
         <Space>
-          <PaperClipOutlined style={{ color: "#7C3AED" }} />
+          <PaperClipOutlined style={{ color: "#008f89" }} />
           <span>
             {language === "en" ? "Price List Attachments" : "Tệp đính kèm Bảng giá"} ({attachments.length})
           </span>
@@ -101,8 +101,8 @@ export default function QuotationAttachmentsModal({
           key="close"
           type="primary"
           style={{
-            background: "#7C3AED",
-            borderColor: "#7C3AED",
+            background: "#008f89",
+            borderColor: "#008f89",
             borderRadius: 8,
           }}
           onClick={onClose}
@@ -121,12 +121,12 @@ export default function QuotationAttachmentsModal({
             justifyContent: "space-between",
             alignItems: "center",
             padding: "8px 12px",
-            background: "#F5F3FF",
+            background: "#eef8f6",
             borderRadius: 8,
-            border: "1px solid #DDD6FE",
+            border: "1px solid #b2ded9",
           }}
         >
-          <Text type="secondary" style={{ fontSize: 13, color: "#64748B" }}>
+          <Text type="secondary" style={{ fontSize: 13, color: "#718894" }}>
             {language === "en"
               ? "Upload and manage attached documents, quotation sheets."
               : "Tải lên và quản lý hồ sơ, tài liệu, bảng chào giá đính kèm."}
@@ -136,8 +136,8 @@ export default function QuotationAttachmentsModal({
               type="primary"
               icon={<UploadOutlined />}
               style={{
-                background: "#7C3AED",
-                borderColor: "#7C3AED",
+                background: "#008f89",
+                borderColor: "#008f89",
                 borderRadius: 8,
               }}
             >
@@ -188,8 +188,8 @@ export default function QuotationAttachmentsModal({
             <div
               key={file.id}
               style={{
-                background: "#F8FAFC",
-                border: "1px solid #E2E8F0",
+                background: "#f7fbfa",
+                border: "1px solid #dce5e6",
                 borderRadius: 8,
                 padding: "10px 14px",
               }}
@@ -211,7 +211,7 @@ export default function QuotationAttachmentsModal({
                     style={{
                       fontSize: 13,
                       fontWeight: 500,
-                      color: "#7C3AED",
+                      color: "#008f89",
                       wordBreak: "break-all",
                     }}
                   >
@@ -223,7 +223,7 @@ export default function QuotationAttachmentsModal({
                     href={file.fileUrl}
                     download={file.fileName}
                     title={language === "en" ? "Download" : "Tải về"}
-                    style={{ color: "#64748B" }}
+                    style={{ color: "#718894" }}
                   >
                     <Button type="text" size="small" icon={<DownloadOutlined />} />
                   </a>

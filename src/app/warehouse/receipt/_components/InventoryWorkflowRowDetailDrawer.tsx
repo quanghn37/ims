@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useMemo } from "react";
 import {
@@ -118,18 +118,18 @@ export default function InventoryWorkflowRowDetailDrawer({
   return (
     <Drawer
       closable={true}
-      closeIcon={<IconX size={18} style={{ color: "#64748B" }} />}
+      closeIcon={<IconX size={18} style={{ color: "#718894" }} />}
       title={
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <IconClipboardCheck size={20} strokeWidth={1.8} style={{ color: "#7C3AED" }} />
-          <span style={{ fontSize: 16, fontWeight: 700, color: "#0F172A" }}>
+          <IconClipboardCheck size={20} strokeWidth={1.8} style={{ color: "#008f89" }} />
+          <span style={{ fontSize: 16, fontWeight: 700, color: "#123443" }}>
             {selectedWorkflowRow?.FullName || selectedWorkflowRow?.UserName || (language === "en" ? "Approver" : "Người duyệt")}
           </span>
           {selectedWorkflowRow?.Role && (
             <Tag
               style={{
-                background: "#EDE9FE",
-                color: "#7C3AED",
+                background: "#dce5e6",
+                color: "#008f89",
                 border: "none",
                 borderRadius: 16,
                 fontWeight: 600,
@@ -154,7 +154,7 @@ export default function InventoryWorkflowRowDetailDrawer({
             style={{
               height: 38,
               borderRadius: 8,
-              borderColor: "#E2E8F0",
+              borderColor: "#dce5e6",
               color: "#334155",
               padding: "0 18px",
             }}
@@ -165,13 +165,13 @@ export default function InventoryWorkflowRowDetailDrawer({
             type="primary"
             icon={<IconDeviceFloppy size={18} strokeWidth={1.8} />}
             style={{
-              background: "#7C3AED",
-              borderColor: "#7C3AED",
+              background: "#008f89",
+              borderColor: "#008f89",
               height: 38,
               borderRadius: 8,
               fontWeight: 500,
               padding: "0 20px",
-              boxShadow: "0 2px 6px rgba(124, 58, 237, 0.25)",
+              boxShadow: "0 2px 6px rgba(0, 143, 137, 0.25)",
               display: "inline-flex",
               alignItems: "center",
               gap: 6,
@@ -195,14 +195,14 @@ export default function InventoryWorkflowRowDetailDrawer({
                   gap: 8,
                   fontSize: 13,
                   color: "#334155",
-                  background: "#F8FAFC",
+                  background: "#f7fbfa",
                   padding: "10px 14px",
                   borderRadius: 8,
                   border: "1px solid #F1F5F9",
                   fontWeight: 500,
                 }}
               >
-                <IconClock size={16} strokeWidth={1.8} style={{ color: "#64748B" }} />
+                <IconClock size={16} strokeWidth={1.8} style={{ color: "#718894" }} />
                 <span>
                   {t("workflow.startTime") || "Bắt đầu"}: {dayjs(selectedWorkflowRow.ActualStart).format("HH:mm DD/MM/YYYY")}
                 </span>
@@ -235,7 +235,7 @@ export default function InventoryWorkflowRowDetailDrawer({
                   value={rowDetailQnty}
                   onChange={(v) => setRowDetailQnty(Number(v || 0))}
                   min={0}
-                  style={{ width: "100%", height: 40, borderRadius: 8, borderColor: "#E2E8F0" }}
+                  style={{ width: "100%", height: 40, borderRadius: 8, borderColor: "#dce5e6" }}
                   formatter={(val) => `${val}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
                   parser={(val) => Number(val?.replace(/,/g, "") || 0) as any}
                 />
@@ -254,7 +254,7 @@ export default function InventoryWorkflowRowDetailDrawer({
                       value={rowDetailQnty}
                       onChange={(v) => setRowDetailQnty(Number(v || 0))}
                       min={0}
-                      style={{ width: "100%", height: 40, borderRadius: 8, borderColor: "#E2E8F0" }}
+                      style={{ width: "100%", height: 40, borderRadius: 8, borderColor: "#dce5e6" }}
                       formatter={(val) => `${val}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
                       parser={(val) => Number(val?.replace(/,/g, "") || 0) as any}
                     />
@@ -270,7 +270,7 @@ export default function InventoryWorkflowRowDetailDrawer({
                       value={rowDetailUnitPrice}
                       onChange={(v) => setRowDetailUnitPrice(Number(v || 0))}
                       min={0}
-                      style={{ width: "100%", height: 40, borderRadius: 8, borderColor: "#E2E8F0" }}
+                      style={{ width: "100%", height: 40, borderRadius: 8, borderColor: "#dce5e6" }}
                       formatter={(val) => `${val}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
                       parser={(val) => Number(val?.replace(/,/g, "") || 0) as any}
                     />
@@ -279,16 +279,16 @@ export default function InventoryWorkflowRowDetailDrawer({
 
                 <div
                   style={{
-                    background: "#F5F3FF",
+                    background: "#eef8f6",
                     borderRadius: 10,
                     padding: "14px 16px",
-                    border: "1px solid #EDE9FE",
+                    border: "1px solid #dce5e6",
                   }}
                 >
-                  <div style={{ fontSize: 13, color: "#64748B", fontWeight: 500, marginBottom: 4 }}>
+                  <div style={{ fontSize: 13, color: "#718894", fontWeight: 500, marginBottom: 4 }}>
                     {t("workflow.approvedAmount") || "Thành tiền duyệt"}
                   </div>
-                  <div style={{ fontSize: 20, fontWeight: 700, color: "#7C3AED", letterSpacing: 0.2 }}>
+                  <div style={{ fontSize: 20, fontWeight: 700, color: "#008f89", letterSpacing: 0.2 }}>
                     {(rowDetailQnty * rowDetailUnitPrice).toLocaleString(numLocale)}
                   </div>
                 </div>
@@ -308,7 +308,7 @@ export default function InventoryWorkflowRowDetailDrawer({
                     ? (language === "en" ? "Enter material request approval comments..." : "Nhập ý kiến phê duyệt yêu cầu xuất vật tư...")
                     : (language === "en" ? "Enter stock receipt approval comments..." : "Nhập ý kiến phê duyệt nhập kho...")
                 }
-                style={{ borderRadius: 8, borderColor: "#E2E8F0", padding: "10px 12px" }}
+                style={{ borderRadius: 8, borderColor: "#dce5e6", padding: "10px 12px" }}
               />
             </div>
           </div>

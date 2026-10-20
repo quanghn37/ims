@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, useMemo } from "react";
 import {
@@ -617,7 +617,7 @@ export default function RequisitionEditTab({
               <div
                 style={{
                   fontWeight: 500,
-                  color: "#1E293B",
+                  color: "#123443",
                   fontSize: 12,
                   lineHeight: "17px",
                   wordBreak: "break-word",
@@ -630,7 +630,7 @@ export default function RequisitionEditTab({
                 <div
                   style={{
                     fontSize: 11,
-                    color: "#7C3AED",
+                    color: "#008f89",
                     fontWeight: 600,
                     fontFamily: "monospace",
                     marginTop: 2,
@@ -653,11 +653,11 @@ export default function RequisitionEditTab({
           const desc = name || r.Description || r.ItemName || "---";
           return (
             <div>
-              <div style={{ fontWeight: 500, color: "#1E293B", fontSize: 12, lineHeight: "17px" }}>
+              <div style={{ fontWeight: 500, color: "#123443", fontSize: 12, lineHeight: "17px" }}>
                 {desc}
               </div>
               {code && (
-                <div style={{ fontSize: 11, color: "#64748B", fontFamily: "monospace", lineHeight: "15px" }}>
+                <div style={{ fontSize: 11, color: "#718894", fontFamily: "monospace", lineHeight: "15px" }}>
                   {code}
                 </div>
               )}
@@ -682,7 +682,7 @@ export default function RequisitionEditTab({
         width: 85,
         align: "right",
         render: (val: any, r: any) => (
-          <span style={{ fontWeight: 600, color: "#0F172A", fontSize: 12 }}>
+          <span style={{ fontWeight: 600, color: "#123443", fontSize: 12 }}>
             {Number(val ?? r.Qnty ?? 0).toLocaleString("vi-VN")}
           </span>
         ),
@@ -750,7 +750,7 @@ export default function RequisitionEditTab({
         },
       },
       {
-        title: <IconSettings size={16} strokeWidth={1.8} style={{ color: "#7C3AED" }} />,
+        title: <IconSettings size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />,
         key: "action",
         width: 70,
         align: "center",
@@ -804,26 +804,26 @@ export default function RequisitionEditTab({
       {/* Scoped CSS cho bảng chi tiết */}
       <style jsx global>{`
         .requisition-detail-table .ant-table-thead > tr > th {
-          background: #F8FAFC !important;
-          color: #0F172A !important;
+          background: #f7fbfa !important;
+          color: #123443 !important;
           font-size: 12px !important;
           font-weight: 600 !important;
           line-height: 18px !important;
-          border-color: #E2E8F0 !important;
+          border-color: #dce5e6 !important;
           padding: 8px 10px !important;
         }
         .requisition-detail-table .ant-table-tbody > tr > td {
-          color: #0F172A !important;
+          color: #123443 !important;
           font-size: 12px !important;
           line-height: 18px !important;
-          border-color: #E2E8F0 !important;
+          border-color: #dce5e6 !important;
           padding: 6px 10px !important;
         }
         .requisition-detail-table .ant-table-tbody > tr:hover > td {
-          background-color: #F5F3FF !important;
+          background-color: #eef8f6 !important;
         }
         .requisition-detail-table .ant-table-container {
-          border: 1px solid #E2E8F0 !important;
+          border: 1px solid #dce5e6 !important;
           border-radius: 8px !important;
           overflow: hidden;
         }
@@ -843,14 +843,14 @@ export default function RequisitionEditTab({
             gap: 8,
           }}
         >
-          <Text strong style={{ fontSize: 13, color: "#7C3AED", fontWeight: 700, textTransform: "uppercase" }}>
+          <Text strong style={{ fontSize: 13, color: "#008f89", fontWeight: 700, textTransform: "uppercase" }}>
             {t.section.generalInfoRequisition}
           </Text>
 
           <Space size={8}>
             <Button
               onClick={onClose}
-              style={{ height: 32, borderRadius: 6, borderColor: "#E2E8F0", fontSize: 13 }}
+              style={{ height: 32, borderRadius: 6, borderColor: "#dce5e6", fontSize: 13 }}
             >
               {t.common.close}
             </Button>
@@ -860,13 +860,13 @@ export default function RequisitionEditTab({
               htmlType="submit"
               loading={submitting}
               style={{
-                background: "#7C3AED",
-                borderColor: "#7C3AED",
+                background: "#008f89",
+                borderColor: "#008f89",
                 height: 32,
                 borderRadius: 6,
                 fontWeight: 500,
                 fontSize: 13,
-                boxShadow: "0 2px 4px rgba(124, 58, 237, 0.2)",
+                boxShadow: "0 2px 4px rgba(0, 143, 137, 0.2)",
               }}
             >
               {editingRequisition ? t.common.update : t.common.save}
@@ -878,7 +878,7 @@ export default function RequisitionEditTab({
         <div
           style={{
             background: "#FFFFFF",
-            border: "1px solid #E2E8F0",
+            border: "1px solid #dce5e6",
             borderRadius: 6,
             padding: "5px 12px",
             boxShadow: "0 1px 2px rgba(0, 0, 0, 0.03)",
@@ -888,8 +888,8 @@ export default function RequisitionEditTab({
           {/* Hàng 1: 4 Cột */}
           <Row gutter={[0, 0]} align="middle">
             {/* Cột 1: Hợp đồng CĐT (Map API get-contract-list) */}
-            <Col span={7} style={{ paddingRight: 8, borderRight: "1px solid #E2E8F0" }}>
-              <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+            <Col span={7} style={{ paddingRight: 8, borderRight: "1px solid #dce5e6" }}>
+              <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                 Hợp đồng CĐT <span style={{ color: "#ff4d4f" }}>*</span>
               </div>
               <Form.Item
@@ -910,7 +910,7 @@ export default function RequisitionEditTab({
                   fontSize: 12,
                   lineHeight: "22px",
                   height: 22,
-                  color: lov.selectedMainContractDisplay ? "#0F172A" : "#94A3B8",
+                  color: lov.selectedMainContractDisplay ? "#123443" : "#94A3B8",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
@@ -933,14 +933,14 @@ export default function RequisitionEditTab({
                       }}
                     />
                   )}
-                  <IconSearch size={14} strokeWidth={1.8} style={{ color: "#7C3AED" }} />
+                  <IconSearch size={14} strokeWidth={1.8} style={{ color: "#008f89" }} />
                 </Space>
               </div>
             </Col>
 
             {/* Cột 2: Loại xuất */}
-            <Col span={5} style={{ paddingLeft: 8, paddingRight: 8, borderRight: "1px solid #E2E8F0" }}>
-              <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+            <Col span={5} style={{ paddingLeft: 8, paddingRight: 8, borderRight: "1px solid #dce5e6" }}>
+              <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                 Loại xuất <span style={{ color: "#ff4d4f" }}>*</span>
               </div>
               <Form.Item
@@ -951,7 +951,7 @@ export default function RequisitionEditTab({
                 <Select
                   size="small"
                   variant="borderless"
-                  style={{ padding: 0, width: "100%", fontWeight: 600, fontSize: 12, color: "#0F172A", height: 22 }}
+                  style={{ padding: 0, width: "100%", fontWeight: 600, fontSize: 12, color: "#123443", height: 22 }}
                   options={[
                     { value: "Project", label: "Xuất thi công" },
                     { value: "SUB_CONTRACTOR", label: "Xuất cho NTP" },
@@ -961,8 +961,8 @@ export default function RequisitionEditTab({
             </Col>
 
             {/* Cột 3: Tên đối tượng (Map API get-client-list) */}
-            <Col span={6} style={{ paddingLeft: 8, paddingRight: 8, borderRight: "1px solid #E2E8F0" }}>
-              <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+            <Col span={6} style={{ paddingLeft: 8, paddingRight: 8, borderRight: "1px solid #dce5e6" }}>
+              <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                 Tên đối tượng <span style={{ color: "#ff4d4f" }}>*</span>
               </div>
               <Form.Item
@@ -983,7 +983,7 @@ export default function RequisitionEditTab({
                   fontSize: 12,
                   lineHeight: "22px",
                   height: 22,
-                  color: lov.selectedClientDisplay ? "#0F172A" : "#94A3B8",
+                  color: lov.selectedClientDisplay ? "#123443" : "#94A3B8",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
@@ -1006,14 +1006,14 @@ export default function RequisitionEditTab({
                       }}
                     />
                   )}
-                  <IconSearch size={14} strokeWidth={1.8} style={{ color: "#7C3AED" }} />
+                  <IconSearch size={14} strokeWidth={1.8} style={{ color: "#008f89" }} />
                 </Space>
               </div>
             </Col>
 
             {/* Cột 4: Kho xuất (Map API get-warehouse-list) */}
             <Col span={6} style={{ paddingLeft: 8 }}>
-              <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                 Kho xuất <span style={{ color: "#ff4d4f" }}>*</span>
               </div>
               <Form.Item
@@ -1034,7 +1034,7 @@ export default function RequisitionEditTab({
                   fontSize: 12,
                   lineHeight: "22px",
                   height: 22,
-                  color: lov.selectedWarehouseDisplay ? "#0F172A" : "#94A3B8",
+                  color: lov.selectedWarehouseDisplay ? "#123443" : "#94A3B8",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
@@ -1057,19 +1057,19 @@ export default function RequisitionEditTab({
                       }}
                     />
                   )}
-                  <IconSearch size={14} strokeWidth={1.8} style={{ color: "#7C3AED" }} />
+                  <IconSearch size={14} strokeWidth={1.8} style={{ color: "#008f89" }} />
                 </Space>
               </div>
             </Col>
           </Row>
 
-          <Divider style={{ margin: "3px 0", borderColor: "#E2E8F0" }} />
+          <Divider style={{ margin: "3px 0", borderColor: "#dce5e6" }} />
 
           {/* Hàng 2: 4 Cột (Ngày yêu cầu, Số yêu cầu, Nội dung yêu cầu, Trạng thái phiếu) */}
           <Row gutter={[0, 0]} align="middle">
             {/* Cột 1: Ngày yêu cầu */}
-            <Col span={5} style={{ paddingRight: 8, borderRight: "1px solid #E2E8F0" }}>
-              <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+            <Col span={5} style={{ paddingRight: 8, borderRight: "1px solid #dce5e6" }}>
+              <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                 Ngày yêu cầu <span style={{ color: "#ff4d4f" }}>*</span>
               </div>
               <Form.Item
@@ -1081,14 +1081,14 @@ export default function RequisitionEditTab({
                   size="small"
                   variant="borderless"
                   format="DD/MM/YYYY"
-                  style={{ padding: 0, width: "100%", fontWeight: 500, fontSize: 12, color: "#0F172A", height: 22 }}
+                  style={{ padding: 0, width: "100%", fontWeight: 500, fontSize: 12, color: "#123443", height: 22 }}
                 />
               </Form.Item>
             </Col>
 
             {/* Cột 2: Số yêu cầu (Tự sinh) */}
-            <Col span={5} style={{ paddingLeft: 8, paddingRight: 8, borderRight: "1px solid #E2E8F0" }}>
-              <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+            <Col span={5} style={{ paddingLeft: 8, paddingRight: 8, borderRight: "1px solid #dce5e6" }}>
+              <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                 Số yêu cầu (Tự sinh)
               </div>
               <Form.Item name="requisitionCode" style={{ margin: 0 }}>
@@ -1101,7 +1101,7 @@ export default function RequisitionEditTab({
                     padding: 0,
                     fontWeight: 600,
                     fontSize: 12,
-                    color: "#0F172A",
+                    color: "#123443",
                     height: 22,
                     fontFamily: "monospace",
                   }}
@@ -1110,8 +1110,8 @@ export default function RequisitionEditTab({
             </Col>
 
             {/* Cột 3: Nội dung yêu cầu */}
-            <Col span={10} style={{ paddingLeft: 8, paddingRight: 8, borderRight: "1px solid #E2E8F0" }}>
-              <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+            <Col span={10} style={{ paddingLeft: 8, paddingRight: 8, borderRight: "1px solid #dce5e6" }}>
+              <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                 Nội dung yêu cầu <span style={{ color: "#ff4d4f" }}>*</span>
               </div>
               <Form.Item
@@ -1123,14 +1123,14 @@ export default function RequisitionEditTab({
                   size="small"
                   variant="borderless"
                   placeholder="vd: Cấp gấp thép và phụ kiện đổ bê tông dầm sàn tầng 12..."
-                  style={{ padding: 0, fontWeight: 500, fontSize: 12, color: "#0F172A", height: 22 }}
+                  style={{ padding: 0, fontWeight: 500, fontSize: 12, color: "#123443", height: 22 }}
                 />
               </Form.Item>
             </Col>
 
             {/* Cột 4: Trạng thái phiếu */}
             <Col span={4} style={{ paddingLeft: 8 }}>
-              <div style={{ fontSize: 11, color: "#64748B", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
                 Trạng thái phiếu
               </div>
               <div style={{ height: 22, display: "flex", alignItems: "center" }}>
@@ -1167,13 +1167,13 @@ export default function RequisitionEditTab({
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <Text strong style={{ fontSize: 13, color: "#7C3AED", fontWeight: 700, textTransform: "uppercase" }}>
+            <Text strong style={{ fontSize: 13, color: "#008f89", fontWeight: 700, textTransform: "uppercase" }}>
               {t.section.detailList}
             </Text>
             <Tag
               style={{
-                background: "#EDE9FE",
-                color: "#7C3AED",
+                background: "#dce5e6",
+                color: "#008f89",
                 borderRadius: 12,
                 border: "none",
                 fontSize: 11,
@@ -1210,7 +1210,7 @@ export default function RequisitionEditTab({
               style={{
                 height: 32,
                 borderRadius: 6,
-                borderColor: "#E2E8F0",
+                borderColor: "#dce5e6",
                 fontSize: 13,
               }}
             >
@@ -1221,13 +1221,13 @@ export default function RequisitionEditTab({
               icon={<IconPlus size={16} strokeWidth={2} />}
               onClick={handleOpenAddItem}
               style={{
-                background: "#7C3AED",
-                borderColor: "#7C3AED",
+                background: "#008f89",
+                borderColor: "#008f89",
                 height: 32,
                 borderRadius: 6,
                 fontWeight: 500,
                 fontSize: 13,
-                boxShadow: "0 2px 4px rgba(124, 58, 237, 0.2)",
+                boxShadow: "0 2px 4px rgba(0, 143, 137, 0.2)",
               }}
             >
               {t.common.addNew}
@@ -1252,14 +1252,14 @@ export default function RequisitionEditTab({
             const totalApp = items.reduce((sum, it) => sum + Number(it.approvedQty || 0), 0);
             return (
               <Table.Summary fixed>
-                <Table.Summary.Row style={{ background: "#F5F3FF", fontWeight: "bold" }}>
+                <Table.Summary.Row style={{ background: "#eef8f6", fontWeight: "bold" }}>
                   <Table.Summary.Cell index={0} colSpan={4} align="right">
-                    <Text strong style={{ color: "#7C3AED", fontSize: 12 }}>
+                    <Text strong style={{ color: "#008f89", fontSize: 12 }}>
                       {t.table.total}
                     </Text>
                   </Table.Summary.Cell>
                   <Table.Summary.Cell index={1} align="right">
-                    <Text strong style={{ color: "#0F172A", fontSize: 12 }}>
+                    <Text strong style={{ color: "#123443", fontSize: 12 }}>
                       {totalReq.toLocaleString("vi-VN")}
                     </Text>
                   </Table.Summary.Cell>

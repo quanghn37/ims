@@ -401,7 +401,7 @@ export default function MaterialRequisitionPage() {
         render: (val, record: any) => (
           <a
             onClick={() => handleOpenEdit(record)}
-            style={{ color: "#7C3AED", fontWeight: 600, cursor: "pointer" }}
+            style={{ color: "#008f89", fontWeight: 600, cursor: "pointer" }}
           >
             {val || record.DocCode}
           </a>
@@ -416,7 +416,7 @@ export default function MaterialRequisitionPage() {
         render: (val, r: any) => {
           const createDate = val || r.DocDate;
           return (
-            <Text style={{ color: "#0F172A", fontWeight: 500 }}>
+            <Text style={{ color: "#123443", fontWeight: 500 }}>
               {createDate ? dayjs(createDate).format("DD/MM/YYYY") : "---"}
             </Text>
           );
@@ -443,9 +443,9 @@ export default function MaterialRequisitionPage() {
           const pCode = r.ProjectCode || r.contractCode || r.workPackage || "";
           return (
             <div>
-              <div style={{ color: "#0F172A", fontWeight: 500, fontSize: 13 }}>{pName}</div>
+              <div style={{ color: "#123443", fontWeight: 500, fontSize: 13 }}>{pName}</div>
               {pCode && (
-                <div style={{ fontSize: 12, color: "#64748B" }}>
+                <div style={{ fontSize: 12, color: "#718894" }}>
                   {pCode}
                 </div>
               )}
@@ -462,10 +462,10 @@ export default function MaterialRequisitionPage() {
           const requester = r.requesterName || r.CreatedBy || "r@gmail.com";
           return (
             <div>
-              <div style={{ color: "#0F172A", fontWeight: 500, fontSize: 13 }}>
+              <div style={{ color: "#123443", fontWeight: 500, fontSize: 13 }}>
                 {receiver}
               </div>
-              <div style={{ fontSize: 12, color: "#64748B" }}>
+              <div style={{ fontSize: 12, color: "#718894" }}>
                 {requester}
               </div>
             </div>
@@ -512,7 +512,7 @@ export default function MaterialRequisitionPage() {
   });
 
   return (
-    <div style={{ padding: 0, width: "100%", height: "100%", background: "#fff" }}>
+    <div style={{ padding: 0, width: "100%", minHeight: "calc(100vh - 100px)", background: "#FFFFFF", borderRadius: 16, border: "1px solid #dce5e6", overflow: "hidden", boxShadow: "0 1px 3px rgba(18, 52, 67, 0.04)" }}>
       <Tabs
         className="requisition-page-tabs"
         type="editable-card"
@@ -526,16 +526,16 @@ export default function MaterialRequisitionPage() {
         }}
         tabBarStyle={{
           margin: 0,
-          background: "#F8FAFC",
+          background: "#f7fbfa",
           padding: "6px 16px 0 16px",
-          borderBottom: "1px solid #E2E8F0",
+          borderBottom: "1px solid #dce5e6",
         }}
         items={[
           {
             key: "list",
             label: (
               <Space size={6}>
-                <IconList size={16} strokeWidth={1.8} style={{ color: "#7C3AED" }} />
+                <IconList size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />
                 <span>{t.requisition.tabList}</span>
               </Space>
             ),
@@ -545,49 +545,49 @@ export default function MaterialRequisitionPage() {
                 {/* Scoped CSS for requisition main table and tabs */}
                 <style jsx global>{`
                   .requisition-main-table .ant-table-thead > tr > th {
-                    background: #F8FAFC !important;
-                    color: #0F172A !important;
+                    background: #f7fbfa !important;
+                    color: #123443 !important;
                     font-size: 13px !important;
                     font-weight: 600 !important;
                     line-height: 18px !important;
-                    border-color: #E2E8F0 !important;
+                    border-color: #dce5e6 !important;
                     padding: 10px 12px !important;
                   }
                   .requisition-main-table .ant-table-tbody > tr > td {
-                    color: #0F172A !important;
+                    color: #123443 !important;
                     font-size: 13px !important;
                     line-height: 18px !important;
-                    border-color: #E2E8F0 !important;
+                    border-color: #dce5e6 !important;
                     padding: 10px 12px !important;
                     height: 46px !important;
                   }
                   .requisition-main-table .ant-table-tbody > tr:hover > td {
-                    background-color: #F5F3FF !important;
+                    background-color: #eef8f6 !important;
                   }
                   .requisition-main-table .ant-table-container {
-                    border: 1px solid #E2E8F0 !important;
+                    border: 1px solid #dce5e6 !important;
                     border-radius: 8px !important;
                     overflow: hidden;
                   }
                   .requisition-main-table .ant-pagination .ant-pagination-item-active {
-                    border-color: #7C3AED !important;
-                    background-color: #7C3AED !important;
+                    border-color: #008f89 !important;
+                    background-color: #008f89 !important;
                   }
                   .requisition-main-table .ant-pagination .ant-pagination-item-active a {
                     color: #FFFFFF !important;
                   }
                   .requisition-page-tabs .ant-tabs-nav {
                     margin-bottom: 0 !important;
-                    background: #F8FAFC !important;
-                    border-bottom: 1px solid #E2E8F0 !important;
+                    background: #f7fbfa !important;
+                    border-bottom: 1px solid #dce5e6 !important;
                     padding: 6px 16px 0 16px !important;
                   }
                   .requisition-page-tabs .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
-                    color: #7C3AED !important;
+                    color: #008f89 !important;
                     font-weight: 600 !important;
                   }
                   .requisition-page-tabs .ant-tabs-ink-bar {
-                    background: #7C3AED !important;
+                    background: #008f89 !important;
                   }
                 `}</style>
 
@@ -607,7 +607,7 @@ export default function MaterialRequisitionPage() {
                       strong
                       style={{
                         fontSize: 18,
-                        color: "#7C3AED",
+                        color: "#008f89",
                         fontWeight: 700,
                         lineHeight: "28px",
                         display: "flex",
@@ -615,12 +615,12 @@ export default function MaterialRequisitionPage() {
                         gap: 8,
                       }}
                     >
-                      <IconFileText size={18} strokeWidth={1.8} style={{ color: "#7C3AED" }} /> {t.requisition.listTitle}
+                      <IconFileText size={18} strokeWidth={1.8} style={{ color: "#008f89" }} /> {t.requisition.listTitle}
                     </Text>
                     <Tag
                       style={{
-                        background: "#EDE9FE",
-                        color: "#7C3AED",
+                        background: "#dce5e6",
+                        color: "#008f89",
                         borderRadius: 12,
                         border: "none",
                         fontSize: 12,
@@ -682,7 +682,7 @@ export default function MaterialRequisitionPage() {
                     <Button
                       icon={<IconSearch size={16} strokeWidth={1.8} />}
                       onClick={() => fetchRequisitions(1, pagination.pageSize, searchKeyword)}
-                      style={{ height: 36, borderRadius: 8, borderColor: "#E2E8F0" }}
+                      style={{ height: 36, borderRadius: 8, borderColor: "#dce5e6" }}
                     >
                       {t.common.search}
                     </Button>
@@ -696,7 +696,7 @@ export default function MaterialRequisitionPage() {
                         setSelectedPriorityFilter("ALL");
                         fetchRequisitions(1, pagination.pageSize, "");
                       }}
-                      style={{ height: 36, borderRadius: 8, borderColor: "#E2E8F0" }}
+                      style={{ height: 36, borderRadius: 8, borderColor: "#dce5e6" }}
                     >
                       {t.common.refresh}
                     </Button>
@@ -704,7 +704,7 @@ export default function MaterialRequisitionPage() {
                     <Button
                       icon={<IconFileSpreadsheet size={16} strokeWidth={1.8} />}
                       onClick={() => message.info("Đang xuất danh sách yêu cầu ra file Excel...")}
-                      style={{ height: 36, borderRadius: 8, borderColor: "#E2E8F0" }}
+                      style={{ height: 36, borderRadius: 8, borderColor: "#dce5e6" }}
                     >
                       {t.common.exportExcel}
                     </Button>
@@ -713,12 +713,12 @@ export default function MaterialRequisitionPage() {
                       type="primary"
                       icon={<IconPlus size={16} strokeWidth={2} />}
                       style={{
-                        background: "#7C3AED",
-                        borderColor: "#7C3AED",
+                        background: "#008f89",
+                        borderColor: "#008f89",
                         height: 36,
                         borderRadius: 8,
                         fontWeight: 500,
-                        boxShadow: "0 2px 4px rgba(124, 58, 237, 0.2)",
+                        boxShadow: "0 2px 4px rgba(0, 143, 137, 0.2)",
                       }}
                       onClick={handleOpenCreate}
                     >
@@ -758,7 +758,7 @@ export default function MaterialRequisitionPage() {
                   key: "edit",
                   label: (
                     <Space size={6}>
-                      <IconPencil size={16} strokeWidth={1.8} style={{ color: "#7C3AED" }} />
+                      <IconPencil size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />
                       <span>
                         {editingRequisition
                           ? `${editingRequisition.requisitionCode}`
