@@ -36,7 +36,7 @@ export const ErpLayout: React.FC<ErpLayoutProps> = ({ children }) => {
   const { user, loading, logout } = useAuth();
   const [openKeys, setOpenKeys] = useState<string[]>([]);
 
-  // Tự động đóng popup submenu khi pathname thay đổi hoặc khi click chọn mục
+  // Tự động đóng popup submenu khi pathname thay đổi hoặc khi click
   useEffect(() => {
     if (collapsed) {
       setOpenKeys([]);
