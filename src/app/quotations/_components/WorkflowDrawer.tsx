@@ -4,7 +4,6 @@ import React from "react";
 import {
   Drawer,
   Table,
-  Steps,
   Spin,
   Typography,
   Tag,
@@ -219,83 +218,6 @@ export default function WorkflowDrawer({
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-            <div
-              style={{
-                background: "#fafafa",
-                padding: "16px",
-                borderRadius: 8,
-                border: "1px solid #f0f0f0",
-              }}
-            >
-              <Steps
-                current={
-                  workflowData.findIndex((i) => {
-                    const l = String(i.ApprovalStatus || "").toLowerCase();
-                    return l === "đang làm" || l === "dang làm" || l === "dang lam" || l === "processing" || l === "in progress";
-                  }) !== -1
-                    ? workflowData.findIndex((i) => {
-                        const l = String(i.ApprovalStatus || "").toLowerCase();
-                        return l === "đang làm" || l === "dang làm" || l === "dang lam" || l === "processing" || l === "in progress";
-                      })
-                    : 0
-                }
-                items={workflowData.map((item, idx) => {
-                  const statusStr = item.ApprovalStatus || "";
-                  const lower = statusStr.toLowerCase();
-                  const isDone =
-                    lower === "chấp thuận" ||
-                    lower === "chap thuan" ||
-                    lower === "duyệt" ||
-                    lower === "đã duyệt" ||
-                    lower === "da duyet" ||
-                    lower === "approved" ||
-                    lower === "appr." ||
-                    lower === "appr" ||
-                    lower === "1";
-                  const isProcessing =
-                    lower === "dang làm" ||
-                    lower === "đang làm" ||
-                    lower === "dang lam" ||
-                    lower === "processing" ||
-                    lower === "in progress" ||
-                    lower === "in-progress";
-                  const isRejected =
-                    lower === "từ chối" ||
-                    lower === "tu choi" ||
-                    lower === "rejected" ||
-                    lower === "reject";
-
-                  let status: "finish" | "process" | "wait" | "error" = "wait";
-                  if (isDone) status = "finish";
-                  else if (isProcessing) status = "process";
-                  else if (isRejected) status = "error";
-
-                  return {
-                    title: (
-                      <Text style={{ fontSize: 13 }}>
-                        {item.FullName || `${language === "en" ? "Approver " : "Người duyệt "}${idx + 1}`}
-                      </Text>
-                    ),
-                    description: (
-                      <div style={{ fontSize: 11, color: "#595959", marginTop: 2 }}>
-                        <div>
-                          {statusStr || (isDone
-                            ? (language === "en" ? "Approved" : "Chấp thuận")
-                            : isProcessing
-                            ? (language === "en" ? "Processing" : "Đang làm")
-                            : isRejected
-                            ? (language === "en" ? "Rejected" : "Từ chối")
-                            : (language === "en" ? "Not-Started" : "Chờ duyệt"))}
-                        </div>
-                        {item.ActualFinish && <div>{dayjs(item.ActualFinish).format("HH:mm DD/MM")}</div>}
-                      </div>
-                    ),
-                    status: status,
-                  };
-                })}
-              />
-            </div>
-
             <div>
               <Text type="secondary" style={{ display: "block", marginBottom: 10, fontSize: 12 }}>
                 {t("workflow.clickHint") || "💡 Nhấn vào dòng bên dưới để xem / nhập quyết định"}

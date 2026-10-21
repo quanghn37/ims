@@ -416,7 +416,7 @@ export default function MaterialRequisitionPage() {
         render: (val, r: any) => {
           const createDate = val || r.DocDate;
           return (
-            <Text style={{ color: "#123443", fontWeight: 500 }}>
+            <Text style={{ color: "#123443" }}>
               {createDate ? dayjs(createDate).format("DD/MM/YYYY") : "---"}
             </Text>
           );
@@ -428,7 +428,7 @@ export default function MaterialRequisitionPage() {
         key: "warehouseName",
         width: 220,
         render: (val, r: any) => (
-          <span style={{ fontWeight: 500, color: "#334155" }}>
+          <span style={{ color: "#334155" }}>
             {val || r.WarehouseName || (r.warehouseId ? `Kho #${r.warehouseId}` : "---")}
           </span>
         ),
@@ -443,7 +443,7 @@ export default function MaterialRequisitionPage() {
           const pCode = r.ProjectCode || r.contractCode || r.workPackage || "";
           return (
             <div>
-              <div style={{ color: "#123443", fontWeight: 500, fontSize: 13 }}>{pName}</div>
+              <div style={{ color: "#123443", fontSize: 13 }}>{pName}</div>
               {pCode && (
                 <div style={{ fontSize: 12, color: "#718894" }}>
                   {pCode}
@@ -462,7 +462,7 @@ export default function MaterialRequisitionPage() {
           const requester = r.requesterName || r.CreatedBy || "r@gmail.com";
           return (
             <div>
-              <div style={{ color: "#123443", fontWeight: 500, fontSize: 13 }}>
+              <div style={{ color: "#123443", fontSize: 13 }}>
                 {receiver}
               </div>
               <div style={{ fontSize: 12, color: "#718894" }}>

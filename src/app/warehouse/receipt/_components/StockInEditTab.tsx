@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
@@ -344,7 +344,7 @@ export default function StockInEditTab({
 
           if (!orgName) {
             return (
-              <span style={{ fontWeight: 600, color: "#123443", fontSize: 13 }}>
+              <span style={{ color: "#123443", fontSize: 13 }}>
                 {orgCode}
               </span>
             );
@@ -352,7 +352,7 @@ export default function StockInEditTab({
 
           return (
             <div>
-              <div style={{ fontWeight: 600, color: "#123443", fontSize: 13, lineHeight: "17px" }}>
+              <div style={{ color: "#123443", fontSize: 13, lineHeight: "17px" }}>
                 {orgName}
               </div>
               {orgCode && (
@@ -373,7 +373,7 @@ export default function StockInEditTab({
           const desc = record.Description || record.itemName || "";
           return (
             <div>
-              <div style={{ fontWeight: 600, color: "#123443", fontSize: 12, lineHeight: "17px" }}>
+              <div style={{ color: "#123443", fontSize: 12, lineHeight: "17px" }}>
                 {desc || "---"}
               </div>
               {sCode && (

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect, useMemo } from "react";
 import {
@@ -64,7 +64,8 @@ export default function RequisitionEditTab({
   editingRequisition,
   onSave,
 }: RequisitionEditTabProps) {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
+  const isEn = language === "en";
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
 
@@ -509,7 +510,7 @@ export default function RequisitionEditTab({
       (!isNaN(Number(editingRequisition?.id)) ? Number(editingRequisition?.id) : null);
 
     if (!editingRequisition || !transId) {
-      message.warning("Vui lòng bấm 'Lưu Yêu Cầu' để tạo thông tin chung phiếu trước khi thêm vật tư!");
+      message.warning(t.requisition.pleaseSaveFirst);
       return;
     }
 
@@ -519,7 +520,7 @@ export default function RequisitionEditTab({
       (editingRequisition as any)?.WarehouseId;
 
     if (!rawWhId) {
-      message.warning("Vui lòng chọn Kho xuất trước khi thêm vật tư!");
+      message.warning(t.requisition.pleaseSelectWhFirst);
       lov.handleOpenWarehouseLov();
       return;
     }
@@ -576,14 +577,14 @@ export default function RequisitionEditTab({
               String((it as any).SubmissionId ?? "") !== String(subId)
           )
         );
-        message.success(res?.Message || "Đã xóa mặt hàng khỏi yêu cầu!");
+        message.success(res?.Message || t.requisition.deleteItemSuccess);
       } else {
         setItems((prev) => prev.filter((it) => it.id !== record.id));
-        message.success("Đã xóa mặt hàng khỏi yêu cầu!");
+        message.success(t.requisition.deleteItemSuccess);
       }
     } catch (err: any) {
       console.error("Lỗi khi xóa vật tư yêu cầu:", err);
-      message.error(err?.message || "Xóa mặt hàng thất bại!");
+      message.error(err?.message || t.requisition.deleteItemFailed);
     }
   };
 
@@ -616,7 +617,6 @@ export default function RequisitionEditTab({
             <div>
               <div
                 style={{
-                  fontWeight: 500,
                   color: "#123443",
                   fontSize: 12,
                   lineHeight: "17px",
@@ -631,7 +631,6 @@ export default function RequisitionEditTab({
                   style={{
                     fontSize: 11,
                     color: "#008f89",
-                    fontWeight: 600,
                     fontFamily: "monospace",
                     marginTop: 2,
                   }}
@@ -653,7 +652,7 @@ export default function RequisitionEditTab({
           const desc = name || r.Description || r.ItemName || "---";
           return (
             <div>
-              <div style={{ fontWeight: 500, color: "#123443", fontSize: 12, lineHeight: "17px" }}>
+              <div style={{ color: "#123443", fontSize: 12, lineHeight: "17px" }}>
                 {desc}
               </div>
               {code && (
@@ -682,7 +681,7 @@ export default function RequisitionEditTab({
         width: 85,
         align: "right",
         render: (val: any, r: any) => (
-          <span style={{ fontWeight: 600, color: "#123443", fontSize: 12 }}>
+          <span style={{ color: "#123443", fontSize: 12 }}>
             {Number(val ?? r.Qnty ?? 0).toLocaleString("vi-VN")}
           </span>
         ),
@@ -696,7 +695,7 @@ export default function RequisitionEditTab({
         render: (val: any, r: any) => {
           const num = Number(val ?? r.ApprovedQty ?? 0);
           return num > 0 ? (
-            <span style={{ fontWeight: 600, color: "#059669", fontSize: 12 }}>
+            <span style={{ color: "#059669", fontSize: 12 }}>
               {num.toLocaleString("vi-VN")}
             </span>
           ) : (
@@ -731,7 +730,13 @@ export default function RequisitionEditTab({
           const subId = record.SubmissionId ?? record.LocalId;
           const statusText = val || record.status || "---";
           return (
-            <Tooltip title={subId ? `Nhấp để xem quy trình duyệt (Mã #${subId})` : "Chưa có quy trình duyệt"}>
+            <Tooltip
+              title={
+                subId
+                  ? (t.requisition.clickToViewWorkflow || "Nhấp để xem quy trình duyệt (Mã #{id})").replace("{id}", String(subId))
+                  : t.requisition.noWorkflowYet || "Chưa có quy trình duyệt"
+              }
+            >
               <span
                 onClick={() => {
                   if (subId) {
@@ -890,12 +895,12 @@ export default function RequisitionEditTab({
             {/* Cột 1: Hợp đồng CĐT (Map API get-contract-list) */}
             <Col span={7} style={{ paddingRight: 8, borderRight: "1px solid #dce5e6" }}>
               <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
-                Hợp đồng CĐT <span style={{ color: "#ff4d4f" }}>*</span>
+                {t.requisition.contractClient} <span style={{ color: "#ff4d4f" }}>*</span>
               </div>
               <Form.Item
                 name="contractCode"
                 style={{ display: "none" }}
-                rules={[{ required: true, message: "Vui lòng chọn Hợp đồng CĐT!" }]}
+                rules={[{ required: true, message: t.requisition.reqContract }]}
               >
                 <Input />
               </Form.Item>
@@ -919,7 +924,7 @@ export default function RequisitionEditTab({
                 title={lov.selectedMainContractDisplay}
               >
                 <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {lov.selectedMainContractDisplay || "Chọn HĐ CĐT..."}
+                  {lov.selectedMainContractDisplay || t.requisition.selectContractClient}
                 </span>
                 <Space size={2} style={{ flexShrink: 0, marginLeft: 4 }}>
                   {lov.selectedMainContractDisplay && (
@@ -941,20 +946,20 @@ export default function RequisitionEditTab({
             {/* Cột 2: Loại xuất */}
             <Col span={5} style={{ paddingLeft: 8, paddingRight: 8, borderRight: "1px solid #dce5e6" }}>
               <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
-                Loại xuất <span style={{ color: "#ff4d4f" }}>*</span>
+                {t.requisition.issueType} <span style={{ color: "#ff4d4f" }}>*</span>
               </div>
               <Form.Item
                 name="issueType"
                 style={{ margin: 0 }}
-                rules={[{ required: true, message: "Vui lòng chọn loại xuất!" }]}
+                rules={[{ required: true, message: t.requisition.reqIssueType }]}
               >
                 <Select
                   size="small"
                   variant="borderless"
                   style={{ padding: 0, width: "100%", fontWeight: 600, fontSize: 12, color: "#123443", height: 22 }}
                   options={[
-                    { value: "Project", label: "Xuất thi công" },
-                    { value: "SUB_CONTRACTOR", label: "Xuất cho NTP" },
+                    { value: "Project", label: t.requisition.issueTypeProject },
+                    { value: "SUB_CONTRACTOR", label: t.requisition.issueTypeSubcon },
                   ]}
                 />
               </Form.Item>
@@ -963,12 +968,12 @@ export default function RequisitionEditTab({
             {/* Cột 3: Tên đối tượng (Map API get-client-list) */}
             <Col span={6} style={{ paddingLeft: 8, paddingRight: 8, borderRight: "1px solid #dce5e6" }}>
               <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
-                Tên đối tượng <span style={{ color: "#ff4d4f" }}>*</span>
+                {t.requisition.targetName} <span style={{ color: "#ff4d4f" }}>*</span>
               </div>
               <Form.Item
                 name="targetName"
                 style={{ display: "none" }}
-                rules={[{ required: true, message: "Vui lòng chọn đối tượng nhận!" }]}
+                rules={[{ required: true, message: t.requisition.reqTarget }]}
               >
                 <Input />
               </Form.Item>
@@ -992,7 +997,7 @@ export default function RequisitionEditTab({
                 title={lov.selectedClientDisplay}
               >
                 <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {lov.selectedClientDisplay || "Chọn đối tượng..."}
+                  {lov.selectedClientDisplay || t.requisition.selectTarget}
                 </span>
                 <Space size={2} style={{ flexShrink: 0, marginLeft: 4 }}>
                   {lov.selectedClientDisplay && (
@@ -1014,12 +1019,12 @@ export default function RequisitionEditTab({
             {/* Cột 4: Kho xuất (Map API get-warehouse-list) */}
             <Col span={6} style={{ paddingLeft: 8 }}>
               <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
-                Kho xuất <span style={{ color: "#ff4d4f" }}>*</span>
+                {t.requisition.issueWarehouse} <span style={{ color: "#ff4d4f" }}>*</span>
               </div>
               <Form.Item
                 name="warehouseId"
                 style={{ display: "none" }}
-                rules={[{ required: true, message: "Vui lòng chọn kho xuất!" }]}
+                rules={[{ required: true, message: t.requisition.reqWarehouse }]}
               >
                 <Input />
               </Form.Item>
@@ -1043,7 +1048,7 @@ export default function RequisitionEditTab({
                 title={lov.selectedWarehouseDisplay}
               >
                 <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {lov.selectedWarehouseDisplay || "Chọn kho xuất..."}
+                  {lov.selectedWarehouseDisplay || t.requisition.selectIssueWarehouse}
                 </span>
                 <Space size={2} style={{ flexShrink: 0, marginLeft: 4 }}>
                   {lov.selectedWarehouseDisplay && (
@@ -1070,12 +1075,12 @@ export default function RequisitionEditTab({
             {/* Cột 1: Ngày yêu cầu */}
             <Col span={5} style={{ paddingRight: 8, borderRight: "1px solid #dce5e6" }}>
               <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
-                Ngày yêu cầu <span style={{ color: "#ff4d4f" }}>*</span>
+                {t.requisition.requisitionDate} <span style={{ color: "#ff4d4f" }}>*</span>
               </div>
               <Form.Item
                 name="requisitionDate"
                 style={{ margin: 0 }}
-                rules={[{ required: true, message: "Vui lòng chọn ngày yêu cầu!" }]}
+                rules={[{ required: true, message: t.requisition.reqDate }]}
               >
                 <DatePicker
                   size="small"
@@ -1089,14 +1094,14 @@ export default function RequisitionEditTab({
             {/* Cột 2: Số yêu cầu (Tự sinh) */}
             <Col span={5} style={{ paddingLeft: 8, paddingRight: 8, borderRight: "1px solid #dce5e6" }}>
               <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
-                Số yêu cầu (Tự sinh)
+                {t.requisition.requisitionCodeAuto}
               </div>
               <Form.Item name="requisitionCode" style={{ margin: 0 }}>
                 <Input
                   size="small"
                   variant="borderless"
                   readOnly
-                  placeholder="(Tự sinh khi lưu)"
+                  placeholder={t.requisition.autoGenOnSave}
                   style={{
                     padding: 0,
                     fontWeight: 600,
@@ -1112,17 +1117,17 @@ export default function RequisitionEditTab({
             {/* Cột 3: Nội dung yêu cầu */}
             <Col span={10} style={{ paddingLeft: 8, paddingRight: 8, borderRight: "1px solid #dce5e6" }}>
               <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
-                Nội dung yêu cầu <span style={{ color: "#ff4d4f" }}>*</span>
+                {t.requisition.contentDescription} <span style={{ color: "#ff4d4f" }}>*</span>
               </div>
               <Form.Item
                 name="description"
                 style={{ margin: 0 }}
-                rules={[{ required: true, message: "Vui lòng nhập nội dung yêu cầu!" }]}
+                rules={[{ required: true, message: t.requisition.reqContent }]}
               >
                 <Input
                   size="small"
                   variant="borderless"
-                  placeholder="vd: Cấp gấp thép và phụ kiện đổ bê tông dầm sàn tầng 12..."
+                  placeholder={t.requisition.contentPlaceholder}
                   style={{ padding: 0, fontWeight: 500, fontSize: 12, color: "#123443", height: 22 }}
                 />
               </Form.Item>
@@ -1131,7 +1136,7 @@ export default function RequisitionEditTab({
             {/* Cột 4: Trạng thái phiếu */}
             <Col span={4} style={{ paddingLeft: 8 }}>
               <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
-                Trạng thái phiếu
+                {t.requisition.docStatus}
               </div>
               <div style={{ height: 22, display: "flex", alignItems: "center" }}>
                 <span
@@ -1148,7 +1153,13 @@ export default function RequisitionEditTab({
                         : "#D97706",
                   }}
                 >
-                  {editingRequisition?.status || "PENDING"}
+                  {editingRequisition?.status === "APPROVED"
+                    ? t.status.approved
+                    : editingRequisition?.status === "REJECTED"
+                    ? t.status.rejected
+                    : editingRequisition?.status === "COMPLETED"
+                    ? t.status.completed
+                    : t.status.pending}
                 </span>
               </div>
             </Col>
@@ -1195,16 +1206,16 @@ export default function RequisitionEditTab({
                 if (transId) {
                   fetchSubmissions(transId).then((res) => {
                     if (res && res.length > 0) {
-                      message.success("Đã làm mới danh mục vật tư!");
+                      message.success(t.requisition.itemRefreshed);
                     } else {
-                      message.info("Không có vật tư nào trong phiếu yêu cầu này!");
+                      message.info(t.requisition.emptyItemsInReq);
                     }
                   });
                 } else if (editingRequisition?.items) {
                   setItems(editingRequisition.items);
-                  message.success("Đã làm mới danh mục vật tư!");
+                  message.success(t.requisition.itemRefreshed);
                 } else {
-                  message.info("Danh mục vật tư trống!");
+                  message.info(t.requisition.emptyItems);
                 }
               }}
               style={{
@@ -1253,24 +1264,37 @@ export default function RequisitionEditTab({
             return (
               <Table.Summary fixed>
                 <Table.Summary.Row style={{ background: "#eef8f6", fontWeight: "bold" }}>
-                  <Table.Summary.Cell index={0} colSpan={4} align="right">
-                    <Text strong style={{ color: "#008f89", fontSize: 12 }}>
-                      {t.table.total}
-                    </Text>
-                  </Table.Summary.Cell>
-                  <Table.Summary.Cell index={1} align="right">
-                    <Text strong style={{ color: "#123443", fontSize: 12 }}>
-                      {totalReq.toLocaleString("vi-VN")}
-                    </Text>
-                  </Table.Summary.Cell>
-                  <Table.Summary.Cell index={2} align="right">
-                    <Text strong style={{ color: totalApp > 0 ? "#059669" : "#94A3B8", fontSize: 12 }}>
-                      {totalApp > 0 ? totalApp.toLocaleString("vi-VN") : "---"}
-                    </Text>
-                  </Table.Summary.Cell>
-                  <Table.Summary.Cell index={3} />
-                  <Table.Summary.Cell index={4} />
-                  <Table.Summary.Cell index={5} />
+                  {columns.map((col: any, idx: number) => {
+                    const key = String(col.key || col.dataIndex || idx);
+                    if (key === "unit" || (key === "itemName" && !columns.some((c: any) => (c.key || c.dataIndex) === "unit"))) {
+                      return (
+                        <Table.Summary.Cell key={key} index={idx} align="right">
+                          <Text strong style={{ color: "#008f89", fontSize: 12 }}>
+                            {t.table.total}
+                          </Text>
+                        </Table.Summary.Cell>
+                      );
+                    }
+                    if (key === "requestedQty") {
+                      return (
+                        <Table.Summary.Cell key={key} index={idx} align="right">
+                          <Text strong style={{ color: "#123443", fontSize: 12 }}>
+                            {totalReq.toLocaleString("vi-VN")}
+                          </Text>
+                        </Table.Summary.Cell>
+                      );
+                    }
+                    if (key === "approvedQty") {
+                      return (
+                        <Table.Summary.Cell key={key} index={idx} align="right">
+                          <Text strong style={{ color: totalApp > 0 ? "#059669" : "#94A3B8", fontSize: 12 }}>
+                            {totalApp > 0 ? totalApp.toLocaleString("vi-VN") : "---"}
+                          </Text>
+                        </Table.Summary.Cell>
+                      );
+                    }
+                    return <Table.Summary.Cell key={key} index={idx} />;
+                  })}
                 </Table.Summary.Row>
               </Table.Summary>
             );

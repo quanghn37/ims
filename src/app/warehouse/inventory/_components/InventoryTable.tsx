@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useMemo } from "react";
 import {
@@ -106,7 +106,7 @@ export default function InventoryTable({
       key: "ItemName",
       width: 280,
       render: (val: string) => (
-        <span style={{ fontWeight: 500, fontSize: 13, color: "#123443", lineHeight: "18px" }}>
+        <span style={{ fontSize: 13, color: "#123443", lineHeight: "18px" }}>
           {val}
         </span>
       ),
@@ -137,7 +137,7 @@ export default function InventoryTable({
       width: 110,
       align: "right",
       render: (val: number) => (
-        <span style={{ fontWeight: 600, fontSize: 13, color: val === 0 ? "#DC2626" : "#123443" }}>
+        <span style={{ fontSize: 13, color: val === 0 ? "#DC2626" : "#123443" }}>
           {Number(val || 0).toLocaleString("vi-VN")}
         </span>
       ),
@@ -161,7 +161,7 @@ export default function InventoryTable({
       width: 115,
       align: "right",
       render: (val: number) => (
-        <span style={{ fontWeight: 600, fontSize: 13, color: "#16A34A" }}>
+        <span style={{ fontSize: 13, color: "#16A34A" }}>
           {Number(val || 0).toLocaleString("vi-VN")}
         </span>
       ),
@@ -185,7 +185,7 @@ export default function InventoryTable({
       width: 155,
       align: "right",
       render: (val: number) => (
-        <span style={{ fontWeight: 600, color: "#008f89", fontSize: 13 }}>
+        <span style={{ color: "#008f89", fontSize: 13 }}>
           {Number(val || 0).toLocaleString("vi-VN")}
         </span>
       ),
@@ -329,33 +329,60 @@ export default function InventoryTable({
 
             return (
               <Table.Summary.Row style={{ background: "#eef8f6" }}>
-                <Table.Summary.Cell index={0} colSpan={5}>
-                  <span style={{ fontWeight: 600, color: "#123443", fontSize: 13 }}>
-                    {t.table.total}
-                  </span>
-                </Table.Summary.Cell>
-                <Table.Summary.Cell index={1} align="right">
-                  <span style={{ fontWeight: 700, color: "#123443", fontSize: 13 }}>
-                    {pageTotalQty.toLocaleString("vi-VN")}
-                  </span>
-                </Table.Summary.Cell>
-                <Table.Summary.Cell index={2} align="right">
-                  <span>-</span>
-                </Table.Summary.Cell>
-                <Table.Summary.Cell index={3} align="right">
-                  <span style={{ fontWeight: 700, color: "#16A34A", fontSize: 13 }}>
-                    {pageAvailableQty.toLocaleString("vi-VN")}
-                  </span>
-                </Table.Summary.Cell>
-                <Table.Summary.Cell index={4} align="right">
-                  <span>-</span>
-                </Table.Summary.Cell>
-                <Table.Summary.Cell index={5} align="right">
-                  <span style={{ fontWeight: 700, color: "#008f89", fontSize: 13 }}>
-                    {pageTotalValue.toLocaleString("vi-VN")}
-                  </span>
-                </Table.Summary.Cell>
-                <Table.Summary.Cell index={6} colSpan={2} />
+                {columns.map((col: any, index: number) => {
+                  const key = String(col.key || col.dataIndex || index);
+                  if (key === "WarehouseName" || (key === "ItemName" && !columns.some((c: any) => (c.key || c.dataIndex) === "WarehouseName"))) {
+                    return (
+                      <Table.Summary.Cell key={key} index={index} align="right">
+                        <span style={{ fontWeight: 600, color: "#123443", fontSize: 13 }}>
+                          {t.table.total}
+                        </span>
+                      </Table.Summary.Cell>
+                    );
+                  }
+                  if (key === "OnHandQty") {
+                    return (
+                      <Table.Summary.Cell key={key} index={index} align="right">
+                        <span style={{ fontWeight: 700, color: "#123443", fontSize: 13 }}>
+                          {pageTotalQty.toLocaleString("vi-VN")}
+                        </span>
+                      </Table.Summary.Cell>
+                    );
+                  }
+                  if (key === "ReservedQty") {
+                    return (
+                      <Table.Summary.Cell key={key} index={index} align="right">
+                        <span>-</span>
+                      </Table.Summary.Cell>
+                    );
+                  }
+                  if (key === "AvailableQty") {
+                    return (
+                      <Table.Summary.Cell key={key} index={index} align="right">
+                        <span style={{ fontWeight: 700, color: "#16A34A", fontSize: 13 }}>
+                          {pageAvailableQty.toLocaleString("vi-VN")}
+                        </span>
+                      </Table.Summary.Cell>
+                    );
+                  }
+                  if (key === "AvgUnitCost") {
+                    return (
+                      <Table.Summary.Cell key={key} index={index} align="right">
+                        <span>-</span>
+                      </Table.Summary.Cell>
+                    );
+                  }
+                  if (key === "TotalCost") {
+                    return (
+                      <Table.Summary.Cell key={key} index={index} align="right">
+                        <span style={{ fontWeight: 700, color: "#008f89", fontSize: 13 }}>
+                          {pageTotalValue.toLocaleString("vi-VN")}
+                        </span>
+                      </Table.Summary.Cell>
+                    );
+                  }
+                  return <Table.Summary.Cell key={key} index={index} />;
+                })}
               </Table.Summary.Row>
             );
           }}

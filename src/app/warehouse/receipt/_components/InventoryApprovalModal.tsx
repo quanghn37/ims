@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Modal, Table, Steps, Spin, Empty, Typography, Descriptions, Button } from "antd";
+import { Modal, Table, Spin, Empty, Typography, Descriptions, Button } from "antd";
 import { AuditOutlined, CloseOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { StockItemDetail } from "../../types";
@@ -196,62 +196,6 @@ export default function InventoryApprovalModal({
         />
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          {/* Steps flow */}
-          <div
-            style={{
-              background: "#fafafa",
-              padding: "16px",
-              borderRadius: 6,
-              border: "1px solid #f0f0f0",
-            }}
-          >
-            <Steps
-              size="small"
-              current={
-                workflowData.findIndex((w) => {
-                  const l = String(w.ApprovalStatus || "").toLowerCase();
-                  return l === "đang làm" || l === "dang làm" || l === "dang lam" || l === "processing" || l === "in progress" || l === "chờ duyệt" || l === "pending";
-                }) >= 0
-                  ? workflowData.findIndex((w) => {
-                      const l = String(w.ApprovalStatus || "").toLowerCase();
-                      return l === "đang làm" || l === "dang làm" || l === "dang lam" || l === "processing" || l === "in progress" || l === "chờ duyệt" || l === "pending";
-                    })
-                  : workflowData.length - 1
-              }
-              items={workflowData.map((item, idx) => {
-                const statusStr = item.ApprovalStatus || item.Status || "";
-                const isDone =
-                  statusStr === "Chấp thuận" || statusStr === "Approved" || statusStr === "Đã duyệt";
-                const isProcessing =
-                  statusStr === "Dang làm" || statusStr === "Đang làm" || statusStr === "Processing";
-                const isRejected =
-                  statusStr === "Từ chối" || statusStr === "Rejected";
-
-                let stepStatus: "finish" | "process" | "wait" | "error" = "wait";
-                if (isDone) stepStatus = "finish";
-                else if (isProcessing) stepStatus = "process";
-                else if (isRejected) stepStatus = "error";
-
-                return {
-                  title: (
-                    <span style={{ fontSize: 13, color: "#262626" }}>
-                      {item.FullName || item.UserName || `Cấp ${idx + 1}`}
-                    </span>
-                  ),
-                  description: (
-                    <div style={{ fontSize: 11, color: "#595959", marginTop: 2 }}>
-                      <div>{statusStr || (isDone ? "Chấp thuận" : "Chờ duyệt")}</div>
-                      {item.ActualFinish && (
-                        <div>{dayjs(item.ActualFinish).format("HH:mm DD/MM")}</div>
-                      )}
-                    </div>
-                  ),
-                  status: stepStatus,
-                };
-              })}
-            />
-          </div>
-
           {/* Table detail */}
           <Table
             dataSource={workflowData}

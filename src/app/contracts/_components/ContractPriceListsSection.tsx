@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useMemo } from "react";
 import {
@@ -67,7 +67,8 @@ export default function ContractPriceListsSection({
   onUpdateMaterialItem,
   onRefreshMaterials,
 }: ContractPriceListsSectionProps) {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
+  const isEn = language === "en";
   // States cho Drawer chỉnh sửa chi tiết vật tư
   const [editingMaterial, setEditingMaterial] = useState<ContractMaterialItem | null>(null);
   const [submittingEdit, setSubmittingEdit] = useState(false);
@@ -136,7 +137,7 @@ export default function ContractPriceListsSection({
           const sCode = r.SystemCode || r.ItemCode || (r.MaterialId ? String(r.MaterialId) : "");
           return (
             <div>
-              <div style={{ fontWeight: 600, color: "#123443", fontSize: 13, wordBreak: "break-word" }}>
+              <div style={{ color: "#123443", fontSize: 13, wordBreak: "break-word" }}>
                 {desc || "Vật tư trong bảng giá"}
               </div>
               {sCode && (
@@ -239,7 +240,7 @@ export default function ContractPriceListsSection({
               : rawAmount * (Number(r.TaxRate) || 0);
           const totalVat = rawAmount + taxVal;
           return (
-            <span style={{ color: "#123443", fontWeight: 600, fontSize: 13 }}>
+            <span style={{ color: "#123443", fontSize: 13 }}>
               {totalVat.toLocaleString("vi-VN")}
             </span>
           );
@@ -292,21 +293,26 @@ export default function ContractPriceListsSection({
                     <ActionIconButton
                       action="edit"
                       size="small"
-                      tooltip="Chỉnh sửa chi tiết"
+                      tooltip={t.common.edit || (isEn ? "Edit item details" : "Chỉnh sửa chi tiết")}
                       onClick={() => handleOpenEditDrawer(r)}
                     />
                   )}
                   {onDeleteMaterialItem && (
                     <Popconfirm
-                      title={`Xóa mặt hàng "${r.ItemName || r.Description}" khỏi hợp đồng?`}
+                      title={
+                        isEn
+                          ? `Delete item "${r.ItemName || r.Description}" from contract?`
+                          : `Xóa mặt hàng "${r.ItemName || r.Description}" khỏi hợp đồng?`
+                      }
                       onConfirm={() => onDeleteMaterialItem(r)}
-                      okText="Xóa"
-                      cancelText="Hủy"
+                      okText={t.common.delete || (isEn ? "Delete" : "Xóa")}
+                      cancelText={t.common.cancel || (isEn ? "Cancel" : "Hủy")}
+                      okButtonProps={{ danger: true }}
                     >
                       <ActionIconButton
                         action="delete"
                         size="small"
-                        tooltip="Xóa mặt hàng"
+                        tooltip={t.common.delete || (isEn ? "Delete item" : "Xóa mặt hàng")}
                       />
                     </Popconfirm>
                   )}
@@ -316,7 +322,7 @@ export default function ContractPriceListsSection({
           ]
         : []),
     ],
-    [onDeleteMaterialItem, onUpdateMaterialItem, t]
+    [onDeleteMaterialItem, onUpdateMaterialItem, t, isEn]
   );
 
   return (
@@ -509,55 +515,57 @@ export default function ContractPriceListsSection({
 
                   return (
                     <Table.Summary.Row style={{ background: "#f7fbfa", fontWeight: 700 }}>
-                      <Table.Summary.Cell index={0} align="center">
-                        -
-                      </Table.Summary.Cell>
-                      <Table.Summary.Cell index={1} align="center">
-                        -
-                      </Table.Summary.Cell>
-                      <Table.Summary.Cell index={2} align="center">
-                        <span style={{ color: "#123443", fontWeight: 700 }}>{t.common.total}</span>
-                      </Table.Summary.Cell>
-                      <Table.Summary.Cell index={3} align="center">
-                        -
-                      </Table.Summary.Cell>
-                      <Table.Summary.Cell index={4} align="right">
-                        <span style={{ color: "#123443", fontWeight: 700 }}>
-                          {totalQnty.toLocaleString("vi-VN")}
-                        </span>
-                      </Table.Summary.Cell>
-                      <Table.Summary.Cell index={5} align="center">
-                        -
-                      </Table.Summary.Cell>
-                      <Table.Summary.Cell index={6} align="right">
-                        <span style={{ color: "#123443", fontWeight: 700 }}>
-                          {totalAmount.toLocaleString("vi-VN")}
-                        </span>
-                      </Table.Summary.Cell>
-                      <Table.Summary.Cell index={7} align="center">
-                        -
-                      </Table.Summary.Cell>
-                      <Table.Summary.Cell index={8} align="right">
-                        <span style={{ color: "#123443", fontWeight: 700 }}>
-                          {totalTax.toLocaleString("vi-VN")}
-                        </span>
-                      </Table.Summary.Cell>
-                      <Table.Summary.Cell index={9} align="right">
-                        <span style={{ color: "#008f89", fontWeight: 700 }}>
-                          {totalVat.toLocaleString("vi-VN")}
-                        </span>
-                      </Table.Summary.Cell>
-                      <Table.Summary.Cell index={10} align="center">
-                        -
-                      </Table.Summary.Cell>
-                      <Table.Summary.Cell index={11} align="center">
-                        -
-                      </Table.Summary.Cell>
-                      {(onDeleteMaterialItem || onUpdateMaterialItem) && (
-                        <Table.Summary.Cell index={12} align="center">
-                          -
-                        </Table.Summary.Cell>
-                      )}
+                      {mainMaterialColumns.map((col: any, index: number) => {
+                        const key = String(col.key || col.dataIndex || index);
+                        if (key === "ItemName" || key === "Description") {
+                          return (
+                            <Table.Summary.Cell key={key} index={index} align="center">
+                              <span style={{ color: "#123443", fontWeight: 700 }}>{t.common.total}</span>
+                            </Table.Summary.Cell>
+                          );
+                        }
+                        if (key === "Qnty") {
+                          return (
+                            <Table.Summary.Cell key={key} index={index} align="right">
+                              <span style={{ color: "#123443", fontWeight: 700 }}>
+                                {totalQnty.toLocaleString("vi-VN")}
+                              </span>
+                            </Table.Summary.Cell>
+                          );
+                        }
+                        if (key === "Amount") {
+                          return (
+                            <Table.Summary.Cell key={key} index={index} align="right">
+                              <span style={{ color: "#123443", fontWeight: 700 }}>
+                                {totalAmount.toLocaleString("vi-VN")}
+                              </span>
+                            </Table.Summary.Cell>
+                          );
+                        }
+                        if (key === "TaxAmount") {
+                          return (
+                            <Table.Summary.Cell key={key} index={index} align="right">
+                              <span style={{ color: "#123443", fontWeight: 700 }}>
+                                {totalTax.toLocaleString("vi-VN")}
+                              </span>
+                            </Table.Summary.Cell>
+                          );
+                        }
+                        if (key === "TotalAmountWithVat") {
+                          return (
+                            <Table.Summary.Cell key={key} index={index} align="right">
+                              <span style={{ color: "#008f89", fontWeight: 700 }}>
+                                {totalVat.toLocaleString("vi-VN")}
+                              </span>
+                            </Table.Summary.Cell>
+                          );
+                        }
+                        return (
+                          <Table.Summary.Cell key={key} index={index} align="center">
+                            -
+                          </Table.Summary.Cell>
+                        );
+                      })}
                     </Table.Summary.Row>
                   );
                 }}
@@ -574,7 +582,10 @@ export default function ContractPriceListsSection({
                   border: "1px dashed #CBD5E1",
                 }}
               >
-                Chưa có chi tiết vật tư nào cho hợp đồng. Bấm "Đối chiếu bảng giá" ở trên để chọn vật tư đưa vào hợp đồng.
+                {t.contract.emptyMaterialNotice ||
+                  (isEn
+                    ? 'No material items for this contract yet. Click "Reconcile Price List" above to add materials.'
+                    : 'Chưa có chi tiết vật tư nào cho hợp đồng. Bấm "Đối chiếu bảng giá" ở trên để chọn vật tư đưa vào hợp đồng.')}
               </div>
             )}
 
@@ -591,12 +602,18 @@ export default function ContractPriceListsSection({
             >
               <span>
                 {materialItems.length > 0
-                  ? `Đang hiển thị: ${materialItems.length} mặt hàng`
-                  : "Chưa có chi tiết vật tư"}
+                  ? (t.contract.showingItems || (isEn ? "Showing: {count} items" : "Đang hiển thị: {count} mặt hàng")).replace(
+                      "{count}",
+                      String(materialItems.length)
+                    )
+                  : t.contract.noMaterialItems || (isEn ? "No material items" : "Chưa có chi tiết vật tư")}
               </span>
               {!effectiveClientId || !effectiveSubconOf ? (
                 <span style={{ color: "#faad14" }}>
-                  * Vui lòng chọn HĐ chủ đầu tư và Đối tượng ở phần I để tải danh sách bảng giá
+                  {t.contract.selectClientAndVendorNotice ||
+                    (isEn
+                      ? "* Please select Client Contract and Vendor in Section I to load price lists"
+                      : "* Vui lòng chọn HĐ chủ đầu tư và Đối tượng ở phần I để tải danh sách bảng giá")}
                 </span>
               ) : null}
             </div>

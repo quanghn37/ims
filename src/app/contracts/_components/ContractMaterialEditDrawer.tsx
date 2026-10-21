@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useEffect, useMemo } from "react";
 import {
@@ -101,7 +101,11 @@ export default function ContractMaterialEditDrawer({
 
       const subId = material.SubmissionId ?? material.LocalId ?? material.id;
       if (!subId) {
-        message.warning("Không tìm thấy SubmissionId của mặt hàng để cập nhật!");
+        message.warning(
+          language === "en"
+            ? "Cannot find item SubmissionId to update!"
+            : "Không tìm thấy SubmissionId của mặt hàng để cập nhật!"
+        );
         return;
       }
 

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useMemo, useEffect } from "react";
 import {
@@ -196,7 +196,7 @@ export default function OrderDetailItemsSection({
 
           if (!orgName) {
             return (
-              <span style={{ fontWeight: 500, color: "#123443", fontSize: 13 }}>
+              <span style={{ color: "#123443", fontSize: 13 }}>
                 {orgCode}
               </span>
             );
@@ -204,7 +204,7 @@ export default function OrderDetailItemsSection({
 
           return (
             <div>
-              <div style={{ fontWeight: 600, color: "#123443", fontSize: 13 }}>
+              <div style={{ color: "#123443", fontSize: 13 }}>
                 {orgName}
               </div>
               {orgCode && (
@@ -234,7 +234,7 @@ export default function OrderDetailItemsSection({
           }
           return (
             <div>
-              <div style={{ fontWeight: 600, color: "#123443", fontSize: 13 }}>
+              <div style={{ color: "#123443", fontSize: 13 }}>
                 {mainTitle || "---"}
               </div>
               {subTitle && (
@@ -313,7 +313,7 @@ export default function OrderDetailItemsSection({
             r.TaxRate !== undefined && r.TaxRate !== null ? Number(r.TaxRate) : 0.08;
           const ratePercent = `${Math.round(taxRate * 100)}%`;
           return (
-            <span style={{ color: "#475569", fontWeight: 500, fontSize: 13 }}>
+            <span style={{ color: "#475569", fontSize: 13 }}>
               {ratePercent}
             </span>
           );
@@ -336,7 +336,7 @@ export default function OrderDetailItemsSection({
               : rawAmount * taxRate;
           const totalWithVat = rawAmount + taxVal;
           return (
-            <span style={{ color: "#123443", fontWeight: 600, fontSize: 13 }}>
+            <span style={{ color: "#123443", fontSize: 13 }}>
               {totalWithVat.toLocaleString("vi-VN")}
             </span>
           );
@@ -579,43 +579,57 @@ export default function OrderDetailItemsSection({
         summary={() => (
           <Table.Summary fixed>
             <Table.Summary.Row style={{ background: "#eef8f6", fontWeight: "bold" }}>
-              <Table.Summary.Cell index={0} align="center">
-                <Text style={{ color: "#94A3B8" }}>-</Text>
-              </Table.Summary.Cell>
-              <Table.Summary.Cell index={1} align="center">
-                <Text style={{ color: "#94A3B8" }}>-</Text>
-              </Table.Summary.Cell>
-              <Table.Summary.Cell index={2} align="center">
-                <Text style={{ color: "#94A3B8" }}>-</Text>
-              </Table.Summary.Cell>
-              <Table.Summary.Cell index={3} align="right">
-                <Text strong style={{ color: "#123443", fontSize: 13.5 }}>
-                  {t.table.total}
-                </Text>
-              </Table.Summary.Cell>
-              <Table.Summary.Cell index={4} align="right">
-                <Text style={{ color: "#123443", fontSize: 13.5 }}>
-                  {totalQty.toLocaleString("vi-VN")}
-                </Text>
-              </Table.Summary.Cell>
-              <Table.Summary.Cell index={5} align="center">
-                <Text style={{ color: "#94A3B8" }}>-</Text>
-              </Table.Summary.Cell>
-              <Table.Summary.Cell index={6} align="right">
-                <Text strong style={{ color: "#123443", fontSize: 13.5 }}>
-                  {totalAmount.toLocaleString("vi-VN")}
-                </Text>
-              </Table.Summary.Cell>
-              <Table.Summary.Cell index={7} align="center">
-                <Text style={{ color: "#475569", fontSize: 13 }}>8%</Text>
-              </Table.Summary.Cell>
-              <Table.Summary.Cell index={8} align="right">
-                <Text strong style={{ color: "#123443", fontSize: 13.5 }}>
-                  {(totalAmount + totalTax).toLocaleString("vi-VN")}
-                </Text>
-              </Table.Summary.Cell>
-              <Table.Summary.Cell index={9} />
-              <Table.Summary.Cell index={10} />
+              {mergedItemColumns.map((col: any, index: number) => {
+                const key = String(col.key || col.dataIndex || index);
+                if (key === "ItemName" || key === "Description") {
+                  return (
+                    <Table.Summary.Cell key={key} index={index} align="right">
+                      <Text strong style={{ color: "#123443", fontSize: 13.5 }}>
+                        {t.table.total}
+                      </Text>
+                    </Table.Summary.Cell>
+                  );
+                }
+                if (key === "Qnty") {
+                  return (
+                    <Table.Summary.Cell key={key} index={index} align="right">
+                      <Text style={{ color: "#123443", fontSize: 13.5 }}>
+                        {totalQty.toLocaleString("vi-VN")}
+                      </Text>
+                    </Table.Summary.Cell>
+                  );
+                }
+                if (key === "TotalPrice" || key === "Amount") {
+                  return (
+                    <Table.Summary.Cell key={key} index={index} align="right">
+                      <Text strong style={{ color: "#123443", fontSize: 13.5 }}>
+                        {totalAmount.toLocaleString("vi-VN")}
+                      </Text>
+                    </Table.Summary.Cell>
+                  );
+                }
+                if (key === "TaxAmount") {
+                  return (
+                    <Table.Summary.Cell key={key} index={index} align="center">
+                      <Text style={{ color: "#475569", fontSize: 13 }}>8%</Text>
+                    </Table.Summary.Cell>
+                  );
+                }
+                if (key === "TotalAmountWithVat") {
+                  return (
+                    <Table.Summary.Cell key={key} index={index} align="right">
+                      <Text strong style={{ color: "#123443", fontSize: 13.5 }}>
+                        {(totalAmount + totalTax).toLocaleString("vi-VN")}
+                      </Text>
+                    </Table.Summary.Cell>
+                  );
+                }
+                return (
+                  <Table.Summary.Cell key={key} index={index} align="center">
+                    <Text style={{ color: "#94A3B8" }}>-</Text>
+                  </Table.Summary.Cell>
+                );
+              })}
             </Table.Summary.Row>
           </Table.Summary>
         )}

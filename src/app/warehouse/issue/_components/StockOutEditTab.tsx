@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect, useMemo } from "react";
 import {
@@ -742,23 +742,42 @@ export default function StockOutEditTab({
             return (
               <Table.Summary fixed="bottom">
                 <Table.Summary.Row style={{ background: "#f7fbfa", fontWeight: 600 }}>
-                  <Table.Summary.Cell index={0} colSpan={6} align="right">
-                    <span style={{ color: "#123443" }}>{t.table.total}</span>
-                  </Table.Summary.Cell>
-                  <Table.Summary.Cell index={6} align="right">
-                    <span style={{ color: "#008f89", fontSize: 14 }}>
-                      {totalQty.toLocaleString("vi-VN")}
-                    </span>
-                  </Table.Summary.Cell>
-                  <Table.Summary.Cell index={7} align="right">
-                    <span>---</span>
-                  </Table.Summary.Cell>
-                  <Table.Summary.Cell index={8} align="right">
-                    <span style={{ color: "#123443", fontSize: 14 }}>
-                      {totalAmount.toLocaleString("vi-VN")}
-                    </span>
-                  </Table.Summary.Cell>
-                  <Table.Summary.Cell index={9} colSpan={3} />
+                  {tableColumns.map((col: any, idx: number) => {
+                    const key = String(col.key || col.dataIndex || idx);
+                    if (key === "orderQty") {
+                      return (
+                        <Table.Summary.Cell key={key} index={idx} align="right">
+                          <span style={{ color: "#123443" }}>{t.table.total}</span>
+                        </Table.Summary.Cell>
+                      );
+                    }
+                    if (key === "actualQty") {
+                      return (
+                        <Table.Summary.Cell key={key} index={idx} align="right">
+                          <span style={{ color: "#008f89", fontSize: 14 }}>
+                            {totalQty.toLocaleString("vi-VN")}
+                          </span>
+                        </Table.Summary.Cell>
+                      );
+                    }
+                    if (key === "unitPrice") {
+                      return (
+                        <Table.Summary.Cell key={key} index={idx} align="right">
+                          <span>---</span>
+                        </Table.Summary.Cell>
+                      );
+                    }
+                    if (key === "totalPrice") {
+                      return (
+                        <Table.Summary.Cell key={key} index={idx} align="right">
+                          <span style={{ color: "#123443", fontSize: 14 }}>
+                            {totalAmount.toLocaleString("vi-VN")}
+                          </span>
+                        </Table.Summary.Cell>
+                      );
+                    }
+                    return <Table.Summary.Cell key={key} index={idx} />;
+                  })}
                 </Table.Summary.Row>
               </Table.Summary>
             );

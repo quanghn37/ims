@@ -1,4 +1,4 @@
-﻿import { useMemo } from "react";
+import { useMemo } from "react";
 import { Button, Input, Popconfirm, Space, Table, Tag, Tooltip, Typography } from "antd";
 import {
   IconSettings,
@@ -71,7 +71,7 @@ export default function PurchaseOrdersTable({
       key: "Description",
       width: 260,
       render: (val: string) => (
-        <span style={{ fontWeight: 500, color: "#123443", fontSize: 13 }}>
+        <span style={{ color: "#123443", fontSize: 13 }}>
           {val || "Đơn đặt hàng vật tư & thiết bị"}
         </span>
       ),

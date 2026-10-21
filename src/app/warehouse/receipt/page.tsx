@@ -28,7 +28,7 @@ import {
 import ActionIconButton from "@/components/common/ActionIconButton";
 import dayjs from "dayjs";
 import { extractApiList, extractTotalRows } from "@/lib/api-client";
-import { StockInReceipt, StockItemDetail, MOCK_WAREHOUSES } from "../types";
+import { StockInReceipt, StockItemDetail } from "../types";
 import { warehouseApi } from "../api";
 import StockInEditTab from "./_components/StockInEditTab";
 import PendingPoReconcileTab, { PendingPoItem } from "./_components/PendingPoReconcileTab";
@@ -158,9 +158,27 @@ export default function StockInPage() {
     []
   );
 
+  const [warehouses, setWarehouses] = useState<any[]>([]);
+
+  const fetchWarehouses = useCallback(async () => {
+    try {
+      const data = await warehouseApi.getWarehouseList({
+        PageNum: 1,
+        PageSize: 100,
+      });
+      const list = extractApiList(data);
+      if (list && list.length > 0) {
+        setWarehouses(list);
+      }
+    } catch (e) {
+      console.error("Lỗi khi tải danh sách kho:", e);
+    }
+  }, []);
+
   useEffect(() => {
     fetchReceipts(1, pagination.pageSize, "");
-  }, [fetchReceipts, pagination.pageSize]);
+    fetchWarehouses();
+  }, [fetchReceipts, fetchWarehouses, pagination.pageSize]);
 
   // ---------------------------------------------------------------------------
   // Load Detail Items from API: api/get-inventory-submission
@@ -517,20 +535,27 @@ export default function StockInPage() {
 
 
   // ---------------------------------------------------------------------------
-  // Warehouse & Status Filter options
+  // Warehouse & Status Filter options (Tải từ API get-warehouse-list)
   // ---------------------------------------------------------------------------
   const warehouseOptions = useMemo(() => {
     const map = new Map<string | number, string>();
+
+    // 1. Nguồn chuẩn từ API get-warehouse-list
+    warehouses.forEach((w) => {
+      const id = w.WarehouseId ?? w.id ?? w.Id;
+      const name = w.WarehouseName || w.Name || w.warehouseName;
+      if (id && name) {
+        map.set(id, name);
+      }
+    });
+
+    // 2. Dự phòng gom thêm từ receipts nếu có kho nào phát sinh trước đó
     receipts.forEach((r) => {
-      if (r.warehouseId && r.warehouseName) {
+      if (r.warehouseId && r.warehouseName && !map.has(r.warehouseId)) {
         map.set(r.warehouseId, r.warehouseName);
       }
     });
-    MOCK_WAREHOUSES.forEach((w) => {
-      if (!map.has(w.id)) {
-        map.set(w.id, w.name);
-      }
-    });
+
     return [
       { value: "ALL", label: "Tất cả kho nhập" },
       ...Array.from(map.entries()).map(([id, name]) => ({
@@ -538,7 +563,7 @@ export default function StockInPage() {
         label: name,
       })),
     ];
-  }, [receipts]);
+  }, [warehouses, receipts]);
 
   const filteredReceipts = useMemo(() => {
     return receipts.filter((r) => {
@@ -610,7 +635,7 @@ export default function StockInPage() {
         render: (val, r) => {
           const typeStr = renderType(val || r.receiptType || "");
           return (
-            <span style={{ color: "#334155", fontWeight: 500, fontSize: 13 }}>
+            <span style={{ color: "#334155", fontSize: 13 }}>
               {typeStr}
             </span>
           );

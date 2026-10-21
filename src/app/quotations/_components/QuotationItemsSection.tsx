@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useEffect, useState, useMemo } from "react";
 import {
@@ -60,7 +60,7 @@ export default function QuotationItemsSection({
         width: 42,
         align: "center" as const,
         render: (_: any, __: any, idx: number) => (
-          <span style={{ fontWeight: 500, color: "#718894", fontSize: 12 }}>{idx + 1}</span>
+          <span style={{ color: "#718894", fontSize: 12 }}>{idx + 1}</span>
         ),
       },
       {
@@ -76,7 +76,6 @@ export default function QuotationItemsSection({
             <div>
               <div
                 style={{
-                  fontWeight: 600,
                   color: "#123443",
                   fontSize: 12,
                   wordBreak: "break-word",
@@ -159,7 +158,7 @@ export default function QuotationItemsSection({
         width: 60,
         align: "center" as const,
         render: (val: number) => (
-          <span style={{ color: "#475569", fontWeight: 500, fontSize: 12 }}>
+          <span style={{ color: "#475569", fontSize: 12 }}>
             {`${((Number(val) || 0) * 100).toFixed(0)}%`}
           </span>
         ),
@@ -200,7 +199,7 @@ export default function QuotationItemsSection({
               : rawAmount * (Number(r.TaxRate) || 0);
           const totalVat = rawAmount + taxVal;
           return (
-            <span style={{ color: "#123443", fontWeight: 600, fontSize: 12 }}>
+            <span style={{ color: "#123443", fontSize: 12 }}>
               {totalVat.toLocaleString("vi-VN")}
             </span>
           );
@@ -532,50 +531,66 @@ export default function QuotationItemsSection({
           return (
             <Table.Summary fixed>
               <Table.Summary.Row style={{ background: "#eef8f6", fontWeight: "bold" }}>
-                <Table.Summary.Cell index={0} align="center">
-                  <Text style={{ color: "#94A3B8" }}>-</Text>
-                </Table.Summary.Cell>
-                <Table.Summary.Cell index={1} align="right">
-                  <Text strong style={{ color: "#123443", fontSize: 13.5 }}>
-                    {t.table.total}
-                  </Text>
-                </Table.Summary.Cell>
-                <Table.Summary.Cell index={2} align="center">
-                  <Text style={{ color: "#94A3B8" }}>-</Text>
-                </Table.Summary.Cell>
-                <Table.Summary.Cell index={3} align="right">
-                  <Text style={{ color: "#123443", fontSize: 13.5 }}>
-                    {totalQnty.toLocaleString("vi-VN")}
-                  </Text>
-                </Table.Summary.Cell>
-                <Table.Summary.Cell index={4} align="center">
-                  <Text style={{ color: "#94A3B8" }}>-</Text>
-                </Table.Summary.Cell>
-                <Table.Summary.Cell index={5} align="right">
-                  <Text strong style={{ color: "#123443", fontSize: 13.5 }}>
-                    {totalAmount.toLocaleString("vi-VN")}
-                  </Text>
-                </Table.Summary.Cell>
-                <Table.Summary.Cell index={6} align="center">
-                  <Text style={{ color: "#475569", fontSize: 13 }}>-</Text>
-                </Table.Summary.Cell>
-                <Table.Summary.Cell index={7} align="right">
-                  <Text style={{ color: "#123443", fontSize: 13.5 }}>
-                    {totalTax.toLocaleString("vi-VN")}
-                  </Text>
-                </Table.Summary.Cell>
-                <Table.Summary.Cell index={8} align="right">
-                  <Text strong style={{ color: "#123443", fontSize: 13.5 }}>
-                    {grandTotal.toLocaleString("vi-VN")}
-                  </Text>
-                </Table.Summary.Cell>
-                <Table.Summary.Cell index={9} align="center">
-                  <Text style={{ color: "#94A3B8" }}>-</Text>
-                </Table.Summary.Cell>
-                <Table.Summary.Cell index={10} align="center">
-                  <Text style={{ color: "#94A3B8" }}>-</Text>
-                </Table.Summary.Cell>
-                <Table.Summary.Cell index={11} />
+                {resizableSubmissionColumns.map((col: any, index: number) => {
+                  const key = String(col.key || col.dataIndex || index);
+                  if (key === "ItemName" || key === "Description") {
+                    return (
+                      <Table.Summary.Cell key={key} index={index} align="right">
+                        <Text strong style={{ color: "#123443", fontSize: 13.5 }}>
+                          {t.table.total}
+                        </Text>
+                      </Table.Summary.Cell>
+                    );
+                  }
+                  if (key === "Qnty") {
+                    return (
+                      <Table.Summary.Cell key={key} index={index} align="right">
+                        <Text style={{ color: "#123443", fontSize: 13.5 }}>
+                          {totalQnty.toLocaleString("vi-VN")}
+                        </Text>
+                      </Table.Summary.Cell>
+                    );
+                  }
+                  if (key === "Amount") {
+                    return (
+                      <Table.Summary.Cell key={key} index={index} align="right">
+                        <Text strong style={{ color: "#123443", fontSize: 13.5 }}>
+                          {totalAmount.toLocaleString("vi-VN")}
+                        </Text>
+                      </Table.Summary.Cell>
+                    );
+                  }
+                  if (key === "TaxRate") {
+                    return (
+                      <Table.Summary.Cell key={key} index={index} align="center">
+                        <Text style={{ color: "#475569", fontSize: 13 }}>-</Text>
+                      </Table.Summary.Cell>
+                    );
+                  }
+                  if (key === "TaxAmount") {
+                    return (
+                      <Table.Summary.Cell key={key} index={index} align="right">
+                        <Text style={{ color: "#123443", fontSize: 13.5 }}>
+                          {totalTax.toLocaleString("vi-VN")}
+                        </Text>
+                      </Table.Summary.Cell>
+                    );
+                  }
+                  if (key === "TotalAmountWithVat") {
+                    return (
+                      <Table.Summary.Cell key={key} index={index} align="right">
+                        <Text strong style={{ color: "#123443", fontSize: 13.5 }}>
+                          {grandTotal.toLocaleString("vi-VN")}
+                        </Text>
+                      </Table.Summary.Cell>
+                    );
+                  }
+                  return (
+                    <Table.Summary.Cell key={key} index={index} align="center">
+                      <Text style={{ color: "#94A3B8" }}>-</Text>
+                    </Table.Summary.Cell>
+                  );
+                })}
               </Table.Summary.Row>
             </Table.Summary>
           );

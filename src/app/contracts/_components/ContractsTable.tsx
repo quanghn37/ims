@@ -395,15 +395,29 @@ export default function ContractsTable({ filteredContracts, loading, searchKeywo
           pageData.forEach((item: any) => { totalAmount += Number(item.ContractedAmount ?? item.Amount ?? 0); });
           return (
             <Table.Summary.Row style={{ background: "#eef8f6" }}>
-              <Table.Summary.Cell index={0} colSpan={5}>
-                <span style={{ fontWeight: 600, color: "#123443", fontSize: 13 }}>{t.common.total}:</span>
-              </Table.Summary.Cell>
-              <Table.Summary.Cell index={1} align="right">
-                <span style={{ fontWeight: 700, color: "#008f89", fontSize: 14 }}>
-                  {totalAmount.toLocaleString("vi-VN")}
-                </span>
-              </Table.Summary.Cell>
-              <Table.Summary.Cell index={2} colSpan={6} />
+              {mergedColumns.map((col: any, index: number) => {
+                const key = String(col.key || col.dataIndex || index);
+                const isAmount = key === "ContractedAmount";
+                const isFirst = index === 0;
+                return (
+                  <Table.Summary.Cell
+                    key={key}
+                    index={index}
+                    align={isAmount ? "right" : col.align}
+                  >
+                    {isFirst && (
+                      <span style={{ fontWeight: 600, color: "#123443", fontSize: 13 }}>
+                        {t.common.total}:
+                      </span>
+                    )}
+                    {isAmount && (
+                      <span style={{ fontWeight: 700, color: "#008f89", fontSize: 14 }}>
+                        {totalAmount.toLocaleString("vi-VN")}
+                      </span>
+                    )}
+                  </Table.Summary.Cell>
+                );
+              })}
             </Table.Summary.Row>
           );
         }}

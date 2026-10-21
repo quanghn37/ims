@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect, useMemo } from "react";
 import {
@@ -399,30 +399,49 @@ export default function SubmissionDetailDrawer({
 
           return (
             <Table.Summary.Row style={{ background: "#f8fafd", borderTop: "2px solid #e6f0fa" }}>
-              <Table.Summary.Cell index={0} colSpan={3}>
-                <Text strong style={{ color: "#262626", fontSize: 13 }}>
-                  {t("common.total") || "Tổng cộng"}:
-                </Text>
-              </Table.Summary.Cell>
-              <Table.Summary.Cell index={1} align="right">
-                <Text strong style={{ color: "#262626" }}>{totalQnty.toLocaleString(numLocale)}</Text>
-              </Table.Summary.Cell>
-              <Table.Summary.Cell index={2} align="right" />
-              <Table.Summary.Cell index={3} align="right">
-                <Text strong style={{ color: "#262626" }}>{totalAmount.toLocaleString(numLocale)}</Text>
-              </Table.Summary.Cell>
-              <Table.Summary.Cell index={4} align="center" />
-              <Table.Summary.Cell index={5} align="right">
-                <Text strong style={{ color: "#262626" }}>{totalTax.toLocaleString(numLocale)}</Text>
-              </Table.Summary.Cell>
-              <Table.Summary.Cell index={6} align="right">
-                <Text strong style={{ color: "#008f89", fontSize: 13.5 }}>
-                  {grandTotal.toLocaleString(numLocale)}
-                </Text>
-              </Table.Summary.Cell>
-              <Table.Summary.Cell index={7} align="center" />
-              <Table.Summary.Cell index={8} align="center" />
-              <Table.Summary.Cell index={9} align="center" />
+              {itemColumns.map((col: any, index: number) => {
+                const key = String(col.key || col.dataIndex || index);
+                if (key === "ItemName" || key === "Description") {
+                  return (
+                    <Table.Summary.Cell key={key} index={index} align="right">
+                      <Text strong style={{ color: "#262626", fontSize: 13 }}>
+                        {t("common.total") || "Tổng cộng"}:
+                      </Text>
+                    </Table.Summary.Cell>
+                  );
+                }
+                if (key === "Qnty") {
+                  return (
+                    <Table.Summary.Cell key={key} index={index} align="right">
+                      <Text strong style={{ color: "#262626" }}>{totalQnty.toLocaleString(numLocale)}</Text>
+                    </Table.Summary.Cell>
+                  );
+                }
+                if (key === "Amount") {
+                  return (
+                    <Table.Summary.Cell key={key} index={index} align="right">
+                      <Text strong style={{ color: "#262626" }}>{totalAmount.toLocaleString(numLocale)}</Text>
+                    </Table.Summary.Cell>
+                  );
+                }
+                if (key === "TaxAmount") {
+                  return (
+                    <Table.Summary.Cell key={key} index={index} align="right">
+                      <Text strong style={{ color: "#262626" }}>{totalTax.toLocaleString(numLocale)}</Text>
+                    </Table.Summary.Cell>
+                  );
+                }
+                if (key === "TotalAmountWithVat") {
+                  return (
+                    <Table.Summary.Cell key={key} index={index} align="right">
+                      <Text strong style={{ color: "#008f89", fontSize: 13.5 }}>
+                        {grandTotal.toLocaleString(numLocale)}
+                      </Text>
+                    </Table.Summary.Cell>
+                  );
+                }
+                return <Table.Summary.Cell key={key} index={index} align="center" />;
+              })}
             </Table.Summary.Row>
           );
         }}

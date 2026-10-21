@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useMemo } from "react";
 import {
@@ -518,42 +518,83 @@ export default function StockCardDrawer({
             }}
             summary={() => {
               if (transactions.length === 0) return null;
+              const getLeafCols = (cols: any[]): any[] =>
+                cols.flatMap((c) => (c.children && c.children.length > 0 ? getLeafCols(c.children) : c));
+              const leafCols = getLeafCols(columns);
+
               return (
                 <Table.Summary.Row style={{ background: "#eef8f6", fontWeight: 600 }}>
-                  <Table.Summary.Cell index={0} colSpan={6} align="center">
-                    <span style={{ fontWeight: 700, color: "#123443", fontSize: 13 }}>
-                      {language === "en" ? "Total Movements:" : "Tổng cộng phát sinh:"}
-                    </span>
-                  </Table.Summary.Cell>
-                  {/* Nhập */}
-                  <Table.Summary.Cell index={1} align="right">
-                    <span style={{ color: "#16A34A" }}>{totalReceiptQty.toLocaleString(numLocale)}</span>
-                  </Table.Summary.Cell>
-                  <Table.Summary.Cell index={2} align="right">
-                    <span>-</span>
-                  </Table.Summary.Cell>
-                  <Table.Summary.Cell index={3} align="right">
-                    <span style={{ color: "#16A34A" }}>{totalReceiptValue.toLocaleString(numLocale)}</span>
-                  </Table.Summary.Cell>
-                  {/* Xuất */}
-                  <Table.Summary.Cell index={4} align="right">
-                    <span style={{ color: "#DC2626" }}>{totalIssueQty.toLocaleString(numLocale)}</span>
-                  </Table.Summary.Cell>
-                  <Table.Summary.Cell index={5} align="right">
-                    <span>-</span>
-                  </Table.Summary.Cell>
-                  <Table.Summary.Cell index={6} align="right">
-                    <span style={{ color: "#DC2626" }}>{totalIssueValue.toLocaleString(numLocale)}</span>
-                  </Table.Summary.Cell>
-                  {/* Tồn cuối */}
-                  <Table.Summary.Cell index={7} align="right">
-                    <span style={{ color: "#123443" }}>{closingQty.toLocaleString(numLocale)}</span>
-                  </Table.Summary.Cell>
-                  <Table.Summary.Cell index={8} align="right">
-                    <span style={{ color: "#008f89", fontWeight: 700 }}>
-                      {closingValue.toLocaleString(numLocale)}
-                    </span>
-                  </Table.Summary.Cell>
+                  {leafCols.map((col: any, index: number) => {
+                    const key = String(col.key || col.dataIndex || index);
+                    if (key === "Description") {
+                      return (
+                        <Table.Summary.Cell key={key} index={index} align="center">
+                          <span style={{ fontWeight: 700, color: "#123443", fontSize: 13 }}>
+                            {language === "en" ? "Total Movements:" : "Tổng cộng phát sinh:"}
+                          </span>
+                        </Table.Summary.Cell>
+                      );
+                    }
+                    if (key === "ReceiptQty") {
+                      return (
+                        <Table.Summary.Cell key={key} index={index} align="right">
+                          <span style={{ color: "#16A34A" }}>{totalReceiptQty.toLocaleString(numLocale)}</span>
+                        </Table.Summary.Cell>
+                      );
+                    }
+                    if (key === "ReceiptUnitPrice") {
+                      return (
+                        <Table.Summary.Cell key={key} index={index} align="right">
+                          <span>-</span>
+                        </Table.Summary.Cell>
+                      );
+                    }
+                    if (key === "ReceiptAmount") {
+                      return (
+                        <Table.Summary.Cell key={key} index={index} align="right">
+                          <span style={{ color: "#16A34A" }}>{totalReceiptValue.toLocaleString(numLocale)}</span>
+                        </Table.Summary.Cell>
+                      );
+                    }
+                    if (key === "IssueQty") {
+                      return (
+                        <Table.Summary.Cell key={key} index={index} align="right">
+                          <span style={{ color: "#DC2626" }}>{totalIssueQty.toLocaleString(numLocale)}</span>
+                        </Table.Summary.Cell>
+                      );
+                    }
+                    if (key === "IssueUnitPrice") {
+                      return (
+                        <Table.Summary.Cell key={key} index={index} align="right">
+                          <span>-</span>
+                        </Table.Summary.Cell>
+                      );
+                    }
+                    if (key === "IssueAmount") {
+                      return (
+                        <Table.Summary.Cell key={key} index={index} align="right">
+                          <span style={{ color: "#DC2626" }}>{totalIssueValue.toLocaleString(numLocale)}</span>
+                        </Table.Summary.Cell>
+                      );
+                    }
+                    if (key === "ClosingQty") {
+                      return (
+                        <Table.Summary.Cell key={key} index={index} align="right">
+                          <span style={{ color: "#123443" }}>{closingQty.toLocaleString(numLocale)}</span>
+                        </Table.Summary.Cell>
+                      );
+                    }
+                    if (key === "ClosingAmount") {
+                      return (
+                        <Table.Summary.Cell key={key} index={index} align="right">
+                          <span style={{ color: "#008f89", fontWeight: 700 }}>
+                            {closingValue.toLocaleString(numLocale)}
+                          </span>
+                        </Table.Summary.Cell>
+                      );
+                    }
+                    return <Table.Summary.Cell key={key} index={index} />;
+                  })}
                 </Table.Summary.Row>
               );
             }}
