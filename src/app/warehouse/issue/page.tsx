@@ -8,21 +8,15 @@ import {
   Select,
   Tag,
   Space,
-  Typography,
-  Card,
   Popconfirm,
-  Tabs,
   message,
-  Tooltip,
 } from "antd";
-import type { ColumnsType, ColumnType } from "antd/es/table";
+import type { ColumnType } from "antd/es/table";
 import {
   IconUpload,
   IconPlus,
   IconSearch,
   IconRefresh,
-  IconList,
-  IconPencil,
 } from "@tabler/icons-react";
 import ActionIconButton from "@/components/common/ActionIconButton";
 import dayjs from "dayjs";
@@ -31,8 +25,7 @@ import StockOutEditTab from "./_components/StockOutEditTab";
 import ResizableTitle from "@/components/table/ResizableTitle";
 import { usePersistedTableColumns } from "@/components/table/usePersistedTableColumns";
 import { useTranslation } from "@/locales/LanguageContext";
-
-const { Text } = Typography;
+import { ErpPageContainer, ErpDetailContainer } from "@/components/layout/ErpPageContainer";
 
 const INITIAL_STOCK_OUT_DATA: StockOutIssue[] = [
   {
@@ -413,6 +406,13 @@ export default function StockOutPage() {
         render: (val) => val || "---",
       },
       {
+        key: "_spacer",
+        title: "",
+        width: undefined,
+        cannotHide: true,
+        render: () => null,
+      },
+      {
         title: t.common.actions,
         key: "action",
         width: 90,
@@ -453,191 +453,22 @@ export default function StockOutPage() {
     defaultScrollX: 1350,
   });
 
-  const tabItems = [
-    {
-      key: "list",
-      label: (
-        <Space size={6}>
-          <IconList size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />
-          <span>{t.issue.tabList}</span>
-        </Space>
-      ),
-      closable: false,
-      children: (
-        <div style={{ padding: 24 }}>
-          {/* Header bar */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: 16,
-              flexWrap: "wrap",
-              gap: 12,
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <Text
-                strong
-                style={{
-                  fontSize: 18,
-                  color: "#008f89",
-                  fontWeight: 700,
-                  lineHeight: "28px",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                }}
-              >
-                <IconUpload size={18} strokeWidth={1.8} style={{ color: "#008f89" }} /> {t.issue.listTitle}
-              </Text>
-              <Tag
-                style={{
-                  background: "#dce5e6",
-                  color: "#008f89",
-                  borderRadius: 12,
-                  border: "none",
-                  fontSize: 12,
-                  fontWeight: 500,
-                  lineHeight: "16px",
-                  padding: "2px 8px",
-                  margin: 0,
-                }}
-              >
-                {filteredIssues.length} {t.table.receiptsCount}
-              </Tag>
-            </div>
-
-            <Space size={8} wrap>
-              <Select
-                value={selectedWarehouseFilter}
-                onChange={setSelectedWarehouseFilter}
-                style={{ width: 220, height: 36 }}
-                options={warehouseOptions}
-              />
-
-              <Select
-                value={selectedStatusFilter}
-                onChange={setSelectedStatusFilter}
-                style={{ width: 150, height: 36 }}
-                options={[
-                  { value: "ALL", label: t.common.allStatus },
-                  { value: "DRAFT", label: t.status.draft },
-                  { value: "PENDING", label: t.status.pending },
-                  { value: "COMPLETED", label: t.status.completed },
-                ]}
-              />
-
-              <Input
-                placeholder={t.issue.searchPlaceholder}
-                allowClear
-                value={searchKeyword}
-                onChange={(e) => setSearchKeyword(e.target.value)}
-                style={{ width: 230, height: 36, borderRadius: 8 }}
-                prefix={<IconSearch size={16} strokeWidth={1.8} style={{ color: "#94A3B8" }} />}
-              />
-
-              <Button
-                icon={<IconSearch size={16} strokeWidth={1.8} />}
-                onClick={() => {}}
-                style={{ height: 36, borderRadius: 8, borderColor: "#dce5e6" }}
-              >
-                {t.common.search}
-              </Button>
-
-              <Button
-                icon={<IconRefresh size={16} strokeWidth={1.8} />}
-                onClick={() => {
-                  setSearchKeyword("");
-                  setSelectedWarehouseFilter("ALL");
-                  setSelectedStatusFilter("ALL");
-                }}
-                style={{ height: 36, borderRadius: 8, borderColor: "#dce5e6" }}
-              >
-                {t.common.refresh}
-              </Button>
-
-              <Button
-                type="primary"
-                icon={<IconPlus size={16} strokeWidth={2} />}
-                style={{
-                  background: "#008f89",
-                  borderColor: "#008f89",
-                  height: 36,
-                  borderRadius: 8,
-                  fontWeight: 500,
-                  boxShadow: "0 2px 4px rgba(0, 143, 137, 0.2)",
-                }}
-                onClick={handleOpenCreate}
-              >
-                {t.common.createIssue}
-              </Button>
-            </Space>
-          </div>
-
-          {/* Main Table */}
-          <Card
-            bodyStyle={{ padding: 0 }}
-            bordered={false}
-            style={{
-              boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-              borderRadius: 8,
-              border: "1px solid #dce5e6",
-              overflow: "hidden",
-            }}
-          >
-            <Table
-              className="stockin-main-table"
-              components={{ header: { cell: ResizableTitle } }}
-              rowKey="id"
-              size="middle"
-              columns={tableColumns}
-              dataSource={filteredIssues}
-              pagination={{
-                pageSize: 10,
-                showSizeChanger: true,
-                pageSizeOptions: ["10", "20", "50", "100"],
-                showTotal: (total) => `${t.table.total} ${total} ${t.table.receiptsCount}`,
-              }}
-              scroll={{ x: scrollX }}
-            />
-          </Card>
-        </div>
-      ),
-    },
-    ...(isEditTabOpen
-      ? [
-          {
-            key: "edit",
-            label: (
-              <Space size={6}>
-                <IconPencil size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />
-                <span>
-                  {editingIssue
-                    ? `${editingIssue.issueCode || t.issue.code}`
-                    : t.common.createIssue}
-                </span>
-              </Space>
-            ),
-            closable: true,
-            children: (
-              <div style={{ background: "#fff", minHeight: "calc(100vh - 110px)" }}>
-                <StockOutEditTab
-                  open={isEditTabOpen}
-                  onClose={handleCloseEditTab}
-                  editingIssue={editingIssue}
-                  onSave={handleSaveIssue}
-                />
-              </div>
-            ),
-          },
-        ]
-      : []),
-  ];
+  if (isEditTabOpen) {
+    return (
+      <ErpDetailContainer>
+        <StockOutEditTab
+          open={isEditTabOpen}
+          onClose={handleCloseEditTab}
+          editingIssue={editingIssue}
+          onSave={handleSaveIssue}
+        />
+      </ErpDetailContainer>
+    );
+  }
 
   return (
-    <div style={{ padding: 0, width: "100%", minHeight: "calc(100vh - 100px)", background: "#FFFFFF", borderRadius: 16, border: "1px solid #dce5e6", overflow: "hidden", boxShadow: "0 1px 3px rgba(18, 52, 67, 0.04)" }}>
-      {/* Scoped CSS for stockout table and tabs */}
+    <ErpPageContainer>
+      {/* Scoped CSS for stockout table */}
       <style jsx global>{`
         .stockin-main-table .ant-table-thead > tr > th {
           background: #f7fbfa !important;
@@ -671,40 +502,105 @@ export default function StockOutPage() {
         .stockin-main-table .ant-pagination .ant-pagination-item-active a {
           color: #FFFFFF !important;
         }
-        .stockout-page-tabs .ant-tabs-nav {
-          margin-bottom: 0 !important;
-          background: #f7fbfa !important;
-          border-bottom: 1px solid #dce5e6 !important;
-          padding: 6px 16px 0 16px !important;
-        }
-        .stockout-page-tabs .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
-          color: #008f89 !important;
-          font-weight: 600 !important;
-        }
-        .stockout-page-tabs .ant-tabs-ink-bar {
-          background: #008f89 !important;
-        }
       `}</style>
 
-      <Tabs
-        className="stockout-page-tabs"
-        type="editable-card"
-        hideAdd
-        activeKey={activeTabKey}
-        onChange={setActiveTabKey}
-        onEdit={(targetKey, action) => {
-          if (action === "remove" && targetKey === "edit") {
-            handleCloseEditTab();
-          }
+      {/* Toolbar Header */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 14,
+          gap: 12,
         }}
-        items={tabItems}
-        tabBarStyle={{
-          margin: 0,
-          background: "#f7fbfa",
-          padding: "6px 16px 0 16px",
-          borderBottom: "1px solid #dce5e6",
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", flex: 1 }}>
+          <Select
+            value={selectedWarehouseFilter}
+            onChange={setSelectedWarehouseFilter}
+            style={{ width: 220, height: 36 }}
+            options={warehouseOptions}
+          />
+
+          <Select
+            value={selectedStatusFilter}
+            onChange={setSelectedStatusFilter}
+            style={{ width: 150, height: 36 }}
+            options={[
+              { value: "ALL", label: t.common.allStatus },
+              { value: "DRAFT", label: t.status.draft },
+              { value: "PENDING", label: t.status.pending },
+              { value: "COMPLETED", label: t.status.completed },
+            ]}
+          />
+
+          <Input
+            placeholder={t.issue.searchPlaceholder}
+            allowClear
+            value={searchKeyword}
+            onChange={(e) => setSearchKeyword(e.target.value)}
+            style={{ width: 240, height: 36, borderRadius: 8, fontSize: 13.5 }}
+            prefix={<IconSearch size={16} strokeWidth={1.8} style={{ color: "#94A3B8" }} />}
+          />
+
+          <span style={{ fontSize: 13, color: "#64748b", whiteSpace: "nowrap" }}>
+            {t.common.total || "Tổng"}: <strong style={{ color: "#008f89" }}>{filteredIssues.length}</strong> {t.table.receiptsCount || "phiếu"}
+          </span>
+        </div>
+
+        <Space size={10} style={{ flexShrink: 0 }}>
+          <Button
+            icon={<IconRefresh size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />}
+            onClick={() => {
+              setSearchKeyword("");
+              setSelectedWarehouseFilter("ALL");
+              setSelectedStatusFilter("ALL");
+            }}
+            style={{ height: 36, borderRadius: 8, borderColor: "#dce5e6", color: "#334155", fontSize: 13.5, fontWeight: 500 }}
+          >
+            {t.common.refresh}
+          </Button>
+
+          <Button
+            type="primary"
+            icon={<IconPlus size={16} strokeWidth={2} />}
+            style={{
+              background: "#008f89",
+              borderColor: "#008f89",
+              height: 36,
+              borderRadius: 8,
+              fontSize: 13.5,
+              fontWeight: 500,
+              color: "#FFFFFF",
+              boxShadow: "0 2px 4px rgba(0, 143, 137, 0.2)",
+            }}
+            onClick={handleOpenCreate}
+          >
+            {t.common.createIssue}
+          </Button>
+        </Space>
+      </div>
+
+      {/* Main Table */}
+      <Table
+        className="stockin-main-table"
+        tableLayout="fixed"
+        components={{ header: { cell: ResizableTitle } }}
+        rowKey="id"
+        size="middle"
+        columns={tableColumns}
+        dataSource={filteredIssues}
+        onRow={(record) => ({
+          onDoubleClick: () => handleOpenEdit(record),
+        })}
+        pagination={{
+          pageSize: 20,
+          showSizeChanger: true,
+          pageSizeOptions: ["20", "50", "100", "200"],
+          showTotal: (total, range) => `${range[0]}–${range[1]} / ${total} ${t.table.receiptsCount}`,
         }}
+        scroll={{ x: scrollX, y: "calc(100vh - 215px)" }}
       />
-    </div>
+    </ErpPageContainer>
   );
 }

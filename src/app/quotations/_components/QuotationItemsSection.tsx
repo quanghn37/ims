@@ -20,6 +20,7 @@ import { parseDateSafe } from "./types";
 import { SubmissionItem } from "@/types";
 import ResizableTitle from "@/components/table/ResizableTitle";
 import { useTranslation } from "@/locales/LanguageContext";
+import ErpDetailCard from "@/components/common/ErpDetailCard";
 
 const { Text } = Typography;
 
@@ -64,38 +65,44 @@ export default function QuotationItemsSection({
         ),
       },
       {
+        title: t.table.itemCode,
+        dataIndex: "ItemCode",
+        key: "ItemCode",
+        width: 130,
+        render: (_: any, r: any) => {
+          const sCode =
+            r.SystemCode || r.ItemCode || (r.MaterialId ? String(r.MaterialId) : "");
+          return (
+            <span
+              style={{
+                fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                color: sCode ? "#1e293b" : "#94A3B8",
+                fontSize: 12.5,
+              }}
+            >
+              {sCode ? sCode.replace(/^\(|\)$/g, "") : "---"}
+            </span>
+          );
+        },
+      },
+      {
         title: t.table.itemName,
         dataIndex: "Description",
         key: "Description",
         width: 240,
         render: (val: string, r: any) => {
           const desc = val || r.Description || r.ItemName || "";
-          const sCode =
-            r.SystemCode || r.ItemCode || (r.MaterialId ? String(r.MaterialId) : "");
+          const matchParen = desc.match(/\(([^)]+)\)/);
+          const cleanDesc = matchParen ? desc.replace(/\([^)]+\)/, "").trim() : desc;
           return (
-            <div>
-              <div
-                style={{
-                  color: "#123443",
-                  fontSize: 12,
-                  wordBreak: "break-word",
-                }}
-              >
-                {desc || "Vật tư trong bảng giá"}
-              </div>
-              {sCode && (
-                <div
-                  style={{
-                    fontSize: 11,
-                    color: "#718894",
-                    marginTop: 2,
-                    wordBreak: "break-word",
-                    fontFamily: "monospace",
-                  }}
-                >
-                  {sCode.startsWith("(") ? sCode : `(${sCode})`}
-                </div>
-              )}
+            <div
+              style={{
+                color: "#123443",
+                fontSize: 12.5,
+                wordBreak: "break-word",
+              }}
+            >
+              {cleanDesc || "Vật tư trong bảng giá"}
             </div>
           );
         },
@@ -390,65 +397,21 @@ export default function QuotationItemsSection({
           textAlign: "center",
           background: "#fafafa",
           borderRadius: 6,
-          border: "1px dashed #d9d9d9",
+          border: "1px dashed #dce5e6",
           color: "#8c8c8c",
           fontSize: 13,
         }}
       >
-        Sau khi tạo Bảng giá thành công, danh mục vật tư hàng hóa và tính năng Import Excel / Thêm vật tư sẽ được kích hoạt tại đây.
+        {t.quotation.notCreatedYet}
       </div>
     );
   }
 
   return (
-    <div
-      style={{
-        background: "#FFFFFF",
-        border: "1px solid #dce5e6",
-        borderRadius: 8,
-        padding: "12px 14px",
-        boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 12,
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <Text
-            strong
-            style={{
-              fontSize: 13,
-              color: "#008f89",
-              fontWeight: 700,
-              textTransform: "uppercase",
-              lineHeight: "20px",
-            }}
-          >
-            {t.section.materialInfo}
-          </Text>
-          <Tag
-            style={{
-              background: "#dce5e6",
-              color: "#008f89",
-              borderRadius: 12,
-              border: "none",
-              fontSize: 11,
-              fontWeight: 500,
-              lineHeight: "16px",
-              padding: "1px 8px",
-              margin: 0,
-            }}
-          >
-            {submissions.length} {t.table.itemsCount}
-          </Tag>
-        </div>
-
-        {!isReadOnly && (
+    <ErpDetailCard
+      title={t.section.materialInfo}
+      actions={
+        !isReadOnly && (
           <Space size={8}>
             {onOpenImportExcel && (
               <Button
@@ -458,10 +421,10 @@ export default function QuotationItemsSection({
                   borderColor: "#dce5e6",
                   background: "#FFFFFF",
                   color: "#334155",
-                  fontSize: 14,
+                  fontSize: 13,
                   fontWeight: 500,
-                  height: 36,
-                  borderRadius: 8,
+                  height: 32,
+                  borderRadius: 6,
                 }}
               >
                 {t.common.importExcel}
@@ -474,10 +437,10 @@ export default function QuotationItemsSection({
                   borderColor: "#dce5e6",
                   background: "#FFFFFF",
                   color: "#334155",
-                  fontSize: 14,
+                  fontSize: 13,
                   fontWeight: 500,
-                  height: 36,
-                  borderRadius: 8,
+                  height: 32,
+                  borderRadius: 6,
                 }}
                 onClick={onOpenAddItem}
               >
@@ -485,11 +448,12 @@ export default function QuotationItemsSection({
               </Button>
             )}
           </Space>
-        )}
-      </div>
+        )
+      }
+    >
 
       <Table
-        className="quotation-detail-table"
+        className="erp-detail-table quotation-detail-table"
         tableLayout="fixed"
         components={{
           header: {
@@ -596,6 +560,6 @@ export default function QuotationItemsSection({
           );
         }}
       />
-    </div>
+    </ErpDetailCard>
   );
 }

@@ -35,6 +35,7 @@ interface ContractMaterialEditDrawerProps {
   onSave: (payload: UpsertMatequipSubmissionParams) => Promise<boolean | void>;
   onDelete?: (material: ContractMaterialItem) => Promise<boolean | void> | void;
   submitting?: boolean;
+  isTaskAssigned?: boolean;
 }
 
 export default function ContractMaterialEditDrawer({
@@ -44,6 +45,7 @@ export default function ContractMaterialEditDrawer({
   onSave,
   onDelete,
   submitting = false,
+  isTaskAssigned = false,
 }: ContractMaterialEditDrawerProps) {
   const { t, language } = useTranslation();
   const [form] = Form.useForm();
@@ -150,7 +152,13 @@ export default function ContractMaterialEditDrawer({
         <Space>
           <IconPencil size={18} strokeWidth={1.8} style={{ color: "#008f89" }} />
           <Text strong style={{ fontSize: 16, color: "#123443", fontWeight: 700 }}>
-            {language === "en" ? "Edit Contract Material Item" : "Chỉnh sửa Vật tư trong Hợp đồng"}
+            {isTaskAssigned
+              ? language === "en"
+                ? "View Contract Material Item"
+                : "Chi tiết Vật tư trong Hợp đồng"
+              : language === "en"
+              ? "Edit Contract Material Item"
+              : "Chỉnh sửa Vật tư trong Hợp đồng"}
           </Text>
         </Space>
       }
@@ -167,7 +175,7 @@ export default function ContractMaterialEditDrawer({
       footer={
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
-            {onDelete && material && (
+            {onDelete && material && !isTaskAssigned && (
               <Popconfirm
                 title={
                   language === "en"
@@ -205,25 +213,27 @@ export default function ContractMaterialEditDrawer({
                 fontWeight: 500,
               }}
             >
-              {t.common.cancel}
+              {isTaskAssigned ? (t.common.close || (language === "en" ? "Close" : "Đóng")) : t.common.cancel}
             </Button>
-            <Button
-              type="primary"
-              icon={<IconDeviceFloppy size={16} strokeWidth={2} />}
-              style={{
-                background: "#008f89",
-                borderColor: "#008f89",
-                borderRadius: 6,
-                height: 32,
-                fontSize: 13,
-                fontWeight: 500,
-                color: "#FFFFFF",
-              }}
-              onClick={handleSubmit}
-              loading={submitting}
-            >
-              {t.itemDrawer.saveItem}
-            </Button>
+            {!isTaskAssigned && (
+              <Button
+                type="primary"
+                icon={<IconDeviceFloppy size={16} strokeWidth={2} />}
+                style={{
+                  background: "#008f89",
+                  borderColor: "#008f89",
+                  borderRadius: 6,
+                  height: 32,
+                  fontSize: 13,
+                  fontWeight: 500,
+                  color: "#FFFFFF",
+                }}
+                onClick={handleSubmit}
+                loading={submitting}
+              >
+                {t.itemDrawer.saveItem}
+              </Button>
+            )}
           </Space>
         </div>
       }
@@ -286,6 +296,7 @@ export default function ContractMaterialEditDrawer({
       <Form
         form={form}
         layout="vertical"
+        disabled={isTaskAssigned}
         onFinish={handleSubmit}
       >
         {/* KHUNG THÔNG TIN VẬT TƯ DẠNG COMPACT BORDERED GRID */}

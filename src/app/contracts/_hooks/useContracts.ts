@@ -17,6 +17,8 @@ export const contractColumnFields: Record<string, string[]> = {
   Description: ["Description", "Remarks", "ContractName"],
   PayTerms: ["PayTerms", "PaymentTerm", "PaytermId"],
   ContractDate: ["ContractDate", "Contractdate", "SignDate", "Signdate"],
+  StatusName: ["StatusName", "Status", "StatusCode"],
+  CurrentAssignee: ["CurrentAssignee", "Assignee", "CurrentRole"],
   CreatedBy: ["CreatedBy", "Createdby"],
 };
 
@@ -28,6 +30,11 @@ const getContractSearchValues = (contract: ContractItem) => [
   contract.MainCode ?? contract.MainContractCode ?? "",
   (contract as any).MasterContract ?? (contract as any).MasterContractCode ?? (contract as any).ParentContractCode ?? "",
   contract.QuotationCode ?? contract.Quotationcode ?? "",
+  contract.StatusName ?? contract.Status ?? "",
+  contract.CurrentAssignee &&
+  !["đã hoàn tất", "hoàn tất", "completed", "done"].includes(contract.CurrentAssignee.trim().toLowerCase())
+    ? contract.CurrentAssignee
+    : "",
   contract.CreatedBy ?? contract.Createdby ?? "",
 ];
 
@@ -47,7 +54,7 @@ export function useContracts() {
     setLoading(true);
     try {
       const data = await contractsApi.getContracts({
-        DisplayMode: "mat_equip", ClientId: "", WSId: "", PageNum: page, PageSize: pageSize,
+        DisplayMode: "mat_equip",
       });
       const list = extractApiList<ContractItem>(data);
       setContracts(list);

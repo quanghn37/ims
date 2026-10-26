@@ -1,6 +1,6 @@
-﻿"use client";
+"use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import { Modal, Button, Upload, Typography, Table, Space, Tag, Spin } from "antd";
 import {
   UploadOutlined,
@@ -14,6 +14,10 @@ import {
   LoadingOutlined,
 } from "@ant-design/icons";
 import { useTranslation } from "@/locales/LanguageContext";
+import ResizableTitle from "@/components/table/ResizableTitle";
+import { usePersistedColumnWidths } from "@/lib/table-utils";
+
+const STORAGE_KEY_IMPORT_EXCEL = "table_cols_quotation_import_excel";
 
 const { Text } = Typography;
 const { Dragger } = Upload;
@@ -68,97 +72,125 @@ export default function ImportExcelModal({
     onPreview(file);
   };
 
-  const columns = [
-    {
-      title: t.table.stt,
-      dataIndex: "LocalId",
-      key: "LocalId",
-      width: 60,
-      align: "center" as const,
-      render: (_: any, __: any, index: number) => (
-        <Text style={{ fontSize: 14, color: "#475569" }}>{index + 1}</Text>
-      ),
-    },
-    {
-      title: t.table.itemName,
-      dataIndex: "ItemName",
-      key: "ItemName",
-      render: (itemName: string, record: any) => (
-        <div style={{ padding: "2px 0" }}>
-          <div style={{ fontWeight: 400, fontSize: 14, color: "#123443", lineHeight: 1.4 }}>
-            {itemName || "—"}
-          </div>
-          {record.ItemCode && (
-            <div style={{ fontSize: 13, color: "#718894", marginTop: 2, fontWeight: 400 }}>
-              {record.ItemCode}
+  const initialColumns = useMemo(
+    () => [
+      {
+        title: t.table.stt,
+        dataIndex: "LocalId",
+        key: "LocalId",
+        width: 60,
+        align: "center" as const,
+        render: (_: any, __: any, index: number) => (
+          <Text style={{ fontSize: 14, color: "#475569" }}>{index + 1}</Text>
+        ),
+      },
+      {
+        title: t.table.itemName,
+        dataIndex: "ItemName",
+        key: "ItemName",
+        width: 260,
+        render: (itemName: string, record: any) => (
+          <div style={{ padding: "2px 0" }}>
+            <div style={{ fontWeight: 400, fontSize: 14, color: "#123443", lineHeight: 1.4 }}>
+              {itemName || "—"}
             </div>
-          )}
-        </div>
-      ),
-    },
-    {
-      title: t.table.unit,
-      dataIndex: "Unit",
-      key: "Unit",
-      width: 80,
-      align: "center" as const,
-      render: (val: string) => <Text style={{ fontSize: 14, color: "#334155" }}>{val || "—"}</Text>,
-    },
-    {
-      title: t.table.qty,
-      dataIndex: "Qnty",
-      key: "Qnty",
-      width: 100,
-      align: "right" as const,
-      render: (val: any) => <Text style={{ fontSize: 14, fontWeight: 400, color: "#334155" }}>{val ?? 0}</Text>,
-    },
-    {
-      title: t.table.unitPrice,
-      dataIndex: "UnitPrice",
-      key: "UnitPrice",
-      width: 130,
-      align: "right" as const,
-      render: (val: any) => (
-        <Text style={{ fontSize: 14, fontWeight: 400, color: "#123443" }}>
-          {val ? Number(val).toLocaleString(language === "en" ? "en-US" : "vi-VN") : "0"}
-        </Text>
-      ),
-    },
-    {
-      title: t.table.status,
-      dataIndex: "IsValid",
-      key: "IsValid",
-      width: 120,
-      align: "center" as const,
-      render: (isValid: boolean | number) => {
-        const ok = isValid === true || isValid === 1;
-        return ok ? (
-          <span style={{ color: "#16a34a", fontWeight: 500, display: "inline-flex", alignItems: "center", gap: 5, fontSize: 13.5 }}>
-            <CheckCircleOutlined style={{ fontSize: 14 }} /> {language === "en" ? "Valid" : "Hợp lệ"}
-          </span>
-        ) : (
-          <span style={{ color: "#dc2626", fontWeight: 500, display: "inline-flex", alignItems: "center", gap: 5, fontSize: 13.5 }}>
-            <CloseCircleOutlined style={{ fontSize: 14 }} /> {language === "en" ? "Error" : "Lỗi"}
-          </span>
-        );
+            {record.ItemCode && (
+              <div style={{ fontSize: 13, color: "#718894", marginTop: 2, fontWeight: 400 }}>
+                {record.ItemCode}
+              </div>
+            )}
+          </div>
+        ),
       },
-    },
-    {
-      title: language === "en" ? "Message" : "Thông báo",
-      dataIndex: "Messenger",
-      key: "Messenger",
-      width: 220,
-      ellipsis: true,
-      render: (msg: string, record: any) => {
-        const ok = record.IsValid === true || record.IsValid === 1;
-        return (
-          <Text style={{ fontSize: 13, color: ok ? "#718894" : "#dc2626", fontWeight: ok ? 400 : 500 }}>
-            {msg || "—"}
+      {
+        title: t.table.unit,
+        dataIndex: "Unit",
+        key: "Unit",
+        width: 90,
+        align: "center" as const,
+        render: (val: string) => <Text style={{ fontSize: 14, color: "#334155" }}>{val || "—"}</Text>,
+      },
+      {
+        title: t.table.qty,
+        dataIndex: "Qnty",
+        key: "Qnty",
+        width: 100,
+        align: "right" as const,
+        render: (val: any) => <Text style={{ fontSize: 14, fontWeight: 400, color: "#334155" }}>{val ?? 0}</Text>,
+      },
+      {
+        title: t.table.unitPrice,
+        dataIndex: "UnitPrice",
+        key: "UnitPrice",
+        width: 130,
+        align: "right" as const,
+        render: (val: any) => (
+          <Text style={{ fontSize: 14, fontWeight: 400, color: "#123443" }}>
+            {val ? Number(val).toLocaleString(language === "en" ? "en-US" : "vi-VN") : "0"}
           </Text>
-        );
+        ),
       },
-    },
-  ];
+      {
+        title: t.table.status,
+        dataIndex: "IsValid",
+        key: "IsValid",
+        width: 120,
+        align: "center" as const,
+        render: (isValid: boolean | number) => {
+          const ok = isValid === true || isValid === 1;
+          return ok ? (
+            <span style={{ color: "#16a34a", fontWeight: 500, display: "inline-flex", alignItems: "center", gap: 5, fontSize: 13.5 }}>
+              <CheckCircleOutlined style={{ fontSize: 14 }} /> {language === "en" ? "Valid" : "Hợp lệ"}
+            </span>
+          ) : (
+            <span style={{ color: "#dc2626", fontWeight: 500, display: "inline-flex", alignItems: "center", gap: 5, fontSize: 13.5 }}>
+              <CloseCircleOutlined style={{ fontSize: 14 }} /> {language === "en" ? "Error" : "Lỗi"}
+            </span>
+          );
+        },
+      },
+      {
+        title: language === "en" ? "Message" : "Thông báo",
+        dataIndex: "Messenger",
+        key: "Messenger",
+        width: 250,
+        ellipsis: true,
+        render: (msg: string, record: any) => {
+          const ok = record.IsValid === true || record.IsValid === 1;
+          return (
+            <Text style={{ fontSize: 13, color: ok ? "#718894" : "#dc2626", fontWeight: ok ? 400 : 500 }}>
+              {msg || "—"}
+            </Text>
+          );
+        },
+      },
+    ],
+    [language, t]
+  );
+
+  const { columns, handleResizeColumn } = usePersistedColumnWidths(
+    initialColumns,
+    STORAGE_KEY_IMPORT_EXCEL
+  );
+
+  const mergedColumns = useMemo(
+    () =>
+      columns.map((column, index) => ({
+        ...column,
+        onHeaderCell: (headerColumn: any) => ({
+          width: headerColumn.width,
+          onResize: handleResizeColumn(index),
+        }),
+      })),
+    [columns, handleResizeColumn]
+  );
+
+  const scrollX = useMemo(() => {
+    return mergedColumns.reduce(
+      (sum, col) => sum + (Number(col.width) || 100),
+      0
+    );
+  }, [mergedColumns]);
 
   const hasFile = importFileList.length > 0;
 
@@ -225,7 +257,6 @@ export default function ImportExcelModal({
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               {hasFile && (
                 <Tag
-                  color="purple"
                   style={{
                     display: "inline-flex",
                     alignItems: "center",
@@ -235,9 +266,9 @@ export default function ImportExcelModal({
                     borderRadius: 6,
                     height: 38,
                     margin: 0,
-                    border: "1px solid #e9d5ff",
-                    backgroundColor: "#faf5ff",
-                    color: "#6b21a8",
+                    border: "1px solid #79c7bf",
+                    backgroundColor: "#eef8f6",
+                    color: "#008f89",
                   }}
                 >
                   <PaperClipOutlined />
@@ -323,12 +354,18 @@ export default function ImportExcelModal({
             {!previewing && previewResult && (
               <div style={{ marginTop: 14 }}>
                 <Table
+                  tableLayout="fixed"
+                  components={{
+                    header: {
+                      cell: ResizableTitle,
+                    },
+                  }}
                   dataSource={previewResult.data || []}
-                  columns={columns}
-                  rowKey={(rec) => rec.LocalId || rec.ItemCode || Math.random()}
+                  columns={mergedColumns}
+                  rowKey={(rec, index) => rec.LocalId || rec.ItemCode || `import_row_${index}`}
                   size="middle"
                   pagination={{ pageSize: 6, showSizeChanger: false }}
-                  scroll={{ y: 300 }}
+                  scroll={{ x: scrollX, y: 300 }}
                   rowClassName={(record) => {
                     const ok = record.IsValid === true || record.IsValid === 1;
                     return ok ? "" : "bg-red-50";

@@ -35,6 +35,7 @@ export interface ContractMaterialItem {
   SubmissionId?: number | string;
   LocalId?: number | string;
   ContractId?: number | string;
+  ContractCode?: string;
   MaterialId?: number | string;
   ItemId?: number | string;
   ItemName?: string;

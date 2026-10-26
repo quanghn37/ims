@@ -11,7 +11,6 @@ import {
   InputNumber,
   Divider,
   Checkbox,
-  Typography,
 } from "antd";
 import {
   EditOutlined,
@@ -21,8 +20,6 @@ import {
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useTranslation } from "@/locales/LanguageContext";
-
-const { Text } = Typography;
 
 interface ItemFormDrawerProps {
   open: boolean;

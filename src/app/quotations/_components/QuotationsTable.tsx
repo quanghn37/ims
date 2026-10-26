@@ -1,5 +1,5 @@
-import { useMemo } from "react";
-import { Button, Input, Popconfirm, Space, Table, Tag, Tooltip, Typography } from "antd";
+import { useMemo, useState, useEffect } from "react";
+import { Button, Input, Popover, Space, Table } from "antd";
 import {
   IconSearch,
   IconCircleX,
@@ -13,7 +13,6 @@ import { usePersistedColumnWidths } from "@/lib/table-utils";
 import { quotationColumnFields } from "../_hooks/useQuotations";
 import { useTranslation } from "@/locales/LanguageContext";
 
-const { Text } = Typography;
 type PaginationState = { current: number; pageSize: number; total: number };
 
 interface QuotationsTableProps {
@@ -51,7 +50,9 @@ export default function QuotationsTable({
   onEdit,
   onDelete,
 }: QuotationsTableProps) {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
+  const [openFilterKey, setOpenFilterKey] = useState<string | null>(null);
+  const [anchorRect, setAnchorRect] = useState<{ bottom: number; left: number; width: number } | null>(null);
 
   const initialColumns = useMemo(() => [
     {
@@ -137,19 +138,60 @@ export default function QuotationsTable({
       title: t.table.creator,
       dataIndex: "CreatedBy",
       key: "CreatedBy",
-      width: 130,
+      width: 140,
       render: (value: string) => (
         <span style={{ color: "#718894", fontSize: 13 }}>
           {value || "Hệ thống"}
         </span>
       ),
     },
+    {
+      title: "",
+      key: "_spacer",
+      render: () => null,
+    },
   ], [onEdit, t]);
 
   const { columns, handleResizeColumn } = usePersistedColumnWidths(initialColumns, storageKey);
 
+  const activeColumnMeta = useMemo(() => {
+    if (!openFilterKey) return null;
+    const col = initialColumns.find(
+      (c) => String(c.key || c.dataIndex) === openFilterKey
+    );
+    const label = typeof col?.title === "string" ? col.title : openFilterKey;
+    return { label };
+  }, [openFilterKey, initialColumns]);
+
+  useEffect(() => {
+    if (!openFilterKey) return;
+    const handleScroll = (e: Event) => {
+      const target = e.target as HTMLElement;
+      // Nếu sự kiện scroll xuất phát từ bên trong popup hoặc danh sách gợi ý, tuyệt đối không được đóng popup
+      if (
+        target &&
+        typeof target.closest === "function" &&
+        target.closest(".ant-popover")
+      ) {
+        return;
+      }
+      setOpenFilterKey(null);
+      setAnchorRect(null);
+    };
+    window.addEventListener("scroll", handleScroll, true);
+    return () => window.removeEventListener("scroll", handleScroll, true);
+  }, [openFilterKey]);
+
   const mergedColumns = useMemo(() => columns.map((column, index) => {
     const key = column.key || column.dataIndex;
+    if (key === "_spacer") {
+      return {
+        key: "_spacer",
+        title: "",
+        width: undefined,
+        render: () => null,
+      };
+    }
     const initialColumn = initialColumns[index];
     const searchable = key && quotationColumnFields[key];
     const onHeaderCell = (headerColumn: any) => ({
@@ -158,34 +200,68 @@ export default function QuotationsTable({
     });
     if (!searchable) return { ...column, width: column.width, onHeaderCell };
     const activeValue = columnFilters[key] || "";
+    const rawTitle = typeof initialColumn?.title === "string" ? initialColumn.title : key;
+    const titleNode = (
+      <span
+        className="column-title-clickable"
+        onClick={(e) => {
+          e.stopPropagation();
+          const rect = e.currentTarget.getBoundingClientRect();
+          setAnchorRect({
+            bottom: rect.bottom,
+            left: rect.left,
+            width: rect.width,
+          });
+          setOpenFilterKey((prev) => (prev === key ? null : key));
+        }}
+        style={{
+          cursor: "pointer",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 6,
+          color: activeValue ? "#008f89" : "inherit",
+          fontWeight: activeValue ? 600 : "inherit",
+          userSelect: "none",
+        }}
+        title={language === "en" ? `Click to search by ${rawTitle}` : `Bấm để tìm kiếm / lọc theo ${rawTitle}`}
+      >
+        <span>{rawTitle}</span>
+        {activeValue && (
+          <span
+            style={{
+              display: "inline-block",
+              width: 7,
+              height: 7,
+              borderRadius: "50%",
+              backgroundColor: "#008f89",
+              flexShrink: 0,
+            }}
+            title={language === "en" ? `Active filter: "${activeValue}"` : `Đang lọc: "${activeValue}"`}
+          />
+        )}
+      </span>
+    );
+
     return {
       ...column,
-      filterDropdown: ({ close }: { close: () => void }) => (
-        <ColumnFilterDropdown
-          colKey={key}
-          label={typeof initialColumn?.title === "string" ? initialColumn.title : key}
-          value={activeValue}
-          suggestions={columnSuggestions[key] || []}
-          close={close}
-          onApply={(value) => setColumnFilters((previous) => {
-            if (!value || !value.trim()) { const next = { ...previous }; delete next[key]; return next; }
-            return { ...previous, [key]: value.trim() };
-          })}
-          onClear={() => setColumnFilters((previous) => { const next = { ...previous }; delete next[key]; return next; })}
-        />
-      ),
-      filterIcon: () => <IconSearch size={14} strokeWidth={1.8} style={{ color: activeValue ? "#008f89" : undefined }} />,
-      filtered: !!activeValue,
+      title: titleNode,
       onHeaderCell,
     };
-  }), [columns, initialColumns, columnFilters, columnSuggestions, setColumnFilters]);
+  }), [columns, initialColumns, columnFilters, handleResizeColumn, language]);
+
+  const scrollX = useMemo(() => {
+    return mergedColumns.reduce((sum, col) => {
+      if (col.key === "_spacer") return sum;
+      return sum + (Number(col.width) || 130);
+    }, 0);
+  }, [mergedColumns]);
 
   return (
     <div
       style={{
         background: "#FFFFFF",
-        padding: "16px 24px",
-        minHeight: "calc(100vh - 110px)",
+        padding: 0,
+        minHeight: "calc(100vh - 100px)",
         boxSizing: "border-box",
       }}
     >
@@ -202,6 +278,12 @@ export default function QuotationsTable({
           line-height: 18px !important;
           border-color: #dce5e6 !important;
           padding: 10px 12px !important;
+        }
+        .quotation-main-table .column-title-clickable {
+          transition: color 0.15s ease;
+        }
+        .quotation-main-table .ant-table-thead > tr > th:hover .column-title-clickable {
+          color: #008f89 !important;
         }
         .quotation-main-table .ant-table-tbody > tr > td {
           color: #123443 !important;
@@ -225,37 +307,16 @@ export default function QuotationsTable({
         }
       `}</style>
 
-      {/* TOOLBAR HEADER */}
+      {/* TOOLBAR HEADER - LIỀN MẠCH, KHÔNG TRÙNG LẶP TIÊU ĐỀ */}
       <div
         style={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          marginBottom: 16,
+          marginBottom: 14,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <Text strong style={{ fontSize: 18, color: "#008f89", fontWeight: 700, lineHeight: "28px" }}>
-            {t.pageTitles.quotations}
-          </Text>
-          <Tag
-            style={{
-              background: "#dce5e6",
-              color: "#008f89",
-              borderRadius: 12,
-              border: "none",
-              fontSize: 12,
-              fontWeight: 500,
-              lineHeight: "16px",
-              padding: "2px 8px",
-              margin: 0,
-            }}
-          >
-            {isFiltering ? `${filteredQuotations.length} / ${pagination.total} ${t.table.records}` : `${pagination.total} ${t.table.records}`}
-          </Tag>
-        </div>
-
-        <Space size={10}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <Input
             placeholder={t.quotation.searchPlaceholder}
             prefix={<IconSearch size={16} strokeWidth={1.8} style={{ color: "#94A3B8" }} />}
@@ -263,31 +324,37 @@ export default function QuotationsTable({
             onChange={(event) => setSearchKeyword(event.target.value)}
             allowClear
             style={{
-              width: 240,
+              width: 280,
               height: 36,
               borderRadius: 8,
               borderColor: "#dce5e6",
-              fontSize: 14,
+              fontSize: 13.5,
               color: "#123443",
             }}
           />
+          <span style={{ fontSize: 13, color: "#64748b" }}>
+            {t.common.total || "Tổng"}: <strong style={{ color: "#008f89" }}>{isFiltering ? filteredQuotations.length : pagination.total}</strong> {t.table.records || "bảng giá"}
+          </span>
           {isFiltering && (
             <Button
-              icon={<IconCircleX size={16} strokeWidth={1.8} style={{ color: "#EF4444" }} />}
+              icon={<IconCircleX size={15} strokeWidth={1.8} style={{ color: "#EF4444" }} />}
               onClick={() => { setSearchKeyword(""); setColumnFilters({}); }}
               style={{
-                height: 36,
-                borderRadius: 8,
+                height: 32,
+                borderRadius: 6,
                 borderColor: "#FED7AA",
                 background: "#FFF7ED",
                 color: "#F97316",
-                fontSize: 14,
+                fontSize: 12.5,
                 fontWeight: 500,
               }}
             >
               {t.common.clearFilter}
             </Button>
           )}
+        </div>
+
+        <Space size={10}>
           <Button
             icon={<IconRefresh size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />}
             onClick={() => onRefresh(pagination.current, pagination.pageSize)}
@@ -297,7 +364,7 @@ export default function QuotationsTable({
               borderColor: "#dce5e6",
               background: "#FFFFFF",
               color: "#334155",
-              fontSize: 14,
+              fontSize: 13.5,
               fontWeight: 500,
             }}
           >
@@ -311,7 +378,7 @@ export default function QuotationsTable({
               borderColor: "#008f89",
               height: 36,
               borderRadius: 8,
-              fontSize: 14,
+              fontSize: 13.5,
               fontWeight: 500,
               color: "#FFFFFF",
             }}
@@ -325,12 +392,13 @@ export default function QuotationsTable({
       {/* BẢNG DỮ LIỆU */}
       <Table
         className="quotation-main-table"
+        tableLayout="fixed"
         components={{ header: { cell: ResizableTitle } }}
         dataSource={filteredQuotations}
         columns={mergedColumns}
         rowKey={(record, index) => record.ContractId ?? record.ContractCode ?? `quotation_${index}`}
         loading={loading}
-        scroll={{ x: 1300 }}
+        scroll={{ x: scrollX, y: "calc(100vh - 215px)" }}
         onRow={(record) => ({ onDoubleClick: () => onEdit(record) })}
         pagination={{
           current: pagination.current,
@@ -344,6 +412,75 @@ export default function QuotationsTable({
           showTotal: (total, range) => `${range[0]}–${range[1]} / ${total} ${t.table.records}`,
         }}
       />
+
+      {/* SINGLE POPOVER DUY NHẤT (ĐẶT NGOÀI TABLE ĐỂ KHÔNG BỊ NHÂN BẢN DO TABLE HEADER RENDER) */}
+      <Popover
+        open={Boolean(openFilterKey && anchorRect)}
+        onOpenChange={(visible) => {
+          if (!visible) {
+            setOpenFilterKey(null);
+            setAnchorRect(null);
+          }
+        }}
+        trigger="click"
+        placement="bottomLeft"
+        arrow={false}
+        destroyTooltipOnHide
+        overlayStyle={{ zIndex: 1050 }}
+        overlayInnerStyle={{
+          padding: 0,
+          borderRadius: 10,
+          overflow: "hidden",
+          boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.04)",
+        }}
+        content={
+          openFilterKey && activeColumnMeta ? (
+            <ColumnFilterDropdown
+              colKey={openFilterKey}
+              label={activeColumnMeta.label}
+              value={columnFilters[openFilterKey] || ""}
+              suggestions={columnSuggestions[openFilterKey] || []}
+              close={() => {
+                setOpenFilterKey(null);
+                setAnchorRect(null);
+              }}
+              onApply={(value) => {
+                setColumnFilters((previous) => {
+                  if (!value || !value.trim()) {
+                    const next = { ...previous };
+                    delete next[openFilterKey];
+                    return next;
+                  }
+                  return { ...previous, [openFilterKey]: value.trim() };
+                });
+                setOpenFilterKey(null);
+                setAnchorRect(null);
+              }}
+              onClear={() => {
+                setColumnFilters((previous) => {
+                  const next = { ...previous };
+                  delete next[openFilterKey];
+                  return next;
+                });
+                setOpenFilterKey(null);
+                setAnchorRect(null);
+              }}
+            />
+          ) : null
+        }
+      >
+        <div
+          style={{
+            position: "fixed",
+            top: anchorRect ? anchorRect.bottom + 4 : -9999,
+            left: anchorRect ? anchorRect.left : -9999,
+            width: anchorRect ? Math.max(anchorRect.width, 1) : 0,
+            height: 1,
+            pointerEvents: "none",
+            visibility: openFilterKey && anchorRect ? "visible" : "hidden",
+          }}
+        />
+      </Popover>
     </div>
   );
 }

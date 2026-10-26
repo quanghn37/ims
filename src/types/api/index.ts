@@ -1,4 +1,4 @@
-import { ApiResponse, ContractItem, SubmissionItem } from "../index";
+import { ApiResponse } from "../index";
 
 export interface BaseApiParams {
   Keyword?: string;

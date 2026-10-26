@@ -19,6 +19,7 @@ import ActionIconButton from "@/components/common/ActionIconButton";
 import ResizableTitle from "@/components/table/ResizableTitle";
 import { renderApprovalBadge } from "@/components/common/ApprovalBadge";
 import { useTranslation } from "@/locales/LanguageContext";
+import ErpDetailCard from "@/components/common/ErpDetailCard";
 
 const STORAGE_KEY_DETAIL = "PO_DETAIL_COL_WIDTHS";
 const { Text } = Typography;
@@ -35,6 +36,47 @@ interface OrderDetailItemsSectionProps {
   onRefreshItems?: () => void;
 }
 
+const extractOrgInfo = (val: any, record: any) => {
+  const raw = String(
+    val || record?.Orgcode || record?.OrgCode || record?.WBS || record?.Wbs || ""
+  ).trim();
+  let orgName = String(record?.OrgName || record?.Orgname || record?.BudgetDescription || "").trim();
+  let orgCode = "";
+
+  if (raw.includes(" - ")) {
+    const parts = raw.split(" - ");
+    orgCode = parts[0].trim();
+    if (!orgName) {
+      orgName = parts.slice(1).join(" - ").trim();
+    }
+  } else {
+    const matchParen = raw.match(/\(([^)]+)\)/);
+    if (matchParen) {
+      orgCode = matchParen[1].trim();
+      if (!orgName) {
+        orgName = raw.replace(/\([^)]+\)/, "").trim();
+      }
+    } else {
+      orgCode = raw;
+    }
+  }
+
+  if (orgName) {
+    const matchParen = orgName.match(/\(([^)]+)\)/);
+    if (matchParen) {
+      if (!orgCode || orgCode === orgName) {
+        orgCode = matchParen[1].trim();
+      }
+      orgName = orgName.replace(/\([^)]+\)/, "").trim();
+    }
+  }
+
+  orgCode = orgCode.replace(/^\(|\)$/g, "").trim();
+  orgName = orgName.replace(/^\(|\)$/g, "").trim();
+
+  return { orgCode, orgName };
+};
+
 export default function OrderDetailItemsSection({
   hasOrderHeader,
   items = [],
@@ -46,7 +88,7 @@ export default function OrderDetailItemsSection({
   onFetchWorkflow,
   onRefreshItems,
 }: OrderDetailItemsSectionProps) {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
 
   const handleDeleteItemRow = async (record: any) => {
     if (onDeleteItem) {
@@ -101,7 +143,9 @@ export default function OrderDetailItemsSection({
   const defaultDetailColWidths: Record<string, number> = useMemo(
     () => ({
       stt: 42,
-      Orgcode: 140,
+      OrgCode: 100,
+      OrgName: 150,
+      ItemCode: 130,
       Description: 240,
       Unit: 55,
       Qnty: 75,
@@ -169,77 +213,89 @@ export default function OrderDetailItemsSection({
         ),
       },
       {
-        title: t.table.orgCode,
-        dataIndex: "Orgcode",
-        key: "Orgcode",
-        width: 220,
-        render: (val, record) => {
-          const raw = String(
-            val || record.Orgcode || record.OrgCode || record.WBS || record.Wbs || ""
-          ).trim();
-          let orgName = record.OrgName || record.Orgname || record.BudgetDescription || "";
-          let orgCode = "";
-
-          if (raw.includes(" - ")) {
-            const parts = raw.split(" - ");
-            orgCode = parts[0].trim();
-            if (!orgName) {
-              orgName = parts.slice(1).join(" - ").trim();
-            }
-          } else {
-            orgCode = raw;
-          }
-
-          if (!orgName && !orgCode) {
-            return <span style={{ color: "#94A3B8", fontSize: 13 }}>---</span>;
-          }
-
-          if (!orgName) {
-            return (
-              <span style={{ color: "#123443", fontSize: 13 }}>
-                {orgCode}
-              </span>
-            );
-          }
-
+        title: t.table.orgCode || "OrgCode",
+        dataIndex: "OrgCode",
+        key: "OrgCode",
+        width: 100,
+        render: (val: any, record: any) => {
+          const { orgCode } = extractOrgInfo(val, record);
           return (
-            <div>
-              <div style={{ color: "#123443", fontSize: 13 }}>
-                {orgName}
-              </div>
-              {orgCode && (
-                <div style={{ fontSize: 11.5, color: "#718894", marginTop: 2 }}>
-                  {orgCode.startsWith("(") ? orgCode : `(${orgCode})`}
-                </div>
-              )}
+            <span
+              style={{
+                fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                color: orgCode ? "#1e293b" : "#94A3B8",
+                fontSize: 12.5,
+              }}
+            >
+              {orgCode || "---"}
+            </span>
+          );
+        },
+      },
+      {
+        title: t.table.orgName || "OrgName",
+        dataIndex: "OrgName",
+        key: "OrgName",
+        width: 150,
+        render: (val: any, record: any) => {
+          const { orgName } = extractOrgInfo(val, record);
+          return (
+            <div
+              style={{
+                color: orgName ? "#123443" : "#94A3B8",
+                fontSize: 12.5,
+                wordBreak: "break-word",
+              }}
+            >
+              {orgName || "---"}
             </div>
           );
         },
       },
       {
+        title: t.table.itemCode,
+        dataIndex: "ItemCode",
+        key: "ItemCode",
+        width: 130,
+        render: (_: any, record: any) => {
+          const sCode = record.ItemCode || record.SystemCode || "";
+          const name = record.Description || record.ItemName || "";
+          const matchParen = name.match(/\(([^)]+)\)/);
+          const extractedCode = sCode || (matchParen ? matchParen[1] : "");
+          return (
+            <span
+              style={{
+                fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                color: extractedCode ? "#1e293b" : "#94A3B8",
+                fontSize: 12.5,
+              }}
+            >
+              {extractedCode || "---"}
+            </span>
+          );
+        },
+      },
+      {
         title: t.table.itemName,
+        dataIndex: "Description",
         key: "Description",
-        width: 280,
+        width: 240,
         render: (_, record) => {
-          const sCode = record.SystemCode || record.ItemCode || "";
           const name = record.Description || record.ItemName || "";
           const matchParen = name.match(/\(([^)]+)\)/);
           let mainTitle = name;
           let subTitle = record.Remarks || record.Spec || "";
           if (matchParen) {
             mainTitle = name.replace(/\([^)]+\)/, "").trim();
-            subTitle = subTitle || `(${matchParen[1]})`;
-          } else if (sCode && sCode !== name) {
-            subTitle = subTitle || `(${sCode})`;
           }
           return (
             <div>
-              <div style={{ color: "#123443", fontSize: 13 }}>
+              <div style={{ color: "#123443", fontSize: 12.5, wordBreak: "break-word" }}>
                 {mainTitle || "---"}
               </div>
               {subTitle && (
-                <div style={{ fontSize: 11.5, color: "#718894", marginTop: 2 }}>
-                  {subTitle.startsWith("(") ? subTitle : `(${subTitle})`}
+                <div style={{ fontSize: 11, color: "#718894", marginTop: 2, wordBreak: "break-word" }}>
+                  {subTitle}
                 </div>
               )}
             </div>
@@ -377,25 +433,7 @@ export default function OrderDetailItemsSection({
                   display: "inline-block",
                 }}
               >
-                {isNotStarted ? (
-                  <span
-                    style={{
-                      background: "#FFF7ED",
-                      border: "1px solid #FED7AA",
-                      color: "#F97316",
-                      borderRadius: 12,
-                      padding: "2px 10px",
-                      fontSize: 12,
-                      fontWeight: 500,
-                      display: "inline-block",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    Not-Started
-                  </span>
-                ) : (
-                  renderApprovalBadge(val, record)
-                )}
+                {renderApprovalBadge(val, record, language)}
               </span>
             </Tooltip>
           );
@@ -477,94 +515,54 @@ export default function OrderDetailItemsSection({
   }
 
   return (
-    <div
-      style={{
-        background: "#FFFFFF",
-        border: "1px solid #dce5e6",
-        borderRadius: 8,
-        padding: "12px 14px",
-        boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
-      }}
+    <ErpDetailCard
+      title={t.section.materialInfo}
+      actions={
+        hasOrderHeader ? (
+          <Space size={8}>
+            {onRefreshItems && (
+              <Button
+                icon={<IconRefresh size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />}
+                onClick={onRefreshItems}
+                loading={loadingItems}
+                style={{
+                  borderColor: "#dce5e6",
+                  background: "#FFFFFF",
+                  color: "#334155",
+                  fontSize: 13,
+                  fontWeight: 500,
+                  height: 32,
+                  borderRadius: 6,
+                }}
+              >
+                {t.common.refresh}
+              </Button>
+            )}
+            {onOpenPriceCompare && (
+              <Button
+                icon={<IconScale size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />}
+                style={{
+                  borderColor: "#dce5e6",
+                  background: "#FFFFFF",
+                  color: "#334155",
+                  fontSize: 13,
+                  fontWeight: 500,
+                  height: 32,
+                  borderRadius: 6,
+                }}
+                onClick={onOpenPriceCompare}
+                disabled={!hasOrderHeader}
+              >
+                {t.purchaseOrder.priceCompare}
+              </Button>
+            )}
+          </Space>
+        ) : null
+      }
     >
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 12,
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <Text
-            strong
-            style={{
-              fontSize: 13,
-              color: "#008f89",
-              fontWeight: 700,
-              textTransform: "uppercase",
-              lineHeight: "20px",
-            }}
-          >
-            {t.section.materialInfo}
-          </Text>
-          <Tag
-            style={{
-              background: "#dce5e6",
-              color: "#008f89",
-              borderRadius: 12,
-              border: "none",
-              fontSize: 11,
-              fontWeight: 500,
-              lineHeight: "16px",
-              padding: "1px 8px",
-              margin: 0,
-            }}
-          >
-            {items.length} {t.table.itemsCount}
-          </Tag>
-        </div>
-        <Space size={8}>
-          {onRefreshItems && (
-            <Button
-              icon={<IconRefresh size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />}
-              onClick={onRefreshItems}
-              loading={loadingItems}
-              style={{
-                borderColor: "#dce5e6",
-                background: "#FFFFFF",
-                color: "#334155",
-                fontSize: 14,
-                fontWeight: 500,
-                height: 36,
-                borderRadius: 8,
-              }}
-            >
-              {t.common.refresh}
-            </Button>
-          )}
-          {onOpenPriceCompare && (
-            <Button
-              icon={<IconScale size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />}
-              style={{
-                borderColor: "#dce5e6",
-                background: "#FFFFFF",
-                color: "#334155",
-                fontSize: 14,
-                fontWeight: 500,
-                height: 36,
-                borderRadius: 8,
-              }}
-              onClick={onOpenPriceCompare}
-              disabled={!hasOrderHeader}
-            >
-              {t.purchaseOrder.priceCompare}
-            </Button>
-          )}
-        </Space>
-      </div>
 
       <Table
-        className="po-order-table"
+        className="erp-detail-table po-order-table"
         rowKey={(r, index) =>
           r.id ?? r.SubmissionId ?? r.LocalId ?? `order_form_item_${index}`
         }
@@ -634,6 +632,6 @@ export default function OrderDetailItemsSection({
           </Table.Summary>
         )}
       />
-    </div>
+    </ErpDetailCard>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   Table,
   Button,
@@ -10,8 +10,6 @@ import {
   Checkbox,
   Tag,
   Space,
-  Typography,
-  Card,
   message,
 } from "antd";
 import type { ColumnType } from "antd/es/table";
@@ -19,7 +17,6 @@ import {
   SearchOutlined,
   ReloadOutlined,
   PlusOutlined,
-  FileSyncOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { extractApiList, extractTotalRows } from "@/lib/api-client";
@@ -27,8 +24,6 @@ import { warehouseApi } from "../../api";
 import ResizableTitle from "@/components/table/ResizableTitle";
 import { usePersistedTableColumns } from "@/components/table/usePersistedTableColumns";
 import { useTranslation } from "@/locales/LanguageContext";
-
-const { Title, Text } = Typography;
 
 export interface PendingPoItem {
   RowNum?: number;
@@ -96,6 +91,7 @@ export default function PendingPoReconcileTab({
 
   // Checkbox lựa chọn 1 hoặc nhiều dòng
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const pendingRequestIdRef = useRef(0);
 
   // Tự động tải danh mục kho từ API nếu parent chưa truyền danh sách
   const [internalWarehouses, setInternalWarehouses] = useState<Array<{ value: string | number; label: string }>>([]);
@@ -144,6 +140,7 @@ export default function PendingPoReconcileTab({
       whFilter: string | number = selectedWarehouseFilter,
       search: string = searchKeyword
     ) => {
+      const requestId = ++pendingRequestIdRef.current;
       setLoading(true);
       try {
         const whId =
@@ -161,6 +158,8 @@ export default function PendingPoReconcileTab({
           PageNum: page,
           PageSize: pageSize,
         });
+
+        if (requestId !== pendingRequestIdRef.current) return;
 
         const rawList = extractApiList<PendingPoItem>(data);
         const list = rawList.map((item) => ({
@@ -180,25 +179,33 @@ export default function PendingPoReconcileTab({
           total,
         });
       } catch (err: any) {
+        if (requestId !== pendingRequestIdRef.current) return;
         console.error("Lỗi tải danh sách đối chiếu đơn hàng:", err);
         message.error(err?.message || (isEn ? "Failed to load reconcile PO items" : "Không thể tải danh sách đối chiếu đơn hàng"));
         setItems([]);
       } finally {
-        setLoading(false);
+        if (requestId === pendingRequestIdRef.current) {
+          setLoading(false);
+        }
       }
     },
-    [selectedWarehouseFilter, searchKeyword]
+    [selectedWarehouseFilter, searchKeyword, isEn]
   );
 
   useEffect(() => {
     fetchPendingItems(1, pagination.pageSize);
+    return () => {
+      pendingRequestIdRef.current += 1;
+    };
   }, []); // Initial load
 
   const handleSearch = () => {
+    setSelectedRowKeys([]);
     fetchPendingItems(1, pagination.pageSize, selectedWarehouseFilter, searchKeyword);
   };
 
   const handleWarehouseChange = (val: string | number) => {
+    setSelectedRowKeys([]);
     setSelectedWarehouseFilter(val);
     fetchPendingItems(1, pagination.pageSize, val, searchKeyword);
   };
@@ -651,61 +658,23 @@ export default function PendingPoReconcileTab({
   });
 
   return (
-    <div style={{ padding: 24 }}>
-      {/* 1. Header bar */}
+    <div>
+      {/* Toolbar: Bộ lọc bên trái, Thao tác tạo phiếu bên phải */}
       <div
         style={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          marginBottom: 12,
-          flexWrap: "wrap",
-          gap: 12,
-        }}
-      >
-        <Space align="center" size={12}>
-          <Title
-            level={4}
-            style={{
-              margin: 0,
-              color: "#1f1f1f",
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-            }}
-          >
-            <FileSyncOutlined style={{ color: "#722ed1" }} />{" "}
-            {t.receipt?.reconcileTitle || (isEn ? "Reconcile Purchase Orders (Pending Items)" : "Đối chiếu đơn hàng PO (Pending Items)")}
-          </Title>
-          <Tag color="purple" style={{ fontSize: 13, padding: "2px 10px", borderRadius: 12 }}>
-            {pagination.total || items.length}{" "}
-            {t.receipt?.pendingItemsCount || (isEn ? "items pending receipt" : "vật tư chờ nhập")}
-          </Tag>
-          {selectedRowKeys.length > 0 && (
-            <Tag color="cyan" style={{ fontSize: 13, padding: "2px 10px", borderRadius: 12, fontWeight: 600 }}>
-              {isEn ? `Selected: ${selectedRowKeys.length} items` : `Đã chọn: ${selectedRowKeys.length} dòng`}
-            </Tag>
-          )}
-        </Space>
-      </div>
-
-      {/* 2. Toolbar: Bộ lọc bên trái, Thao tác tạo phiếu bên phải */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 16,
-          flexWrap: "wrap",
+          marginBottom: 14,
           gap: 12,
         }}
       >
         {/* Cụm bộ lọc bên trái */}
-        <Space size={8} wrap align="center">
+        <Space size={10} wrap align="center" style={{ flex: 1 }}>
           <Select
             value={selectedWarehouseFilter}
             onChange={handleWarehouseChange}
-            style={{ width: 220 }}
+            style={{ width: 220, height: 36 }}
             options={effectiveWarehouseOptions}
           />
 
@@ -715,25 +684,56 @@ export default function PendingPoReconcileTab({
             value={searchKeyword}
             onChange={(e) => setSearchKeyword(e.target.value)}
             onPressEnter={handleSearch}
-            style={{ width: 260 }}
+            style={{ width: 260, height: 36, borderRadius: 8, fontSize: 13.5 }}
             prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
           />
 
-          <Button icon={<SearchOutlined />} onClick={handleSearch}>
+          <Button
+            icon={<SearchOutlined />}
+            onClick={handleSearch}
+            style={{ height: 36, borderRadius: 8, borderColor: "#dce5e6", fontSize: 13.5 }}
+          >
             {t.common?.search || (isEn ? "Search" : "Tìm kiếm")}
           </Button>
 
-          <Button icon={<ReloadOutlined />} onClick={handleRefresh} loading={loading}>
+          <Button
+            icon={<ReloadOutlined style={{ color: "#008f89" }} />}
+            onClick={handleRefresh}
+            loading={loading}
+            style={{ height: 36, borderRadius: 8, borderColor: "#dce5e6", fontSize: 13.5, color: "#334155" }}
+          >
             {t.common?.refresh || (isEn ? "Refresh" : "Làm mới")}
           </Button>
+
+          <span style={{ fontSize: 13, color: "#64748b" }}>
+            {t.common?.total || "Tổng"}: <strong style={{ color: "#008f89" }}>{pagination.total}</strong> {isEn ? "order items" : "dòng vật tư chờ nhập"}
+          </span>
+
+          {selectedRowKeys.length > 0 && (
+            <Tag
+              style={{
+                background: "#eef8f6",
+                color: "#008f89",
+                border: "1px solid #79c7bf",
+                fontSize: 12,
+                padding: "3px 10px",
+                borderRadius: 12,
+                fontWeight: 600,
+                lineHeight: "18px",
+                margin: 0,
+              }}
+            >
+              {isEn ? `Selected: ${selectedRowKeys.length} items` : `Đã chọn: ${selectedRowKeys.length} dòng`}
+            </Tag>
+          )}
         </Space>
 
         {/* Cụm thao tác đưa sang sát mép bên phải */}
-        <Space size={12} align="center">
+        <Space size={10} align="center">
           <Checkbox
             checked={startProcessNow}
             onChange={(e) => setStartProcessNow(e.target.checked)}
-            style={{ fontWeight: 500, color: "#123443" }}
+            style={{ fontWeight: 500, color: "#123443", fontSize: 13 }}
           >
             {t.receipt?.submitForApproval || (isEn ? "Submit for approval" : "Trình duyệt")}
           </Checkbox>
@@ -743,9 +743,14 @@ export default function PendingPoReconcileTab({
             type="primary"
             icon={<PlusOutlined />}
             style={{
-              background: selectedRowKeys.length > 0 ? "#008f89" : undefined,
-              borderColor: selectedRowKeys.length > 0 ? "#008f89" : undefined,
-              fontWeight: 600,
+              background: "#008f89",
+              borderColor: "#008f89",
+              height: 36,
+              borderRadius: 8,
+              fontSize: 13.5,
+              fontWeight: 500,
+              color: "#FFFFFF",
+              boxShadow: "0 2px 4px rgba(0, 143, 137, 0.2)",
             }}
             disabled={selectedRowKeys.length === 0}
             loading={creatingReceipt}
@@ -758,12 +763,16 @@ export default function PendingPoReconcileTab({
       </div>
 
       {/* Main Table */}
-      <Card
-        bodyStyle={{ padding: 0 }}
-        bordered={false}
-        style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
+      <div
+        style={{
+          background: "#FFFFFF",
+          border: "1px solid #dce5e6",
+          borderRadius: 8,
+          overflow: "hidden",
+        }}
       >
         <Table
+          className="stockin-main-table"
           components={{ header: { cell: ResizableTitle } }}
           rowKey={getPendingPoRowKey}
           size="middle"
@@ -777,14 +786,14 @@ export default function PendingPoReconcileTab({
             showSizeChanger: true,
             pageSizeOptions: ["10", "20", "50", "100"],
             onChange: (page, pageSize) => {
+              setSelectedRowKeys([]);
               fetchPendingItems(page, pageSize, selectedWarehouseFilter, searchKeyword);
             },
-            showTotal: (total) =>
-              isEn ? `Total ${total} order items` : `Tổng cộng ${total} dòng vật tư đơn hàng`,
+            showTotal: (total, range) => `${range[0]}–${range[1]} / ${total} ${isEn ? "items" : "dòng vật tư"}`,
           }}
-          scroll={{ x: scrollX }}
+          scroll={{ x: scrollX, y: "calc(100vh - 250px)" }}
         />
-      </Card>
+      </div>
     </div>
   );
 }

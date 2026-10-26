@@ -34,6 +34,7 @@ import {
 import { warehouseApi } from "../../api";
 import ResizableTitle from "@/components/table/ResizableTitle";
 import { usePersistedTableColumns } from "@/components/table/usePersistedTableColumns";
+import ErpDetailCard from "@/components/common/ErpDetailCard";
 import { renderApprovalBadge } from "@/components/common/ApprovalBadge";
 import StockInReconcileModal from "./StockInReconcileModal";
 import StockInItemEditDrawer from "./StockInItemEditDrawer";
@@ -65,7 +66,7 @@ export default function StockInEditTab({
   loadingItems,
   onRefreshItems,
 }: StockInEditTabProps) {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [form] = Form.useForm();
   const isEditing = Boolean(editingReceipt);
   const [submitting, setSubmitting] = useState(false);
@@ -307,15 +308,44 @@ export default function StockInEditTab({
         render: (_, __, index) => index + 1,
       },
       {
-        title: t("table.orgCode"),
+        title: "OrgCode",
         dataIndex: "Orgcode",
-        key: "Orgcode",
-        width: 220,
+        key: "OrgCode",
+        width: 100,
         render: (val: any, record: any) => {
           const raw = String(
             val || record.Orgcode || record.OrgCode || record.WBS || record.Wbs || ""
           ).trim();
-          let orgName = record.OrgName || record.Orgname || record.BudgetDescription || "";
+          let orgCode = "";
+          if (raw.includes(" - ")) {
+            orgCode = raw.split(" - ")[0].trim();
+          } else {
+            orgCode = raw;
+          }
+          if (!orgCode) return <span style={{ color: "#94A3B8", fontSize: 12.5 }}>---</span>;
+          return (
+            <span
+              style={{
+                fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                color: "#1e293b",
+                fontSize: 12.5,
+              }}
+            >
+              {orgCode}
+            </span>
+          );
+        },
+      },
+      {
+        title: "OrgName",
+        dataIndex: "OrgName",
+        key: "OrgName",
+        width: 160,
+        render: (val: any, record: any) => {
+          const raw = String(
+            record.Orgcode || record.OrgCode || record.WBS || record.Wbs || ""
+          ).trim();
+          let orgName = val || record.OrgName || record.Orgname || record.BudgetDescription || "";
           let orgCode = "";
 
           if (raw.includes(" - ")) {
@@ -338,50 +368,46 @@ export default function StockInEditTab({
             }
           }
 
-          if (!orgName && !orgCode) {
-            return <span style={{ color: "#94A3B8", fontSize: 13 }}>---</span>;
-          }
-
-          if (!orgName) {
-            return (
-              <span style={{ color: "#123443", fontSize: 13 }}>
-                {orgCode}
-              </span>
-            );
-          }
+          if (!orgName) return <span style={{ color: "#94A3B8", fontSize: 12.5 }}>---</span>;
 
           return (
-            <div>
-              <div style={{ color: "#123443", fontSize: 13, lineHeight: "17px" }}>
-                {orgName}
-              </div>
-              {orgCode && (
-                <div style={{ fontSize: 11.5, color: "#718894", marginTop: 2 }}>
-                  {orgCode.startsWith("(") ? orgCode : `(${orgCode})`}
-                </div>
-              )}
-            </div>
+            <span style={{ color: "#123443", fontSize: 12.5 }} title={orgName}>
+              {orgName}
+            </span>
           );
         },
       },
       {
-        title: t("table.itemName"),
+        title: t("table.itemCode") || "Item Code",
+        dataIndex: "SystemCode",
+        key: "SystemCode",
+        width: 120,
+        render: (val: any, record: any) => {
+          const sCode = val || record.SystemCode || record.itemCode || "";
+          return (
+            <span
+              style={{
+                fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                color: sCode ? "#1e293b" : "#94A3B8",
+                fontSize: 12.5,
+              }}
+            >
+              {sCode || "---"}
+            </span>
+          );
+        },
+      },
+      {
+        title: t("table.itemName") || "Item Name",
+        dataIndex: "Description",
         key: "Description",
         width: 220,
-        render: (_, record) => {
-          const sCode = record.SystemCode || record.itemCode || "";
-          const desc = record.Description || record.itemName || "";
+        render: (val: any, record: any) => {
+          const desc = val || record.Description || record.itemName || "";
           return (
-            <div>
-              <div style={{ color: "#123443", fontSize: 12, lineHeight: "17px" }}>
-                {desc || "---"}
-              </div>
-              {sCode && (
-                <div style={{ color: "#718894", fontSize: 11, fontFamily: "monospace", lineHeight: "15px" }}>
-                  {sCode}
-                </div>
-              )}
-            </div>
+            <span style={{ color: "#123443", fontSize: 12.5 }} title={desc}>
+              {desc || "---"}
+            </span>
           );
         },
       },
@@ -500,7 +526,7 @@ export default function StockInEditTab({
                   display: "inline-block",
                 }}
               >
-                {renderApprovalBadge(val, record)}
+                {renderApprovalBadge(val, record, language)}
               </span>
             </Tooltip>
           );
@@ -625,22 +651,14 @@ export default function StockInEditTab({
       {/* FORM SECTION I: THỐNG NHẤT GIỐNG ĐƠN HÀNG (COMPACT) */}
       <div style={{ width: "100%", marginBottom: 8 }}>
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
-          <div
-            style={{
-              background: "#FFFFFF",
-              border: "1px solid #dce5e6",
-              borderRadius: 6,
-              padding: "5px 12px",
-              boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
-            }}
-          >
+          <div className="erp-general-info-card">
             {/* Hàng 1: 4 Cột */}
             <Row gutter={[0, 0]} align="middle">
               {/* Cột 1: Loại nhập kho */}
-              <Col span={6} style={{ paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
-                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={6} className="erp-info-cell">
+                <span className="erp-info-label">
                   {t.table.receiptType} <span style={{ color: "#ff4d4f" }}>*</span>
-                </div>
+                </span>
                 <Form.Item
                   name="receiptType"
                   style={{ margin: 0 }}
@@ -648,14 +666,8 @@ export default function StockInEditTab({
                 >
                   <Select
                     variant="borderless"
-                    style={{
-                      padding: 0,
-                      width: "100%",
-                      fontWeight: 600,
-                      fontSize: 12,
-                      color: "#123443",
-                    }}
                     disabled={isHeaderDisabled}
+                    style={{ padding: 0, width: "100%", fontWeight: 400, fontSize: 12.5, color: "#1e293b" }}
                     options={[
                       { value: "PO", label: t.receipt.typePO },
                       { value: "Purchase", label: t.receipt.typePurchase },
@@ -668,10 +680,10 @@ export default function StockInEditTab({
               </Col>
 
               {/* Cột 2: Đơn hàng PO */}
-              <Col span={4} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
-                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={4} className="erp-info-cell">
+                <span className="erp-info-label">
                   {t.table.poCode}
-                </div>
+                </span>
                 <Form.Item name="poCode" style={{ margin: 0 }}>
                   <Input
                     variant="borderless"
@@ -679,20 +691,21 @@ export default function StockInEditTab({
                     disabled={isHeaderDisabled}
                     style={{
                       padding: 0,
-                      fontWeight: 600,
-                      fontSize: 12,
+                      fontWeight: 400,
+                      fontSize: 12.5,
                       lineHeight: "18px",
-                      color: "#123443",
+                      color: "#1e293b",
+                      fontFamily: "monospace",
                     }}
                   />
                 </Form.Item>
               </Col>
 
               {/* Cột 3: Hợp đồng */}
-              <Col span={5} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
-                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={5} className="erp-info-cell">
+                <span className="erp-info-label">
                   {t.table.contractCode} <span style={{ color: "#ff4d4f" }}>*</span>
-                </div>
+                </span>
                 <Form.Item name="contractCode" style={{ margin: 0 }}>
                   <Input
                     variant="borderless"
@@ -701,20 +714,21 @@ export default function StockInEditTab({
                     disabled
                     style={{
                       padding: 0,
-                      fontWeight: 600,
-                      fontSize: 12,
+                      fontWeight: 400,
+                      fontSize: 12.5,
                       lineHeight: "18px",
-                      color: "#123443",
+                      color: "#1e293b",
+                      fontFamily: "monospace",
                     }}
                   />
                 </Form.Item>
               </Col>
 
               {/* Cột 4: Nhà Cung Cấp */}
-              <Col span={9} style={{ paddingLeft: 10 }}>
-                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={9} className="erp-info-cell">
+                <span className="erp-info-label">
                   {t.table.vendorName}
-                </div>
+                </span>
                 <Form.Item name="vendorName" style={{ margin: 0 }}>
                   <Input
                     variant="borderless"
@@ -723,25 +737,25 @@ export default function StockInEditTab({
                     disabled
                     style={{
                       padding: 0,
-                      fontWeight: 600,
-                      fontSize: 12,
+                      fontWeight: 400,
+                      fontSize: 12.5,
                       lineHeight: "18px",
-                      color: "#123443",
+                      color: "#1e293b",
                     }}
                   />
                 </Form.Item>
               </Col>
             </Row>
 
-            <Divider style={{ margin: "3px 0", borderColor: "#dce5e6" }} />
+            <div className="erp-info-divider" />
 
             {/* Hàng 2: 5 Cột */}
             <Row gutter={[0, 0]} align="middle">
               {/* Cột 1: Số phiếu nhập */}
-              <Col span={4} style={{ paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
-                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={4} className="erp-info-cell">
+                <span className="erp-info-label">
                   {t.table.receiptCode}
-                </div>
+                </span>
                 <Form.Item name="receiptCode" style={{ margin: 0 }}>
                   <Input
                     variant="borderless"
@@ -749,10 +763,10 @@ export default function StockInEditTab({
                     placeholder={isEditing ? "" : "(Tự sinh khi lưu)"}
                     style={{
                       padding: 0,
-                      fontWeight: 600,
-                      fontSize: 12,
+                      fontWeight: 400,
+                      fontSize: 12.5,
                       lineHeight: "18px",
-                      color: "#123443",
+                      color: "#1e293b",
                       fontFamily: "monospace",
                     }}
                   />
@@ -760,10 +774,10 @@ export default function StockInEditTab({
               </Col>
 
               {/* Cột 2: Ngày nhập kho */}
-              <Col span={4} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
-                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={4} className="erp-info-cell">
+                <span className="erp-info-label">
                   {t.table.receiptDate} <span style={{ color: "#ff4d4f" }}>*</span>
-                </div>
+                </span>
                 <Form.Item
                   name="receiptDate"
                   style={{ margin: 0 }}
@@ -777,19 +791,19 @@ export default function StockInEditTab({
                     style={{
                       padding: 0,
                       width: "100%",
-                      fontWeight: 500,
-                      fontSize: 12,
-                      color: "#123443",
+                      fontWeight: 400,
+                      fontSize: 12.5,
+                      color: "#1e293b",
                     }}
                   />
                 </Form.Item>
               </Col>
 
               {/* Cột 3: Diễn giải */}
-              <Col span={7} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
-                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={7} className="erp-info-cell">
+                <span className="erp-info-label">
                   {t.table.description} <span style={{ color: "#ff4d4f" }}>*</span>
-                </div>
+                </span>
                 <Form.Item
                   name="description"
                   style={{ margin: 0 }}
@@ -801,20 +815,20 @@ export default function StockInEditTab({
                     disabled={isHeaderDisabled}
                     style={{
                       padding: 0,
-                      fontWeight: 500,
-                      fontSize: 12,
+                      fontWeight: 400,
+                      fontSize: 12.5,
                       lineHeight: "18px",
-                      color: "#123443",
+                      color: "#1e293b",
                     }}
                   />
                 </Form.Item>
               </Col>
 
               {/* Cột 4: Kho nhận hàng */}
-              <Col span={5} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
-                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={5} className="erp-info-cell">
+                <span className="erp-info-label">
                   {t.table.warehouse} <span style={{ color: "#ff4d4f" }}>*</span>
-                </div>
+                </span>
                 <Form.Item
                   name="warehouseId"
                   style={{ margin: 0 }}
@@ -825,9 +839,9 @@ export default function StockInEditTab({
                     style={{
                       padding: 0,
                       width: "100%",
-                      fontWeight: 500,
-                      fontSize: 12,
-                      color: "#123443",
+                      fontWeight: 400,
+                      fontSize: 12.5,
+                      color: "#1e293b",
                     }}
                     disabled={isHeaderDisabled}
                     options={warehouseOptions}
@@ -836,25 +850,36 @@ export default function StockInEditTab({
               </Col>
 
               {/* Cột 5: Trạng thái phiếu */}
-              <Col span={4} style={{ paddingLeft: 10 }}>
-                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={4} className="erp-info-cell" style={{ borderRight: "none" }}>
+                <span className="erp-info-label">
                   {t.table.status}
+                </span>
+                <div style={{ display: "flex", alignItems: "center", height: 24, paddingLeft: 11 }}>
+                  {(() => {
+                    const rawSt = String(editingReceipt?.StatusName || editingReceipt?.StatusCode || editingReceipt?.status || "").toUpperCase();
+                    const isCompleted = rawSt.includes("COMPLETED") || rawSt.includes("ĐÃ NHẬP KHO");
+                    const isPending = rawSt.includes("PENDING") || rawSt.includes("CHỜ DUYỆT");
+                    return (
+                      <Tag
+                        color={isCompleted ? "success" : isPending ? "warning" : "default"}
+                        style={{
+                          margin: 0,
+                          borderRadius: 4,
+                          fontSize: 11,
+                          fontWeight: 600,
+                          lineHeight: "18px",
+                          padding: "0 6px",
+                        }}
+                      >
+                        {isCompleted
+                          ? t.status.completed
+                          : isPending
+                          ? t.status.pending
+                          : (t.status.draft || "Chưa nhập kho")}
+                      </Tag>
+                    );
+                  })()}
                 </div>
-                <Form.Item name="status" style={{ margin: 0 }}>
-                  <Input
-                    variant="borderless"
-                    disabled
-                    readOnly
-                    placeholder="Chưa nhập kho"
-                    style={{
-                      padding: 0,
-                      fontWeight: 500,
-                      fontSize: 12,
-                      lineHeight: "18px",
-                      color: "#123443",
-                    }}
-                  />
-                </Form.Item>
               </Col>
             </Row>
           </div>
@@ -865,31 +890,6 @@ export default function StockInEditTab({
       <div>
         {/* Scoped CSS for stockin items table */}
         <style jsx global>{`
-          .stockin-items-table .ant-table-thead > tr > th {
-            background: #f7fbfa !important;
-            color: #123443 !important;
-            font-size: 12px !important;
-            font-weight: 600 !important;
-            line-height: 18px !important;
-            border-color: #dce5e6 !important;
-            padding: 8px 10px !important;
-          }
-          .stockin-items-table .ant-table-tbody > tr > td {
-            color: #123443 !important;
-            font-size: 12px !important;
-            line-height: 18px !important;
-            border-color: #dce5e6 !important;
-            padding: 8px 10px !important;
-            height: 38px !important;
-          }
-          .stockin-items-table .ant-table-tbody > tr:hover > td {
-            background-color: #eef8f6 !important;
-          }
-          .stockin-items-table .ant-table-container {
-            border: 1px solid #dce5e6 !important;
-            border-radius: 8px !important;
-            overflow: hidden;
-          }
           .stockin-reconcile-table .ant-table-thead > tr > th {
             background: #f7fbfa !important;
             color: #123443 !important;
@@ -899,120 +899,97 @@ export default function StockInEditTab({
           }
         `}</style>
 
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 8,
-          }}
+        <ErpDetailCard
+          title={t.section.materialInfo}
+          actions={
+            <Space size={8}>
+              <Button
+                icon={<IconRefresh size={16} strokeWidth={1.8} />}
+                onClick={onRefreshItems}
+                style={{ height: 32, borderRadius: 6, borderColor: "#dce5e6", fontSize: 13 }}
+              >
+                {t.common.refresh}
+              </Button>
+              <Button
+                icon={<IconScale size={16} strokeWidth={1.8} />}
+                style={{
+                  color: "#008f89",
+                  borderColor: "#b2ded9",
+                  background: "#eef8f6",
+                  height: 32,
+                  borderRadius: 6,
+                  fontWeight: 500,
+                  fontSize: 13,
+                }}
+                onClick={() => {
+                  fetchApprovedBudgetList();
+                  setIsReconcileModalOpen(true);
+                }}
+              >
+                {t.receipt.reconcilePO}
+              </Button>
+            </Space>
+          }
         >
-          <Space size={10} align="center">
-            <Text strong style={{ fontSize: 13, color: "#008f89", fontWeight: 700, textTransform: "uppercase" }}>
-              {t.section.materialInfo}
-            </Text>
-            <Tag
-              style={{
-                background: "#dce5e6",
-                color: "#008f89",
-                border: "none",
-                borderRadius: 12,
-                fontSize: 12,
-                fontWeight: 500,
-                lineHeight: "16px",
-                padding: "2px 8px",
-                margin: 0,
-              }}
-            >
-              {items.length} {t.table.itemsCount}
-            </Tag>
-          </Space>
-          <Space size={8}>
-            <Button
-              icon={<IconRefresh size={16} strokeWidth={1.8} />}
-              onClick={onRefreshItems}
-              style={{ height: 36, borderRadius: 8, borderColor: "#dce5e6" }}
-            >
-              {t.common.refresh}
-            </Button>
-            <Button
-              icon={<IconScale size={16} strokeWidth={1.8} />}
-              style={{
-                color: "#008f89",
-                borderColor: "#b2ded9",
-                background: "#eef8f6",
-                height: 36,
-                borderRadius: 8,
-                fontWeight: 500,
-              }}
-              onClick={() => {
-                fetchApprovedBudgetList();
-                setIsReconcileModalOpen(true);
-              }}
-            >
-              {t.receipt.reconcilePO}
-            </Button>
-          </Space>
-        </div>
-
-        <Table
-          className="stockin-items-table"
-          components={{ header: { cell: ResizableTitle } }}
-          rowKey="id"
-          size="middle"
-          columns={tableColumns}
-          dataSource={items}
-          loading={loadingItems}
-          pagination={false}
-          scroll={{ x: scrollX }}
-          summary={() => (
-            <Table.Summary fixed>
-              <Table.Summary.Row style={{ background: "#eef8f6", fontWeight: "bold" }}>
-                {tableColumns.map((col, idx) => {
-                  const key = String(col.key ?? (col as any).dataIndex ?? idx);
-                  if (key === "Description") {
-                    return (
-                      <Table.Summary.Cell key={key} index={idx} align="right">
-                        <Text strong style={{ color: "#008f89" }}>{t.table.total}</Text>
-                      </Table.Summary.Cell>
-                    );
-                  }
-                  if (key === "Qnty") {
-                    return (
-                      <Table.Summary.Cell key={key} index={idx} align="right">
-                        <Text strong style={{ color: "#123443" }}>{totalQty.toLocaleString("vi-VN")}</Text>
-                      </Table.Summary.Cell>
-                    );
-                  }
-                  if (key === "Amount") {
-                    return (
-                      <Table.Summary.Cell key={key} index={idx} align="right">
-                        <Text strong style={{ color: "#123443" }}>{totalAmount.toLocaleString("vi-VN")}</Text>
-                      </Table.Summary.Cell>
-                    );
-                  }
-                  if (key === "TaxAmount") {
-                    return (
-                      <Table.Summary.Cell key={key} index={idx} align="right">
-                        <Text strong style={{ color: "#123443" }}>{totalTaxAmount.toLocaleString("vi-VN")}</Text>
-                      </Table.Summary.Cell>
-                    );
-                  }
-                  if (key === "totalWithVat") {
-                    return (
-                      <Table.Summary.Cell key={key} index={idx} align="right">
-                        <Text strong style={{ color: "#008f89", fontSize: 14 }}>
-                          {(totalAmount + totalTaxAmount).toLocaleString("vi-VN")}
-                        </Text>
-                      </Table.Summary.Cell>
-                    );
-                  }
-                  return <Table.Summary.Cell key={key} index={idx} />;
-                })}
-              </Table.Summary.Row>
-            </Table.Summary>
-          )}
-        />
+          <Table
+            className="erp-detail-table"
+            components={{ header: { cell: ResizableTitle } }}
+            rowKey="id"
+            size="middle"
+            columns={tableColumns}
+            dataSource={items}
+            loading={loadingItems}
+            pagination={false}
+            scroll={{ x: scrollX }}
+            summary={() => (
+              <Table.Summary fixed>
+                <Table.Summary.Row style={{ background: "#eef8f6", fontWeight: "bold" }}>
+                  {tableColumns.map((col, idx) => {
+                    const key = String(col.key ?? (col as any).dataIndex ?? idx);
+                    if (key === "Description") {
+                      return (
+                        <Table.Summary.Cell key={key} index={idx} align="right">
+                          <Text strong style={{ color: "#008f89" }}>{t.table.total}</Text>
+                        </Table.Summary.Cell>
+                      );
+                    }
+                    if (key === "Qnty") {
+                      return (
+                        <Table.Summary.Cell key={key} index={idx} align="right">
+                          <Text strong style={{ color: "#123443" }}>{totalQty.toLocaleString("vi-VN")}</Text>
+                        </Table.Summary.Cell>
+                      );
+                    }
+                    if (key === "Amount") {
+                      return (
+                        <Table.Summary.Cell key={key} index={idx} align="right">
+                          <Text strong style={{ color: "#123443" }}>{totalAmount.toLocaleString("vi-VN")}</Text>
+                        </Table.Summary.Cell>
+                      );
+                    }
+                    if (key === "TaxAmount") {
+                      return (
+                        <Table.Summary.Cell key={key} index={idx} align="right">
+                          <Text strong style={{ color: "#123443" }}>{totalTaxAmount.toLocaleString("vi-VN")}</Text>
+                        </Table.Summary.Cell>
+                      );
+                    }
+                    if (key === "totalWithVat") {
+                      return (
+                        <Table.Summary.Cell key={key} index={idx} align="right">
+                          <Text strong style={{ color: "#008f89", fontSize: 14 }}>
+                            {(totalAmount + totalTaxAmount).toLocaleString("vi-VN")}
+                          </Text>
+                        </Table.Summary.Cell>
+                      );
+                    }
+                    return <Table.Summary.Cell key={key} index={idx} />;
+                  })}
+                </Table.Summary.Row>
+              </Table.Summary>
+            )}
+          />
+        </ErpDetailCard>
       </div>
 
       {/* MODAL ĐỐI CHIẾU ĐƠN HÀNG PO */}

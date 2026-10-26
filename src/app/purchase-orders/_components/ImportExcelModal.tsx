@@ -63,7 +63,7 @@ export default function ImportExcelModal({
           <Button
             type="primary"
             icon={<FileExcelOutlined />}
-            style={{ background: "#722ed1", borderColor: "#722ed1" }}
+            style={{ background: "#008f89", borderColor: "#008f89" }}
             onClick={onImport}
             loading={importing}
             disabled={importFileList.length === 0}

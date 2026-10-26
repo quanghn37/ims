@@ -21,8 +21,6 @@ import {
   CloseCircleOutlined,
   SendOutlined,
   FileTextOutlined,
-  ClockCircleOutlined,
-  ExportOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { MaterialRequisition, MaterialRequisitionItem } from "../../types";

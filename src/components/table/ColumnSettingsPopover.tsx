@@ -41,7 +41,7 @@ export const ColumnSettingsPopover: React.FC<ColumnSettingsPopoverProps> = ({
   onShowAll,
   compact = false,
 }) => {
-  const { t, language } = useTranslation();
+  const { language } = useTranslation();
   const visibleCount = columnConfigs.filter((c) => c.visible).length;
 
   const content = (

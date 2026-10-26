@@ -1,6 +1,6 @@
-﻿"use client";
+"use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Form,
   Button,
@@ -13,17 +13,20 @@ import {
   Typography,
   Row,
   Col,
+  Popconfirm,
 } from "antd";
 import {
-  IconSearch,
   IconDeviceFloppy,
   IconPaperclip,
   IconX,
+  IconTrash,
 } from "@tabler/icons-react";
+import { CaretDownOutlined } from "@ant-design/icons";
 import { AttachmentFile } from "./types";
 import OrderAttachmentsModal from "./OrderAttachmentsModal";
 import OrderDetailItemsSection from "./OrderDetailItemsSection";
 import { useTranslation } from "@/locales/LanguageContext";
+import { ApprovalBadge } from "@/components/common/ApprovalBadge";
 
 const { Text } = Typography;
 
@@ -69,6 +72,7 @@ interface OrderFormDrawerProps {
   onOpenPriceCompare?: () => void;
   onFetchWorkflow?: (submissionId: any, item?: any) => void;
   onRefreshItems?: () => void;
+  onDeleteOrder?: (contractId: any) => void;
 }
 
 export default function OrderFormDrawer({
@@ -99,15 +103,65 @@ export default function OrderFormDrawer({
   onOpenPriceCompare,
   onFetchWorkflow,
   onRefreshItems,
+  onDeleteOrder,
 }: OrderFormDrawerProps) {
   const { t } = useTranslation();
   const [isAttachmentModalOpen, setIsAttachmentModalOpen] = useState(false);
   const hasOrderHeader = Boolean(
     editingOrder && (editingOrder.ContractId || editingOrder.ContractCode)
   );
+  const isEditing = Boolean(editingOrder && (editingOrder.ContractId || editingOrder.ContractCode));
+  const isDraft =
+    editingOrder?.StatusCode === 0 ||
+    editingOrder?.StatusCode === "0" ||
+    editingOrder?.Status === 0 ||
+    editingOrder?.Status === "0" ||
+    editingOrder?.StatusCode === "DRAFT" ||
+    editingOrder?.StatusCode === "Draft";
 
   const watchedOrderClientId = Form.useWatch("ClientId", form);
   const watchedOrderParentId = Form.useWatch("ParentId", form);
+
+  // Tự động đồng bộ Giá trị đơn hàng (Amount) bằng tổng thành tiền có VAT của chi tiết vật tư khi chưa trình duyệt hoặc khi Amount đang là 0
+  const isTaskAssigned =
+    String(editingOrder?.TaskAssign ?? "").trim().toUpperCase() === "Y" ||
+    editingOrder?.TaskAssign === 1;
+
+  useEffect(() => {
+    if (!open) return;
+    if (items && items.length > 0) {
+      const currentFormAmount = Number(form.getFieldValue("Amount") || 0);
+      if (!isTaskAssigned || currentFormAmount === 0) {
+        const sumTotalVat = items.reduce((acc, it) => {
+          const q = Number(it.Qnty ?? 0);
+          const p = Number(it.UnitPrice ?? 0);
+          const raw =
+            it.TotalPrice !== undefined
+              ? Number(it.TotalPrice)
+              : it.Amount !== undefined
+              ? Number(it.Amount)
+              : q * p;
+          const rawRate =
+            it.TaxRate !== undefined && it.TaxRate !== null ? Number(it.TaxRate) : 0.08;
+          const rate = rawRate > 1 ? rawRate / 100 : rawRate;
+          const tax =
+            it.TaxAmount !== undefined && it.TaxAmount !== null && it.TaxAmount !== ""
+              ? Number(it.TaxAmount)
+              : raw * rate;
+          return acc + raw + tax;
+        }, 0);
+
+        const roundedTotal = Math.round(sumTotalVat);
+        if (currentFormAmount !== roundedTotal) {
+          form.setFieldsValue({ Amount: roundedTotal });
+          if (editingOrder) {
+            editingOrder.Amount = roundedTotal;
+            editingOrder.ContractedAmount = roundedTotal;
+          }
+        }
+      }
+    }
+  }, [items, isTaskAssigned, open, form, editingOrder]);
 
   if (!open) return null;
 
@@ -121,35 +175,6 @@ export default function OrderFormDrawer({
         boxSizing: "border-box",
       }}
     >
-      {/* STYLE OVERRIDES DÀNH RIÊNG CHO PO ĐỂ CHUẨN DESIGN SYSTEM */}
-      <style>{`
-        .po-order-table .ant-table {
-          font-family: inherit;
-        }
-        .po-order-table .ant-table-thead > tr > th {
-          background-color: #f7fbfa !important;
-          color: #475569 !important;
-          font-size: 13px !important;
-          font-weight: 600 !important;
-          line-height: 18px !important;
-          border-color: #dce5e6 !important;
-          padding: 10px 12px !important;
-        }
-        .po-order-table .ant-table-tbody > tr > td {
-          color: #123443 !important;
-          font-size: 13px !important;
-          line-height: 18px !important;
-          border-color: #dce5e6 !important;
-          padding: 10px 12px !important;
-          height: 46px !important;
-        }
-        .po-order-table .ant-table-container {
-          border: 1px solid #dce5e6 !important;
-          border-radius: 8px !important;
-          overflow: hidden;
-        }
-      `}</style>
-
       {/* HEADER SECTION I: TIÊU ĐỀ + NÚT TỆP ĐÍNH KÈM & ĐÓNG/LƯU */}
       <div
         style={{
@@ -168,38 +193,72 @@ export default function OrderFormDrawer({
         </div>
 
         <Space size={8}>
-          <Button
-            icon={<IconPaperclip size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />}
-            onClick={() => setIsAttachmentModalOpen(true)}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              fontSize: 13,
-              fontWeight: 500,
-              height: 32,
-              borderRadius: 6,
-              borderColor: "#dce5e6",
-              background: "#FFFFFF",
-              color: "#334155",
-            }}
-          >
-            {t.quotation.attachments}
-            {attachments.length > 0 ? (
-              <span
+          {hasOrderHeader && (
+            <Button
+              icon={<IconPaperclip size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />}
+              onClick={() => setIsAttachmentModalOpen(true)}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                fontSize: 13,
+                fontWeight: 500,
+                height: 32,
+                borderRadius: 6,
+                borderColor: "#dce5e6",
+                background: "#FFFFFF",
+                color: "#334155",
+              }}
+            >
+              {t.quotation.attachments}
+              {attachments.length > 0 ? (
+                <span
+                  style={{
+                    background: "#dce5e6",
+                    color: "#008f89",
+                    borderRadius: 10,
+                    padding: "1px 7px",
+                    fontSize: 11,
+                    fontWeight: 600,
+                    marginLeft: 5,
+                  }}
+                >
+                  {attachments.length}
+                </span>
+              ) : null}
+            </Button>
+          )}
+          {/* Chỉ hiển thị button Xóa khi đơn hàng có StatusCode === 0 (Bản nháp) và đã có ContractId */}
+          {isEditing && isDraft && onDeleteOrder && editingOrder?.ContractId && (
+            <Popconfirm
+              title={t.common.deleteConfirmTitle}
+              description={t.common.confirmDelete}
+              onConfirm={() => onDeleteOrder(editingOrder.ContractId)}
+              okText={t.common.delete}
+              cancelText={t.common.cancel}
+              okButtonProps={{ danger: true }}
+            >
+              <Button
+                danger
+                icon={<IconTrash size={15} strokeWidth={1.8} />}
                 style={{
-                  background: "#dce5e6",
-                  color: "#008f89",
-                  borderRadius: 10,
-                  padding: "1px 7px",
-                  fontSize: 11,
-                  fontWeight: 600,
-                  marginLeft: 5,
+                  height: 32,
+                  padding: "0 14px",
+                  borderRadius: 6,
+                  background: "#FEE2E2",
+                  borderColor: "#FECACA",
+                  color: "#DC2626",
+                  fontSize: 13,
+                  fontWeight: 500,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                 }}
               >
-                {attachments.length}
-              </span>
-            ) : null}
-          </Button>
+                {t.common.delete}
+              </Button>
+            </Popconfirm>
+          )}
+
           <Button
             icon={<IconX size={15} strokeWidth={1.8} style={{ color: "#718894" }} />}
             onClick={onClose}
@@ -249,61 +308,39 @@ export default function OrderFormDrawer({
           <Form.Item name="FromDate" style={{ display: "none" }}><Input /></Form.Item>
           <Form.Item name="ToDate" style={{ display: "none" }}><Input /></Form.Item>
 
-          <div
-            style={{
-              background: "#FFFFFF",
-              border: "1px solid #dce5e6",
-              borderRadius: 6,
-              padding: "5px 12px",
-              boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
-            }}
-          >
+          <div className="erp-general-info-card">
             {/* Hàng 1: 4 Cột */}
             <Row gutter={[0, 0]} align="middle">
               {/* Cột 1: Hợp đồng */}
-              <Col span={6} style={{ paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
-                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={6} className="erp-info-cell">
+                <span className="erp-info-label">
                   {t.purchaseOrder.mainContract} <span style={{ color: "#ff4d4f" }}>*</span>
-                </div>
+                </span>
                 <div
                   onClick={() => !editingOrder && onOpenContractLov()}
+                  className="erp-info-value mono"
                   style={{
                     cursor: editingOrder ? "default" : "pointer",
-                    fontWeight: 600,
-                    fontSize: 13,
-                    lineHeight: "18px",
-                    color: selectedContractDisplay ? "#123443" : "#94A3B8",
-                    display: "flex",
-                    alignItems: "center",
+                    color: selectedContractDisplay ? "#1e293b" : "#94A3B8",
                     justifyContent: "space-between",
-                    minHeight: 20,
                   }}
                   title={selectedContractDisplay}
                 >
                   <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {selectedContractDisplay || t.purchaseOrder.selectContract}
                   </span>
-                  {!editingOrder && (
-                    <IconSearch size={14} strokeWidth={1.8} style={{ color: "#94A3B8", marginLeft: 4 }} />
-                  )}
                 </div>
               </Col>
 
               {/* Cột 2: Nhà Cung Cấp */}
-              <Col span={6} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
-                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={6} className="erp-info-cell">
+                <span className="erp-info-label">
                   {t.purchaseOrder.vendor}
-                </div>
+                </span>
                 <div
+                  className="erp-info-value"
                   style={{
-                    fontWeight: 600,
-                    fontSize: 13,
-                    lineHeight: "18px",
-                    color: selectedClientDisplay ? "#123443" : "#94A3B8",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                    minHeight: 20,
+                    color: selectedClientDisplay ? "#1e293b" : "#94A3B8",
                   }}
                   title={selectedClientDisplay}
                 >
@@ -312,74 +349,60 @@ export default function OrderFormDrawer({
               </Col>
 
               {/* Cột 3: Bảng giá */}
-              <Col span={6} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
-                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={6} className="erp-info-cell">
+                <span className="erp-info-label">
                   {t.purchaseOrder.priceList}
-                </div>
+                </span>
                 <div
                   onClick={() => {
                     const hasContract = Boolean(watchedOrderParentId || watchedOrderClientId);
                     if (hasContract && !editingOrder) onOpenPriceListLov();
                   }}
+                  className="erp-info-value mono"
                   style={{
                     cursor: !(watchedOrderParentId || watchedOrderClientId) || editingOrder ? "default" : "pointer",
-                    fontWeight: 600,
-                    fontSize: 13,
-                    lineHeight: "18px",
-                    color: selectedPriceListDisplay ? "#123443" : "#94A3B8",
-                    display: "flex",
-                    alignItems: "center",
+                    color: selectedPriceListDisplay ? "#1e293b" : "#94A3B8",
                     justifyContent: "space-between",
-                    minHeight: 20,
                   }}
                   title={selectedPriceListDisplay}
                 >
                   <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {selectedPriceListDisplay || (watchedOrderParentId || watchedOrderClientId ? t.purchaseOrder.selectPriceList : t.purchaseOrder.selectContract)}
                   </span>
-                  {!editingOrder && (watchedOrderParentId || watchedOrderClientId) && (
-                    <IconSearch size={14} strokeWidth={1.8} style={{ color: "#94A3B8", marginLeft: 4 }} />
-                  )}
                 </div>
               </Col>
 
               {/* Cột 4: Kho nhận hàng */}
-              <Col span={6} style={{ paddingLeft: 10 }}>
-                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={6} className="erp-info-cell">
+                <span className="erp-info-label">
                   {t.purchaseOrder.deliveryWarehouse}
-                </div>
+                </span>
                 <div
                   onClick={onOpenWarehouseLov}
+                  className="erp-info-value"
                   style={{
                     cursor: "pointer",
-                    fontWeight: 600,
-                    fontSize: 13,
-                    lineHeight: "18px",
-                    color: selectedWarehouseDisplay ? "#123443" : "#94A3B8",
-                    display: "flex",
-                    alignItems: "center",
+                    color: selectedWarehouseDisplay ? "#1e293b" : "#94A3B8",
                     justifyContent: "space-between",
-                    minHeight: 20,
                   }}
                   title={selectedWarehouseDisplay}
                 >
                   <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {selectedWarehouseDisplay || t.purchaseOrder.selectWarehouse}
                   </span>
-                  <IconSearch size={14} strokeWidth={1.8} style={{ color: "#94A3B8", marginLeft: 4 }} />
                 </div>
               </Col>
             </Row>
 
-            <Divider style={{ margin: "3px 0", borderColor: "#dce5e6" }} />
+            <div className="erp-info-divider" />
 
-            {/* Hàng 2: 6 Cột */}
+            {/* Hàng 2: 7 Cột */}
             <Row gutter={[0, 0]} align="middle">
               {/* Cột 1: Số đơn hàng */}
-              <Col span={4} style={{ paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
-                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={3} className="erp-info-cell">
+                <span className="erp-info-label">
                   {t.purchaseOrder.orderCode}
-                </div>
+                </span>
                 <Form.Item name="ContractCode" style={{ margin: 0 }}>
                   <Input
                     variant="borderless"
@@ -387,10 +410,10 @@ export default function OrderFormDrawer({
                     placeholder={editingOrder ? "" : t.quotation.autoGenerated}
                     style={{
                       padding: 0,
-                      fontWeight: 600,
-                      fontSize: 13,
-                      lineHeight: "18px",
-                      color: "#123443",
+                      fontWeight: 400,
+                      fontSize: 12.5,
+                      lineHeight: "16px",
+                      color: "#1e293b",
                       fontFamily: "monospace",
                     }}
                   />
@@ -398,10 +421,10 @@ export default function OrderFormDrawer({
               </Col>
 
               {/* Cột 2: Diễn giải * */}
-              <Col span={6} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
-                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={5} className="erp-info-cell">
+                <span className="erp-info-label">
                   {t.purchaseOrder.orderDesc} <span style={{ color: "#ff4d4f" }}>*</span>
-                </div>
+                </span>
                 <Form.Item
                   name="Description"
                   style={{ margin: 0 }}
@@ -410,50 +433,51 @@ export default function OrderFormDrawer({
                   <Input
                     variant="borderless"
                     placeholder={t.purchaseOrder.orderDescPlaceholder}
-                    style={{ padding: 0, fontWeight: 500, fontSize: 13, lineHeight: "18px", color: "#123443" }}
+                    style={{ padding: 0, fontWeight: 400, fontSize: 12.5, lineHeight: "16px", color: "#1e293b" }}
                   />
                 </Form.Item>
               </Col>
 
               {/* Cột 3: Ngày đơn hàng */}
-              <Col span={3} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
-                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={3} className="erp-info-cell">
+                <span className="erp-info-label">
                   {t.purchaseOrder.orderDate}
-                </div>
+                </span>
                 <Form.Item name="ContractDate" style={{ margin: 0 }}>
                   <DatePicker
                     variant="borderless"
                     format="DD/MM/YYYY"
                     placeholder={t.quotation.selectDate}
-                    style={{ padding: 0, width: "100%", fontWeight: 500, fontSize: 13, color: "#123443" }}
+                    style={{ padding: 0, width: "100%", fontWeight: 400, fontSize: 12.5, color: "#1e293b" }}
                   />
                 </Form.Item>
               </Col>
 
               {/* Cột 4: Ngày giao hàng */}
-              <Col span={3} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
-                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={3} className="erp-info-cell">
+                <span className="erp-info-label">
                   {t.purchaseOrder.deliveryDate}
-                </div>
+                </span>
                 <Form.Item name="DeliveryDate" style={{ margin: 0 }}>
                   <DatePicker
                     variant="borderless"
                     format="DD/MM/YYYY"
                     placeholder={t.quotation.selectDate}
-                    style={{ padding: 0, width: "100%", fontWeight: 500, fontSize: 13, color: "#123443" }}
+                    style={{ padding: 0, width: "100%", fontWeight: 400, fontSize: 12.5, color: "#1e293b" }}
                   />
                 </Form.Item>
               </Col>
 
               {/* Cột 5: Giá trị đơn hàng */}
-              <Col span={5} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
-                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={4} className="erp-info-cell">
+                <span className="erp-info-label">
                   {t.table.amount}
-                </div>
+                </span>
                 <Form.Item name="Amount" style={{ margin: 0 }}>
                   <InputNumber
                     variant="borderless"
-                    style={{ padding: 0, width: "100%", fontWeight: 600, fontSize: 13, color: "#123443" }}
+                    className="erp-amount-input"
+                    style={{ padding: 0, width: "100%", fontWeight: 700, fontSize: 12.5, color: "#008f89" }}
                     min={0}
                     placeholder="0"
                     formatter={(val) => String(val || "").replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
@@ -463,20 +487,40 @@ export default function OrderFormDrawer({
               </Col>
 
               {/* Cột 6: Loại tiền */}
-              <Col span={3} style={{ paddingLeft: 10 }}>
-                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={3} className="erp-info-cell">
+                <span className="erp-info-label">
                   {t.quotation.currency}
-                </div>
+                </span>
                 <Form.Item name="Currency" style={{ margin: 0 }}>
                   <Select
                     variant="borderless"
-                    style={{ padding: 0, width: "100%", fontWeight: 500, fontSize: 13, color: "#123443" }}
+                    suffixIcon={<CaretDownOutlined style={{ fontSize: 10, color: "#94a3b8" }} />}
+                    style={{ padding: 0, width: "100%", fontWeight: 400, fontSize: 12.5, color: "#1e293b" }}
                     options={[
                       { value: "VND", label: "VND" },
                       { value: "USD", label: "USD" },
                     ]}
                   />
                 </Form.Item>
+              </Col>
+
+              {/* Cột 7: Trạng thái */}
+              <Col span={3} className="erp-info-cell" style={{ borderRight: "none" }}>
+                <span className="erp-info-label">
+                  {t.table.status}
+                </span>
+                <div style={{ display: "flex", alignItems: "center", height: 24, paddingLeft: 8 }}>
+                  <ApprovalBadge
+                    val={
+                      editingOrder?.StatusName ||
+                      editingOrder?.Status ||
+                      (editingOrder?.StatusCode !== undefined && editingOrder?.StatusCode !== null
+                        ? (Number(editingOrder.StatusCode) === 0 ? "Draft" : editingOrder.StatusCode)
+                        : (editingOrder ? "Chờ duyệt" : "Draft"))
+                    }
+                    record={editingOrder}
+                  />
+                </div>
               </Col>
             </Row>
           </div>

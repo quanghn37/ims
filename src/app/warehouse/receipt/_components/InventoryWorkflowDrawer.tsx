@@ -1,17 +1,14 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Drawer, Table, Spin, Typography, Tag, message } from "antd";
+import { Drawer, message } from "antd";
 import { IconRoute } from "@tabler/icons-react";
-import dayjs from "dayjs";
 import InventoryWorkflowRowDetailDrawer from "./InventoryWorkflowRowDetailDrawer";
 import { StockItemDetail } from "../../types";
 import { warehouseApi } from "../../api";
 import { extractApiList } from "@/lib/api-client";
-import { renderApprovalBadge } from "@/components/common/ApprovalBadge";
 import { useTranslation } from "@/locales/LanguageContext";
-
-const { Text } = Typography;
+import WorkflowRaciTable from "@/components/common/WorkflowRaciTable";
 
 interface InventoryWorkflowDrawerProps {
   open: boolean;
@@ -134,91 +131,19 @@ export default function InventoryWorkflowDrawer({
   const { t, language } = useTranslation();
   const numLocale = language === "en" ? "en-US" : "vi-VN";
 
-  const workflowTableColumns = [
-    {
-      title: "#",
-      dataIndex: "RowNum",
-      key: "RowNum",
-      width: 50,
-      align: "center" as const,
-      render: (val: any, _: any, idx: number) => (
-        <span style={{ fontFamily: "monospace", color: "#718894", fontWeight: 600, fontSize: 13 }}>
-          #{val || idx + 1}
-        </span>
-      ),
-    },
-    {
-      title: t("workflow.role") || "Vai trò",
-      dataIndex: "Role",
-      key: "Role",
-      width: 85,
-      align: "center" as const,
-      render: (val: string) => (
-        <Tag
-          style={{
-            background: "#dce5e6",
-            color: "#008f89",
-            border: "1px solid #b2ded9",
-            borderRadius: 4,
-            fontWeight: 600,
-            fontSize: 12,
-            padding: "1px 8px",
-            margin: 0,
-          }}
-        >
-          {val || "?"}
-        </Tag>
-      ),
-    },
-    {
-      title: t("workflow.assignee") || "Người phụ trách",
-      dataIndex: "FullName",
-      key: "FullName",
-      width: 170,
-      render: (val: string, r: any) => (
-        <span style={{ fontWeight: 600, color: "#123443", fontSize: 13 }}>
-          {val || r.UserName || "---"}
-        </span>
-      ),
-    },
-    {
-      title: t("workflow.decision") || "Quyết định",
-      dataIndex: "ApprovalStatus",
-      key: "ApprovalStatus",
-      width: 135,
-      align: "center" as const,
-      render: (val: string) => renderApprovalBadge(val, undefined, language),
-    },
-    {
-      title: t("workflow.remarks") || "Ý kiến",
-      dataIndex: "Remarks",
-      key: "Remarks",
-      render: (val: string) =>
-        val ? (
-          <span style={{ fontSize: 13, color: "#334155" }}>{val}</span>
-        ) : (
-          <span style={{ fontSize: 12, color: "#94A3B8", fontStyle: "italic" }}>
-            {t("workflow.noRemarks") || "Chưa có"}
-          </span>
-        ),
-    },
-    {
-      title: t("workflow.time") || "Thời gian",
-      key: "time",
-      width: 140,
-      render: (_: any, r: any) => {
-        const start = r.ActualStart ? dayjs(r.ActualStart).format("HH:mm DD/MM") : null;
-        const finish = r.ActualFinish ? dayjs(r.ActualFinish).format("HH:mm DD/MM") : null;
-        return (
-          <div style={{ fontSize: 12, color: "#718894", lineHeight: "18px" }}>
-            {start && <div>🕒 {start}</div>}
-            {finish && <div style={{ color: "#0D9488", fontWeight: 500 }}>✓ {finish}</div>}
-            {!start && !finish && "---"}
-          </div>
-        );
-      },
-    },
-  ];
+  const workflowTitle =
+    displayMode === "Request"
+      ? (language === "en" ? "Material Request" : "Yêu cầu xuất kho")
+      : displayMode === "Issue"
+      ? (language === "en" ? "Stock Issue" : "Xuất kho")
+      : (language === "en" ? "Stock Receipt" : "Nhập kho");
+
+  const docTypeName =
+    displayMode === "Request"
+      ? (language === "en" ? "Material Requisition Note" : "Phiếu yêu cầu xuất vật tư")
+      : displayMode === "Issue"
+      ? (language === "en" ? "Stock Issue Note" : "Phiếu xuất kho vật tư")
+      : (language === "en" ? "Stock Receipt Note" : "Phiếu nhập vật tư");
 
   return (
     <>
@@ -241,11 +166,11 @@ export default function InventoryWorkflowDrawer({
             <div>
               <div style={{ fontSize: 18, fontWeight: 700, color: "#008f89", lineHeight: "24px" }}>
                 {language === "en"
-                  ? `Approval Workflow (${displayMode === "Request" ? "Material Request" : "Stock Receipt"})`
-                  : `Quy trình phê duyệt ${displayMode === "Request" ? "Yêu cầu xuất" : "Nhập kho"}`}
+                  ? `Approval Workflow (${workflowTitle})`
+                  : `Quy trình phê duyệt ${workflowTitle}`}
               </div>
               <div style={{ fontSize: 12, color: "#718894", marginTop: 2 }}>
-                Submission #{subId} · {displayMode === "Request" ? (language === "en" ? "Material Requisition Note" : "Phiếu yêu cầu xuất vật tư") : (language === "en" ? "Stock Receipt Note" : "Phiếu nhập vật tư")}
+                Submission #{subId} · {docTypeName}
               </div>
             </div>
           </div>
@@ -256,35 +181,6 @@ export default function InventoryWorkflowDrawer({
         onClose={onClose}
         bodyStyle={{ padding: "20px 24px", background: "#FAF5FF08" }}
       >
-        {/* Scoped CSS cho bảng lịch sử phê duyệt */}
-        <style jsx global>{`
-          .workflow-history-table .ant-table-thead > tr > th {
-            background: #f7fbfa !important;
-            color: #123443 !important;
-            font-size: 13px !important;
-            font-weight: 600 !important;
-            line-height: 18px !important;
-            border-color: #dce5e6 !important;
-            padding: 10px 12px !important;
-          }
-          .workflow-history-table .ant-table-tbody > tr > td {
-            color: #123443 !important;
-            font-size: 13px !important;
-            line-height: 18px !important;
-            border-color: #dce5e6 !important;
-            padding: 10px 12px !important;
-            height: 46px !important;
-          }
-          .workflow-history-table .ant-table-tbody > tr:hover > td {
-            background-color: #eef8f6 !important;
-          }
-          .workflow-history-table .ant-table-container {
-            border: 1px solid #dce5e6 !important;
-            border-radius: 8px !important;
-            overflow: hidden;
-          }
-        `}</style>
-
         {itemDetail && (
           <div style={{ marginBottom: 20 }}>
             <div
@@ -299,15 +195,7 @@ export default function InventoryWorkflowDrawer({
             >
               {language === "en" ? "REQUISITION INFO" : "THÔNG TIN ĐỀ NGHỊ"}
             </div>
-            <div
-              style={{
-                background: "#FFFFFF",
-                border: "1px solid #dce5e6",
-                borderRadius: 10,
-                padding: "14px",
-                boxShadow: "0 1px 3px rgba(0, 0, 0, 0.03)",
-              }}
-            >
+            <div className="erp-summary-card">
               <div
                 style={{
                   display: "grid",
@@ -316,22 +204,22 @@ export default function InventoryWorkflowDrawer({
                 }}
               >
                 {/* Ô 1: Mã vật tư */}
-                <div style={{ background: "#f7fbfa", border: "1px solid #dce5e6", borderRadius: 8, padding: "10px 14px" }}>
-                  <div style={{ fontSize: 12, color: "#718894", fontWeight: 500, marginBottom: 4 }}>
+                <div className="erp-summary-box">
+                  <span className="erp-summary-label">
                     {t("common.materialCode") || "Mã vật tư"}
-                  </div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: "#123443", fontFamily: "monospace" }}>
+                  </span>
+                  <div className="erp-summary-value mono">
                     {itemDetail.SystemCode || itemDetail.itemCode || "---"}
                   </div>
                 </div>
 
                 {/* Ô 2: Tên vật tư */}
-                <div style={{ background: "#f7fbfa", border: "1px solid #dce5e6", borderRadius: 8, padding: "10px 14px" }}>
-                  <div style={{ fontSize: 12, color: "#718894", fontWeight: 500, marginBottom: 4 }}>
+                <div className="erp-summary-box">
+                  <span className="erp-summary-label">
                     {t("common.materialName") || "Tên vật tư"}
-                  </div>
+                  </span>
                   <div
-                    style={{ fontSize: 14, fontWeight: 700, color: "#123443", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                    className="erp-summary-value"
                     title={itemDetail.Description || itemDetail.itemName}
                   >
                     {itemDetail.Description || itemDetail.itemName || "---"}
@@ -339,30 +227,23 @@ export default function InventoryWorkflowDrawer({
                 </div>
 
                 {/* Ô 3: ĐVT */}
-                <div style={{ background: "#f7fbfa", border: "1px solid #dce5e6", borderRadius: 8, padding: "10px 14px" }}>
-                  <div style={{ fontSize: 12, color: "#718894", fontWeight: 500, marginBottom: 4 }}>
+                <div className="erp-summary-box">
+                  <span className="erp-summary-label">
                     {t("common.unit") || "ĐVT"}
-                  </div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: "#123443" }}>
+                  </span>
+                  <div className="erp-summary-value">
                     {itemDetail.Unit || itemDetail.unit || "---"}
                   </div>
                 </div>
 
-                {/* Ô 4, 5, 6: Phân chia theo displayMode (Request: OrgName, SL đề nghị, SL duyệt / Receipt: SL đề nghị, Đơn giá, Thành tiền) */}
+                {/* Ô 4, 5, 6: Phân chia theo displayMode */}
                 {displayMode === "Request" ? (
                   <>
                     {/* Ô 4: OrgName */}
-                    <div style={{ background: "#f7fbfa", border: "1px solid #dce5e6", borderRadius: 8, padding: "10px 14px" }}>
-                      <div style={{ fontSize: 12, color: "#718894", fontWeight: 500, marginBottom: 4 }}>OrgName</div>
+                    <div className="erp-summary-box">
+                      <span className="erp-summary-label">OrgName</span>
                       <div
-                        style={{
-                          fontSize: 14,
-                          fontWeight: 700,
-                          color: "#123443",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
+                        className="erp-summary-value"
                         title={
                           itemDetail.Orgcode && itemDetail.OrgName
                             ? `${itemDetail.Orgcode} - ${itemDetail.OrgName}`
@@ -374,21 +255,21 @@ export default function InventoryWorkflowDrawer({
                     </div>
 
                     {/* Ô 5: Số lượng đề nghị */}
-                    <div style={{ background: "#f7fbfa", border: "1px solid #dce5e6", borderRadius: 8, padding: "10px 14px" }}>
-                      <div style={{ fontSize: 12, color: "#718894", fontWeight: 500, marginBottom: 4 }}>
+                    <div className="erp-summary-box">
+                      <span className="erp-summary-label">
                         {language === "en" ? "Requested Qty" : "Số lượng đề nghị"}
-                      </div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: "#123443" }}>
+                      </span>
+                      <div className="erp-summary-value">
                         {Number(itemDetail.requestedQty ?? itemDetail.Qnty ?? itemDetail.actualQty ?? 0).toLocaleString(numLocale)}
                       </div>
                     </div>
 
                     {/* Ô 6: Số lượng duyệt */}
-                    <div style={{ background: "#f7fbfa", border: "1px solid #dce5e6", borderRadius: 8, padding: "10px 14px" }}>
-                      <div style={{ fontSize: 12, color: "#718894", fontWeight: 500, marginBottom: 4 }}>
+                    <div className="erp-summary-box">
+                      <span className="erp-summary-label">
                         {t("workflow.approvedQty") || "Số lượng duyệt"}
-                      </div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: "#008f89" }}>
+                      </span>
+                      <div className="erp-summary-value amount">
                         {Number(itemDetail.approvedQty ?? itemDetail.ApprovedQty ?? 0).toLocaleString(numLocale)}
                       </div>
                     </div>
@@ -396,31 +277,31 @@ export default function InventoryWorkflowDrawer({
                 ) : (
                   <>
                     {/* Ô 4: Số lượng đề nghị */}
-                    <div style={{ background: "#f7fbfa", border: "1px solid #dce5e6", borderRadius: 8, padding: "10px 14px" }}>
-                      <div style={{ fontSize: 12, color: "#718894", fontWeight: 500, marginBottom: 4 }}>
+                    <div className="erp-summary-box">
+                      <span className="erp-summary-label">
                         {language === "en" ? "Requested Qty" : "Số lượng đề nghị"}
-                      </div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: "#123443" }}>
+                      </span>
+                      <div className="erp-summary-value">
                         {Number(itemDetail.Qnty ?? itemDetail.actualQty ?? 0).toLocaleString(numLocale)}
                       </div>
                     </div>
 
                     {/* Ô 5: Đơn giá đề nghị */}
-                    <div style={{ background: "#f7fbfa", border: "1px solid #dce5e6", borderRadius: 8, padding: "10px 14px" }}>
-                      <div style={{ fontSize: 12, color: "#718894", fontWeight: 500, marginBottom: 4 }}>
+                    <div className="erp-summary-box">
+                      <span className="erp-summary-label">
                         {language === "en" ? "Requested Unit Price" : "Đơn giá đề nghị"}
-                      </div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: "#123443" }}>
+                      </span>
+                      <div className="erp-summary-value">
                         {Number(itemDetail.UnitPrice ?? itemDetail.unitPrice ?? 0).toLocaleString(numLocale)}
                       </div>
                     </div>
 
                     {/* Ô 6: Thành tiền đề nghị */}
-                    <div style={{ background: "#f7fbfa", border: "1px solid #dce5e6", borderRadius: 8, padding: "10px 14px" }}>
-                      <div style={{ fontSize: 12, color: "#718894", fontWeight: 500, marginBottom: 4 }}>
+                    <div className="erp-summary-box">
+                      <span className="erp-summary-label">
                         {language === "en" ? "Requested Amount" : "Thành tiền đề nghị"}
-                      </div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: "#008f89" }}>
+                      </span>
+                      <div className="erp-summary-value amount">
                         {Number(itemDetail.Amount ?? itemDetail.totalPrice ?? 0).toLocaleString(numLocale)}
                       </div>
                     </div>
@@ -431,52 +312,13 @@ export default function InventoryWorkflowDrawer({
           </div>
         )}
 
-        {loadingWorkflow ? (
-          <div style={{ textAlign: "center", padding: "60px 0" }}>
-            <Spin size="large" />
-            <div style={{ marginTop: 12 }}>
-              <Text type="secondary">
-                {t("workflow.loading") || "Đang tải quy trình duyệt..."}
-              </Text>
-            </div>
-          </div>
-        ) : workflowData.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "40px 0" }}>
-            <Text type="secondary">
-              {t("workflow.empty") || "Chưa có lịch sử hoặc quy trình duyệt cho hạng mục này."}
-            </Text>
-          </div>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-            {/* Bảng danh sách chi tiết */}
-            <div>
-              <div
-                style={{
-                  fontSize: 12,
-                  color: "#718894",
-                  marginBottom: 10,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                }}
-              >
-                <span>💡</span> {t("workflow.clickHint") || "Nhấn vào dòng bên dưới để xem / nhập quyết định duyệt"}
-              </div>
-              <Table
-                className="workflow-history-table"
-                dataSource={workflowData}
-                rowKey={(r, idx) => r.AssignmentId || r.RowNum || `wf_${idx}`}
-                pagination={false}
-                size="middle"
-                onRow={(record) => ({
-                  onClick: () => openRowDetail(record),
-                  style: { cursor: "pointer" },
-                })}
-                columns={workflowTableColumns}
-              />
-            </div>
-          </div>
-        )}
+        {/* BẢNG CÁC BƯỚC PHÊ DUYỆT RACI DÙNG CHUNG */}
+        <WorkflowRaciTable
+          dataSource={workflowData}
+          loading={loadingWorkflow}
+          onRefresh={fetchWorkflowStatus}
+          onOpenRowDetail={openRowDetail}
+        />
       </Drawer>
 
       <InventoryWorkflowRowDetailDrawer

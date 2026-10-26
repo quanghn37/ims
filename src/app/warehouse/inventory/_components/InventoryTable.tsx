@@ -7,10 +7,8 @@ import {
   Input,
   Select,
   Space,
-  Typography,
   Tooltip,
 } from "antd";
-import type { ColumnsType } from "antd/es/table";
 import {
   SearchOutlined,
   ReloadOutlined,
@@ -20,8 +18,8 @@ import {
 import dayjs from "dayjs";
 import { InventoryBalanceItem } from "../../types";
 import { useTranslation } from "@/locales/LanguageContext";
-
-const { Text } = Typography;
+import ResizableTitle from "@/components/table/ResizableTitle";
+import { usePersistedColumnWidths } from "@/lib/table-utils";
 
 interface InventoryTableProps {
   items: InventoryBalanceItem[];
@@ -67,13 +65,13 @@ export default function InventoryTable({
     ];
   }, [warehouses, t]);
 
-  const columns: ColumnsType<InventoryBalanceItem> = [
+  const initialColumns = useMemo(() => [
     {
       title: t.table.stt,
       key: "stt",
       width: 55,
-      align: "center",
-      render: (_, __, index) => (
+      align: "center" as const,
+      render: (_: any, __: any, index: number) => (
         <span style={{ color: "#718894", fontSize: 13 }}>
           {(pagination.current - 1) * pagination.pageSize + index + 1}
         </span>
@@ -116,7 +114,7 @@ export default function InventoryTable({
       dataIndex: "UomCode",
       key: "UomCode",
       width: 75,
-      align: "center",
+      align: "center" as const,
       render: (val: string) => (
         <span style={{ color: "#475569", fontSize: 13 }}>{val}</span>
       ),
@@ -135,7 +133,7 @@ export default function InventoryTable({
       dataIndex: "OnHandQty",
       key: "OnHandQty",
       width: 110,
-      align: "right",
+      align: "right" as const,
       render: (val: number) => (
         <span style={{ fontSize: 13, color: val === 0 ? "#DC2626" : "#123443" }}>
           {Number(val || 0).toLocaleString("vi-VN")}
@@ -147,7 +145,7 @@ export default function InventoryTable({
       dataIndex: "ReservedQty",
       key: "ReservedQty",
       width: 105,
-      align: "right",
+      align: "right" as const,
       render: (val: number) => (
         <span style={{ color: "#718894", fontSize: 13 }}>
           {Number(val || 0).toLocaleString("vi-VN")}
@@ -159,7 +157,7 @@ export default function InventoryTable({
       dataIndex: "AvailableQty",
       key: "AvailableQty",
       width: 115,
-      align: "right",
+      align: "right" as const,
       render: (val: number) => (
         <span style={{ fontSize: 13, color: "#16A34A" }}>
           {Number(val || 0).toLocaleString("vi-VN")}
@@ -171,7 +169,7 @@ export default function InventoryTable({
       dataIndex: "AvgUnitCost",
       key: "AvgUnitCost",
       width: 140,
-      align: "right",
+      align: "right" as const,
       render: (val: number) => (
         <span style={{ color: "#334155", fontSize: 13 }}>
           {Number(val || 0).toLocaleString("vi-VN")}
@@ -183,7 +181,7 @@ export default function InventoryTable({
       dataIndex: "TotalCost",
       key: "TotalCost",
       width: 155,
-      align: "right",
+      align: "right" as const,
       render: (val: number) => (
         <span style={{ color: "#008f89", fontSize: 13 }}>
           {Number(val || 0).toLocaleString("vi-VN")}
@@ -195,7 +193,7 @@ export default function InventoryTable({
       dataIndex: "LastReceiptDate",
       key: "LastReceiptDate",
       width: 120,
-      align: "center",
+      align: "center" as const,
       render: (val: string | null) => (
         <span style={{ color: "#718894", fontSize: 13 }}>
           {val ? dayjs(val).format("DD/MM/YYYY") : "---"}
@@ -203,11 +201,17 @@ export default function InventoryTable({
       ),
     },
     {
+      key: "_spacer",
+      title: "",
+      width: undefined,
+      render: () => null,
+    },
+    {
       title: t.common.actions,
       key: "action",
       width: 80,
-      align: "center",
-      fixed: "right",
+      align: "center" as const,
+      fixed: "right" as const,
       render: (_: any, record: InventoryBalanceItem) => (
         <Tooltip title={t.inventory.stockCardTooltip}>
           <Button
@@ -219,26 +223,52 @@ export default function InventoryTable({
         </Tooltip>
       ),
     },
-  ];
+  ], [pagination.current, pagination.pageSize, onOpenStockCard, t]);
+
+  const { columns, handleResizeColumn } = usePersistedColumnWidths(initialColumns, "inventory_table_widths_v1");
+
+  const mergedColumns = useMemo(() => columns.map((column, index) => {
+    const key = column.key || column.dataIndex;
+    if (key === "_spacer") {
+      return {
+        key: "_spacer",
+        title: "",
+        width: undefined,
+        render: () => null,
+      };
+    }
+    const isAction = key === "action";
+    return {
+      ...column,
+      width: isAction ? 80 : column.width,
+      onHeaderCell: (headerColumn: any) => ({
+        width: isAction ? 80 : headerColumn.width,
+        onResize: isAction ? undefined : handleResizeColumn(index),
+        style: isAction ? ({ padding: "4px 2px", textAlign: "center" } as React.CSSProperties) : undefined,
+      }),
+    };
+  }), [columns, handleResizeColumn]);
+
+  const scrollX = useMemo(() => {
+    return mergedColumns.reduce((sum, col) => {
+      if (col.key === "_spacer") return sum;
+      return sum + (Number(col.width) || 120);
+    }, 0);
+  }, [mergedColumns]);
 
   return (
     <div>
       {/* BỘ LỌC VÀ CÔNG CỤ TÌM KIẾM */}
       <div
         style={{
-          background: "#FFFFFF",
-          border: "1px solid #dce5e6",
-          borderRadius: 8,
-          padding: "12px 16px",
-          marginBottom: 16,
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          flexWrap: "wrap",
+          marginBottom: 14,
           gap: 12,
         }}
       >
-        <Space size={10} wrap>
+        <Space size={10} wrap style={{ flex: 1 }}>
           {/* Lọc theo Kho */}
           <Select
             value={selectedWarehouseId}
@@ -246,7 +276,7 @@ export default function InventoryTable({
               setSelectedWarehouseId(val);
               onPageChange(1, pagination.pageSize, val);
             }}
-            style={{ width: 260 }}
+            style={{ width: 240, height: 36 }}
             options={warehouseOptions}
             placeholder={t.inventory.selectWarehouse}
           />
@@ -258,7 +288,7 @@ export default function InventoryTable({
             value={searchKeyword}
             onChange={(e) => setSearchKeyword(e.target.value)}
             onPressEnter={() => onPageChange(1, pagination.pageSize)}
-            style={{ width: 260, borderRadius: 6 }}
+            style={{ width: 260, height: 36, borderRadius: 8, fontSize: 13.5 }}
             allowClear
           />
 
@@ -269,25 +299,32 @@ export default function InventoryTable({
             style={{
               background: "#008f89",
               borderColor: "#008f89",
-              borderRadius: 6,
+              borderRadius: 8,
+              height: 36,
+              fontSize: 13.5,
+              fontWeight: 500,
             }}
           >
             {t.common.search}
           </Button>
 
+          <span style={{ fontSize: 13, color: "#64748b" }}>
+            {t.common.total || "Tổng"}: <strong style={{ color: "#008f89" }}>{pagination.total}</strong> {t.table.itemsCount || "mặt hàng"}
+          </span>
+        </Space>
+
+        <Space size={10}>
           <Button
-            icon={<ReloadOutlined />}
+            icon={<ReloadOutlined style={{ color: "#008f89" }} />}
             onClick={onRefresh}
-            style={{ borderRadius: 6, borderColor: "#CBD5E1" }}
+            style={{ height: 36, borderRadius: 8, borderColor: "#dce5e6", color: "#334155", fontSize: 13.5, fontWeight: 500 }}
           >
             {t.common.refresh}
           </Button>
-        </Space>
 
-        <Space size={8}>
           <Button
-            icon={<FileExcelOutlined />}
-            style={{ borderRadius: 6, borderColor: "#CBD5E1" }}
+            icon={<FileExcelOutlined style={{ color: "#16A34A" }} />}
+            style={{ height: 36, borderRadius: 8, borderColor: "#dce5e6", color: "#334155", fontSize: 13.5, fontWeight: 500 }}
             onClick={() => {
               // Export CSV / Excel
             }}
@@ -307,12 +344,14 @@ export default function InventoryTable({
         }}
       >
         <Table
+          tableLayout="fixed"
+          components={{ header: { cell: ResizableTitle } }}
           size="middle"
           loading={loading}
           dataSource={items}
-          columns={columns}
+          columns={mergedColumns as any}
           rowKey={(r) => `${r.BalanceId ?? r.MaterialId ?? r.ItemCode}_${r.WarehouseId}`}
-          scroll={{ x: 1450 }}
+          scroll={{ x: scrollX, y: "calc(100vh - 215px)" }}
           pagination={{
             current: pagination.current,
             pageSize: pagination.pageSize,
@@ -329,9 +368,12 @@ export default function InventoryTable({
 
             return (
               <Table.Summary.Row style={{ background: "#eef8f6" }}>
-                {columns.map((col: any, index: number) => {
+                {mergedColumns.map((col: any, index: number) => {
                   const key = String(col.key || col.dataIndex || index);
-                  if (key === "WarehouseName" || (key === "ItemName" && !columns.some((c: any) => (c.key || c.dataIndex) === "WarehouseName"))) {
+                  if (key === "_spacer") {
+                    return <Table.Summary.Cell key="_spacer" index={index} />;
+                  }
+                  if (key === "WarehouseName" || (key === "ItemName" && !mergedColumns.some((c: any) => (c.key || c.dataIndex) === "WarehouseName"))) {
                     return (
                       <Table.Summary.Cell key={key} index={index} align="right">
                         <span style={{ fontWeight: 600, color: "#123443", fontSize: 13 }}>

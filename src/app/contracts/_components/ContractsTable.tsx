@@ -1,5 +1,5 @@
-import React, { useMemo } from "react";
-import { Button, Card, Input, Popconfirm, Space, Table, Tag, Tooltip, Typography } from "antd";
+import React, { useMemo, useState, useEffect } from "react";
+import { Button, Input, Popover, Space, Table, Tag, Tooltip, Typography } from "antd";
 import {
   IconCircleX,
   IconPlus,
@@ -15,8 +15,9 @@ import { contractColumnFields } from "../_hooks/useContracts";
 import ColumnFilterDropdown from "@/components/table/ColumnFilterDropdown";
 import { usePersistedColumnWidths } from "@/lib/table-utils";
 import { useTranslation } from "@/locales/LanguageContext";
+import { ApprovalBadge } from "@/components/common/ApprovalBadge";
 
-const { Text, Title } = Typography;
+const { Text } = Typography;
 type PaginationState = { current: number; pageSize: number; total: number };
 
 interface ContractsTableProps {
@@ -35,7 +36,7 @@ interface ContractsTableProps {
   onCreate: () => void;
   onEdit: (record: ContractItem) => void;
   onCreateAddendum: (record: ContractItem) => void;
-  onDelete: (record: ContractItem) => void;
+  onDelete?: (record: ContractItem) => void;
 }
 
 export default function ContractsTable({ filteredContracts, loading, searchKeyword, setSearchKeyword, columnFilters, setColumnFilters, pagination, setPagination, isFiltering, columnSuggestions, storageKey, onRefresh, onCreate, onEdit, onCreateAddendum, onDelete }: ContractsTableProps) {
@@ -51,18 +52,25 @@ export default function ContractsTable({ filteredContracts, loading, searchKeywo
           const code = val || (r as any).Contractcode || (r as any).Code;
           if (!code) return <span>---</span>;
           return (
-            <span
-              onClick={() => onEdit(r)}
+            <a
+              href={`/contracts?id=${r.ContractId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => {
+                e.preventDefault();
+                onEdit(r);
+              }}
               style={{
                 cursor: "pointer",
                 fontWeight: 600,
                 color: "#008f89",
                 fontSize: 13,
+                textDecoration: "none",
               }}
-              title="Bấm để xem chi tiết / chỉnh sửa"
+              title="Mở chi tiết hợp đồng trong tab mới"
             >
               {code}
-            </span>
+            </a>
           );
         },
       },
@@ -145,6 +153,47 @@ export default function ContractsTable({ filteredContracts, loading, searchKeywo
         render: (val: string, r: any) => <span style={{ color: "#262626" }}>{val || r.Currency || "VND"}</span>,
       },
       {
+        title: t.table.status,
+        dataIndex: "StatusName",
+        key: "StatusName",
+        width: 120,
+        align: "center" as const,
+        render: (val: string, r: any) => {
+          const raw = val ?? r.Status ?? r.StatusCode ?? "";
+          return <ApprovalBadge val={raw} record={r} />;
+        },
+      },
+      {
+        title: t.table.currentAssignee,
+        dataIndex: "CurrentAssignee",
+        key: "CurrentAssignee",
+        width: 140,
+        render: (val: string, r: any) => {
+          const name = String(val || r.Assignee || r.CurrentRole || "").trim();
+          const clean = name.toLowerCase();
+          const isDone =
+            !name ||
+            clean === "đã hoàn tất" ||
+            clean === "da hoan tat" ||
+            clean === "hoàn tất" ||
+            clean === "hoan tat" ||
+            clean === "completed" ||
+            clean === "done" ||
+            clean === "finish" ||
+            clean === "finished";
+
+          if (isDone) {
+            return null;
+          }
+
+          return (
+            <span style={{ color: "#123443", fontSize: 13, fontWeight: 500 }}>
+              {name}
+            </span>
+          );
+        },
+      },
+      {
         title: t.table.createdDate,
         dataIndex: "CreatedDate",
         key: "CreatedDate",
@@ -164,47 +213,75 @@ export default function ContractsTable({ filteredContracts, loading, searchKeywo
         render: (val: string, r: any) => <span style={{ color: "#123443", fontSize: 13 }}>{val || r.Createdby || "Hệ thống"}</span>,
       },
       {
+        key: "_spacer",
+        title: "",
+        width: undefined,
+        render: () => null,
+      },
+      {
         title: (
           <Tooltip title={t.table.action}>
             <IconSettings size={15} strokeWidth={1.8} style={{ color: "#718894" }} />
           </Tooltip>
         ),
         key: "action",
-        width: 80,
+        width: 55,
         align: "center" as const,
         fixed: "right" as const,
         onCell: () => ({ style: { padding: "4px 2px", whiteSpace: "nowrap" } }),
         render: (_: any, record: ContractItem) => (
-          <Space size={6} wrap={false}>
-            <ActionIconButton
-              action="add"
-              tooltip={t.contract.createAddendumTooltip}
-              size="small"
-              onClick={() => onCreateAddendum(record)}
-            />
-            <Popconfirm
-              title={t.contract.deleteContract}
-              description={t.common.confirmDelete}
-              onConfirm={() => onDelete(record)}
-              okText={t.common.delete}
-              cancelText={t.common.cancel}
-              okButtonProps={{ danger: true }}
-            >
-              <ActionIconButton
-                action="delete"
-                tooltip={t.contract.deleteContractTooltip}
-                size="small"
-              />
-            </Popconfirm>
-          </Space>
+          <ActionIconButton
+            action="add"
+            tooltip={t.contract.createAddendumTooltip}
+            size="small"
+            onClick={() => onCreateAddendum(record)}
+          />
         ),
       },
     ],
-    [onEdit, onCreateAddendum, onDelete, t]
+    [onEdit, onCreateAddendum, t]
   );
   const { columns: mainColumns, handleResizeColumn } = usePersistedColumnWidths(initialMainColumns, storageKey);
+
+  const [openFilterKey, setOpenFilterKey] = useState<string | null>(null);
+  const [anchorRect, setAnchorRect] = useState<{ bottom: number; left: number; width: number } | null>(null);
+
+  const activeColumnMeta = useMemo(() => {
+    if (!openFilterKey) return null;
+    const col = initialMainColumns.find((c) => (c.key || c.dataIndex) === openFilterKey);
+    const label = typeof col?.title === "string" ? col.title : openFilterKey;
+    const suggestions = columnSuggestions[openFilterKey] || [];
+    return { label, suggestions };
+  }, [openFilterKey, initialMainColumns, columnSuggestions]);
+
+  useEffect(() => {
+    if (!openFilterKey) return;
+    const handleScroll = (e: Event) => {
+      const target = e.target as HTMLElement;
+      if (
+        target &&
+        typeof target.closest === "function" &&
+        target.closest(".ant-popover")
+      ) {
+        return;
+      }
+      setOpenFilterKey(null);
+      setAnchorRect(null);
+    };
+    window.addEventListener("scroll", handleScroll, true);
+    return () => window.removeEventListener("scroll", handleScroll, true);
+  }, [openFilterKey]);
+
   const mergedColumns = useMemo(() => mainColumns.map((column, index) => {
     const key = column.key || column.dataIndex;
+    if (key === "_spacer") {
+      return {
+        key: "_spacer",
+        title: "",
+        width: undefined,
+        render: () => null,
+      };
+    }
     const initialColumn = initialMainColumns[index];
     const searchable = key && contractColumnFields[key];
     const isFixedAction = key === "action";
@@ -216,32 +293,69 @@ export default function ContractsTable({ filteredContracts, loading, searchKeywo
     const colWidth = isFixedAction ? 80 : column.width;
     if (!searchable) return { ...column, width: colWidth, onHeaderCell };
     const activeValue = columnFilters[key] || "";
+    const rawTitle = typeof initialColumn?.title === "string" ? initialColumn.title : key;
+    const titleNode = (
+      <span
+        className="column-title-clickable"
+        onClick={(e) => {
+          e.stopPropagation();
+          const rect = e.currentTarget.getBoundingClientRect();
+          setAnchorRect({
+            bottom: rect.bottom,
+            left: rect.left,
+            width: rect.width,
+          });
+          setOpenFilterKey((prev) => (prev === key ? null : key));
+        }}
+        style={{
+          cursor: "pointer",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 6,
+          color: activeValue ? "#008f89" : "inherit",
+          fontWeight: activeValue ? 600 : "inherit",
+          userSelect: "none",
+        }}
+        title={`Bấm để tìm kiếm / lọc theo ${rawTitle}`}
+      >
+        <span>{rawTitle}</span>
+        {activeValue && (
+          <span
+            style={{
+              display: "inline-block",
+              width: 7,
+              height: 7,
+              borderRadius: "50%",
+              backgroundColor: "#008f89",
+              flexShrink: 0,
+            }}
+            title={`Đang lọc: "${activeValue}"`}
+          />
+        )}
+      </span>
+    );
+
     return {
       ...column,
       width: colWidth,
-      filterDropdown: ({ close }: { close: () => void }) => (
-        <ColumnFilterDropdown
-          colKey={key}
-          label={typeof initialColumn?.title === "string" ? initialColumn.title : key}
-          value={activeValue}
-          suggestions={columnSuggestions[key] || []}
-          close={close}
-          onApply={(value) => setColumnFilters((previous) => { if (!value || !value.trim()) { const next = { ...previous }; delete next[key]; return next; } return { ...previous, [key]: value.trim() }; })}
-          onClear={() => setColumnFilters((previous) => { const next = { ...previous }; delete next[key]; return next; })}
-        />
-      ),
-      filterIcon: () => <IconSearch size={14} strokeWidth={1.8} style={{ color: activeValue ? "#008f89" : undefined }} />,
-      filtered: !!activeValue,
+      title: titleNode,
       onHeaderCell,
     };
-  }), [mainColumns, initialMainColumns, columnFilters, columnSuggestions, setColumnFilters]);
+  }), [mainColumns, initialMainColumns, columnFilters, handleResizeColumn]);
+
+  const scrollX = useMemo(() => {
+    return mergedColumns.reduce((sum, col) => {
+      if (col.key === "_spacer") return sum;
+      return sum + (Number(col.width) || 130);
+    }, 0);
+  }, [mergedColumns]);
 
   return (
     <div
       style={{
         background: "#FFFFFF",
-        padding: "16px 24px",
-        minHeight: "calc(100vh - 110px)",
+        padding: 0,
+        minHeight: "calc(100vh - 100px)",
         boxSizing: "border-box",
       }}
     >
@@ -258,6 +372,12 @@ export default function ContractsTable({ filteredContracts, loading, searchKeywo
           line-height: 18px !important;
           border-color: #dce5e6 !important;
           padding: 10px 12px !important;
+        }
+        .contract-main-table .column-title-clickable {
+          transition: color 0.15s ease;
+        }
+        .contract-main-table .ant-table-thead > tr > th:hover .column-title-clickable {
+          color: #008f89 !important;
         }
         .contract-main-table .ant-table-tbody > tr > td {
           color: #123443 !important;
@@ -281,37 +401,16 @@ export default function ContractsTable({ filteredContracts, loading, searchKeywo
         }
       `}</style>
 
-      {/* TOOLBAR HEADER */}
+      {/* TOOLBAR HEADER - LIỀN MẠCH, KHÔNG TRÙNG LẶP TIÊU ĐỀ */}
       <div
         style={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          marginBottom: 16,
+          marginBottom: 14,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <Text strong style={{ fontSize: 18, color: "#008f89", fontWeight: 700, lineHeight: "28px" }}>
-            {t.pageTitles.contracts}
-          </Text>
-          <Tag
-            style={{
-              background: "#dce5e6",
-              color: "#008f89",
-              borderRadius: 12,
-              border: "none",
-              fontSize: 12,
-              fontWeight: 500,
-              lineHeight: "16px",
-              padding: "2px 8px",
-              margin: 0,
-            }}
-          >
-            {isFiltering ? `${filteredContracts.length} / ${pagination.total} ${t.contract.contractCount}` : `${pagination.total} ${t.contract.contractCount}`}
-          </Tag>
-        </div>
-
-        <Space size={10}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <Input
             placeholder={t.contract.searchPlaceholder}
             prefix={<IconSearch size={16} strokeWidth={1.8} style={{ color: "#94A3B8" }} />}
@@ -319,31 +418,37 @@ export default function ContractsTable({ filteredContracts, loading, searchKeywo
             onChange={(event) => setSearchKeyword(event.target.value)}
             allowClear
             style={{
-              width: 240,
+              width: 280,
               height: 36,
               borderRadius: 8,
               borderColor: "#dce5e6",
-              fontSize: 14,
+              fontSize: 13.5,
               color: "#123443",
             }}
           />
+          <span style={{ fontSize: 13, color: "#64748b" }}>
+            {t.common.total || "Tổng"}: <strong style={{ color: "#008f89" }}>{isFiltering ? filteredContracts.length : pagination.total}</strong> {t.table.records || "hợp đồng"}
+          </span>
           {isFiltering && (
             <Button
-              icon={<IconCircleX size={16} strokeWidth={1.8} style={{ color: "#EF4444" }} />}
+              icon={<IconCircleX size={15} strokeWidth={1.8} style={{ color: "#EF4444" }} />}
               onClick={() => { setSearchKeyword(""); setColumnFilters({}); }}
               style={{
-                height: 36,
-                borderRadius: 8,
+                height: 32,
+                borderRadius: 6,
                 borderColor: "#FED7AA",
                 background: "#FFF7ED",
                 color: "#F97316",
-                fontSize: 14,
+                fontSize: 12.5,
                 fontWeight: 500,
               }}
             >
               {t.common.clearFilter}
             </Button>
           )}
+        </div>
+
+        <Space size={10}>
           <Button
             icon={<IconRefresh size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />}
             onClick={() => onRefresh(pagination.current, pagination.pageSize)}
@@ -353,7 +458,7 @@ export default function ContractsTable({ filteredContracts, loading, searchKeywo
               borderColor: "#dce5e6",
               background: "#FFFFFF",
               color: "#334155",
-              fontSize: 14,
+              fontSize: 13.5,
               fontWeight: 500,
             }}
           >
@@ -367,9 +472,10 @@ export default function ContractsTable({ filteredContracts, loading, searchKeywo
               borderColor: "#008f89",
               height: 36,
               borderRadius: 8,
-              fontSize: 14,
+              fontSize: 13.5,
               fontWeight: 500,
               color: "#FFFFFF",
+              boxShadow: "0 2px 4px rgba(0, 143, 137, 0.2)",
             }}
             onClick={onCreate}
           >
@@ -386,7 +492,7 @@ export default function ContractsTable({ filteredContracts, loading, searchKeywo
         columns={mergedColumns}
         rowKey={(record, index) => record.ContractId ?? record.ContractID ?? record.Id ?? record.ID ?? record.ContractCode ?? record.Code ?? `contract_${index}`}
         loading={loading}
-        scroll={{ x: 1400 }}
+        scroll={{ x: scrollX, y: "calc(100vh - 215px)" }}
         onRow={(record) => ({
           onDoubleClick: () => onEdit(record),
         })}
@@ -397,6 +503,9 @@ export default function ContractsTable({ filteredContracts, loading, searchKeywo
             <Table.Summary.Row style={{ background: "#eef8f6" }}>
               {mergedColumns.map((col: any, index: number) => {
                 const key = String(col.key || col.dataIndex || index);
+                if (key === "_spacer") {
+                  return <Table.Summary.Cell key="_spacer" index={index} />;
+                }
                 const isAmount = key === "ContractedAmount";
                 const isFirst = index === 0;
                 return (
@@ -431,6 +540,69 @@ export default function ContractsTable({ filteredContracts, loading, searchKeywo
           showTotal: (total, range) => `${range[0]}–${range[1]} / ${total} ${t.table.records}`,
         }}
       />
+
+      {/* SINGLE POPOVER DUY NHẤT NGOÀI TABLE */}
+      <Popover
+        open={Boolean(openFilterKey && anchorRect)}
+        onOpenChange={(visible) => {
+          if (!visible) {
+            setOpenFilterKey(null);
+            setAnchorRect(null);
+          }
+        }}
+        trigger={[]}
+        placement="bottomLeft"
+        overlayStyle={{ zIndex: 1050 }}
+        content={
+          openFilterKey && activeColumnMeta ? (
+            <ColumnFilterDropdown
+              colKey={openFilterKey}
+              label={activeColumnMeta.label}
+              value={columnFilters[openFilterKey] || ""}
+              suggestions={activeColumnMeta.suggestions}
+              close={() => {
+                setOpenFilterKey(null);
+                setAnchorRect(null);
+              }}
+              onApply={(val) => {
+                const trimmed = val ? val.trim() : "";
+                setColumnFilters((previous) => {
+                  if (!trimmed) {
+                    const next = { ...previous };
+                    delete next[openFilterKey];
+                    return next;
+                  }
+                  return { ...previous, [openFilterKey]: trimmed };
+                });
+                setOpenFilterKey(null);
+                setAnchorRect(null);
+              }}
+              onClear={() => {
+                setColumnFilters((previous) => {
+                  const next = { ...previous };
+                  delete next[openFilterKey];
+                  return next;
+                });
+                setOpenFilterKey(null);
+                setAnchorRect(null);
+              }}
+            />
+          ) : null
+        }
+      >
+        {anchorRect ? (
+          <div
+            style={{
+              position: "fixed",
+              top: anchorRect.bottom,
+              left: anchorRect.left,
+              width: anchorRect.width,
+              height: 1,
+              pointerEvents: "none",
+            }}
+          />
+        ) : null}
+      </Popover>
     </div>
   );
 }

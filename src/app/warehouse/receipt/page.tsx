@@ -6,23 +6,16 @@ import {
   Button,
   Input,
   Select,
-  Tag,
   Space,
-  Typography,
-  Card,
   Popconfirm,
   Tabs,
   message,
-  Tooltip,
 } from "antd";
-import type { ColumnsType, ColumnType } from "antd/es/table";
+import type { ColumnType } from "antd/es/table";
 import {
-  IconPackage,
-  IconPlus,
   IconSearch,
   IconRefresh,
   IconList,
-  IconPencil,
   IconScale,
 } from "@tabler/icons-react";
 import ActionIconButton from "@/components/common/ActionIconButton";
@@ -36,8 +29,7 @@ import InventoryWorkflowDrawer from "./_components/InventoryWorkflowDrawer";
 import ResizableTitle from "@/components/table/ResizableTitle";
 import { usePersistedTableColumns } from "@/components/table/usePersistedTableColumns";
 import { useTranslation } from "@/locales/LanguageContext";
-
-const { Title, Text } = Typography;
+import { ErpPageContainer, ErpDetailContainer } from "@/components/layout/ErpPageContainer";
 
 export default function StockInPage() {
   const { t } = useTranslation();
@@ -262,99 +254,6 @@ export default function StockInPage() {
   // ---------------------------------------------------------------------------
   // Tab Navigation Actions
   // ---------------------------------------------------------------------------
-  const handleOpenCreate = () => {
-    setEditingReceipt(null);
-    setItems([]);
-    setIsEditTabOpen(true);
-    setActiveTabKey("edit");
-  };
-
-  const handleOpenCreateFromPo = (selectedPoItems: PendingPoItem[]) => {
-    if (!selectedPoItems || selectedPoItems.length === 0) return;
-    const first = selectedPoItems[0];
-
-    const mappedItems: StockItemDetail[] = selectedPoItems.map((item, idx) => {
-      const qnty = Number(item.Suggested_Qnty !== undefined ? item.Suggested_Qnty : item.Remaining_Qnty ?? 0);
-      const unitPrice = Number(item.UnitPrice ?? 0);
-      const taxRate = Number(item.TaxRate ?? 0.1);
-      const amount = qnty * unitPrice;
-      const taxAmount = amount * taxRate;
-
-      return {
-        ...item,
-        id: `item_po_${item.SourceSubmissionId || item.MaterialId || idx}_${Date.now()}`,
-        itemCode: item.ItemCode || "",
-        itemName: item.ItemName || "",
-        unit: item.UomCode || "",
-        actualQty: qnty,
-        unitPrice: unitPrice,
-        totalPrice: amount,
-        orderQty: Number(item.PO_Qnty || qnty),
-        note: item.Remarks || "",
-
-        // Raw fields from API
-        ContractId: item.ContractId,
-        SystemCode: item.ItemCode || "",
-        Description: item.ItemName || "",
-        Unit: item.UomCode || "",
-        UnitPrice: unitPrice,
-        Qnty: qnty,
-        Amount: amount,
-        TaxRate: taxRate,
-        TaxAmount: taxAmount,
-        MaterialId: item.MaterialId,
-        SourceSubmissionId: item.SourceSubmissionId,
-        StatusCode: "Not-Started",
-        Orgcode: item.Orgcode || item.OrgCode || item.WBS || item.Wbs || item.WbsCode || "",
-        OrgName: item.OrgName || item.Orgname || item.BudgetDescription || "",
-        Orgname: item.Orgname || item.OrgName || item.BudgetDescription || "",
-        WBS: item.Orgcode || item.OrgCode || item.WBS || item.Wbs || item.WbsCode || "",
-      };
-    });
-
-    const totalQty = mappedItems.reduce((sum, i) => sum + (i.actualQty || 0), 0);
-    const totalAmount = mappedItems.reduce((sum, i) => sum + (i.totalPrice || 0), 0);
-    const autoCode = `PNK-${dayjs().format("YYYY-MM")}/${String(Math.floor(Math.random() * 900) + 100)}`;
-
-    const newReceipt: StockInReceipt = {
-      id: `rec_new_${Date.now()}`,
-      receiptCode: autoCode,
-      DocCode: autoCode,
-      receiptDate: dayjs().format("YYYY-MM-DD"),
-      DocDate: dayjs().format("YYYY-MM-DD"),
-      receiptType: "PO",
-      SubType: "Purchase",
-      poCode: first.ContractCode || "",
-      contractCode: first.ContractCode || "",
-      ContractCode: first.ContractCode || "",
-      ContractId: first.ContractId,
-      ReferenceId: first.ContractId,
-      ReferenceNo: first.ContractCode || "",
-      SubconOf: first.SubconOf,
-      subconOf: first.SubconOf,
-      vendorName: first.ClientName || "",
-      VenName: first.ClientName || "",
-      warehouseId: first.WarehouseId || "",
-      WarehouseId: first.WarehouseId || "",
-      warehouseName: first.WarehouseName || "",
-      WarehouseName: first.WarehouseName || "",
-      deliverer: "",
-      receiver: "r@gmail.com",
-      description: first.ContractCode
-        ? `Nhập kho theo đơn hàng ${first.ContractCode}`
-        : "Nhập kho theo đơn hàng",
-      status: "Chưa nhập kho",
-      totalQty,
-      totalAmount,
-      items: mappedItems,
-    };
-
-    setEditingReceipt(newReceipt);
-    setItems(mappedItems);
-    setIsEditTabOpen(true);
-    setActiveTabKey("edit");
-  };
-
   const handleReceiptCreated = async (transactionData: any, sourcePoItem?: any) => {
     const transId = transactionData?.TransactionId;
     const docCode = transactionData?.DocCode;
@@ -412,7 +311,6 @@ export default function StockInPage() {
   const handleOpenEdit = (record: StockInReceipt) => {
     setEditingReceipt(record);
     setIsEditTabOpen(true);
-    setActiveTabKey("edit");
 
     const tId =
       record.TransactionId ??
@@ -683,6 +581,13 @@ export default function StockInPage() {
         render: (val, r) => val || r.description || "---",
       },
       {
+        key: "_spacer",
+        title: "",
+        width: undefined,
+        cannotHide: true,
+        render: () => null,
+      },
+      {
         title: t("common.actions"),
         key: "action",
         width: 90,
@@ -732,6 +637,44 @@ export default function StockInPage() {
     defaultScrollX: 1350,
   });
 
+  if (isEditTabOpen) {
+    return (
+      <ErpDetailContainer>
+        <StockInEditTab
+          open={isEditTabOpen}
+          onClose={handleCloseEditTab}
+          editingReceipt={editingReceipt}
+          onSave={handleSaveReceipt}
+          onFetchWorkflow={(item) => setSelectedWorkflowItem(item)}
+          items={items}
+          setItems={setItems}
+          loadingItems={loadingItems}
+          onRefreshItems={() => {
+            const tId =
+              editingReceipt?.TransactionId ??
+              editingReceipt?.Id ??
+              (!isNaN(Number(editingReceipt?.id)) ? Number(editingReceipt?.id) : undefined);
+            if (tId) fetchReceiptItems(tId);
+          }}
+        />
+        <InventoryWorkflowDrawer
+          open={Boolean(selectedWorkflowItem)}
+          onClose={() => setSelectedWorkflowItem(null)}
+          itemDetail={selectedWorkflowItem}
+          onWorkflowUpdated={() => {
+            const tId =
+              editingReceipt?.TransactionId ??
+              editingReceipt?.Id ??
+              (!isNaN(Number(editingReceipt?.id)) ? Number(editingReceipt?.id) : undefined);
+            if (tId) {
+              fetchReceiptItems(tId);
+            }
+          }}
+        />
+      </ErpDetailContainer>
+    );
+  }
+
   // ---------------------------------------------------------------------------
   // Tab configuration
   // ---------------------------------------------------------------------------
@@ -744,102 +687,20 @@ export default function StockInPage() {
           <span>{t("receipt.tabList")}</span>
         </Space>
       ),
-      closable: false,
       children: (
-        <div style={{ padding: 24 }}>
-          {/* Scoped CSS for stockin main table and tabs */}
-          <style jsx global>{`
-            .stockin-main-table .ant-table-thead > tr > th {
-              background: #f7fbfa !important;
-              color: #123443 !important;
-              font-size: 12px !important;
-              font-weight: 600 !important;
-              line-height: 18px !important;
-              border-color: #dce5e6 !important;
-              padding: 8px 10px !important;
-            }
-            .stockin-main-table .ant-table-tbody > tr > td {
-              color: #123443 !important;
-              font-size: 12px !important;
-              line-height: 18px !important;
-              border-color: #dce5e6 !important;
-              padding: 8px 10px !important;
-              height: 40px !important;
-            }
-            .stockin-main-table .ant-table-tbody > tr:hover > td {
-              background-color: #eef8f6 !important;
-            }
-            .stockin-main-table .ant-table-container {
-              border: 1px solid #dce5e6 !important;
-              border-radius: 8px !important;
-              overflow: hidden;
-            }
-            .stockin-main-table .ant-pagination .ant-pagination-item-active {
-              border-color: #008f89 !important;
-              background-color: #008f89 !important;
-            }
-            .stockin-main-table .ant-pagination .ant-pagination-item-active a {
-              color: #FFFFFF !important;
-            }
-            .stockin-page-tabs .ant-tabs-nav {
-              margin-bottom: 0 !important;
-              background: #f7fbfa !important;
-              border-bottom: 1px solid #dce5e6 !important;
-              padding: 6px 16px 0 16px !important;
-            }
-            .stockin-page-tabs .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
-              color: #008f89 !important;
-              font-weight: 600 !important;
-            }
-            .stockin-page-tabs .ant-tabs-ink-bar {
-              background: #008f89 !important;
-            }
-          `}</style>
-
+        <div>
           {/* Header bar */}
           <div
             style={{
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              marginBottom: 16,
+              marginBottom: 14,
               flexWrap: "wrap",
               gap: 12,
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <Text
-                strong
-                style={{
-                  fontSize: 14,
-                  color: "#008f89",
-                  fontWeight: 700,
-                  lineHeight: "22px",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                }}
-              >
-                <IconPackage size={18} strokeWidth={1.8} style={{ color: "#008f89" }} /> {t("receipt.listTitle")}
-              </Text>
-              <Tag
-                style={{
-                  background: "#dce5e6",
-                  color: "#008f89",
-                  borderRadius: 12,
-                  border: "none",
-                  fontSize: 12,
-                  fontWeight: 500,
-                  lineHeight: "16px",
-                  padding: "2px 8px",
-                  margin: 0,
-                }}
-              >
-                {pagination.total || filteredReceipts.length} {t("table.receiptsCount")}
-              </Tag>
-            </div>
-
-            <Space size={8} wrap>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", flex: 1 }}>
               <Select
                 value={selectedWarehouseFilter}
                 onChange={setSelectedWarehouseFilter}
@@ -865,20 +726,20 @@ export default function StockInPage() {
                 value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
                 onPressEnter={() => fetchReceipts(1, pagination.pageSize, searchKeyword.trim())}
-                style={{ width: 230, height: 36, borderRadius: 8 }}
+                style={{ width: 230, height: 36, borderRadius: 8, fontSize: 13.5 }}
                 prefix={<IconSearch size={16} strokeWidth={1.8} style={{ color: "#94A3B8" }} />}
               />
 
               <Button
                 icon={<IconSearch size={16} strokeWidth={1.8} />}
                 onClick={() => fetchReceipts(1, pagination.pageSize, searchKeyword.trim())}
-                style={{ height: 36, borderRadius: 8, borderColor: "#dce5e6" }}
+                style={{ height: 36, borderRadius: 8, borderColor: "#dce5e6", fontSize: 13.5 }}
               >
                 {t("common.search")}
               </Button>
 
               <Button
-                icon={<IconRefresh size={16} strokeWidth={1.8} />}
+                icon={<IconRefresh size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />}
                 loading={loading}
                 onClick={() => {
                   setSearchKeyword("");
@@ -886,42 +747,29 @@ export default function StockInPage() {
                   setSelectedStatusFilter("ALL");
                   fetchReceipts(1, pagination.pageSize, "");
                 }}
-                style={{ height: 36, borderRadius: 8, borderColor: "#dce5e6" }}
+                style={{ height: 36, borderRadius: 8, borderColor: "#dce5e6", fontSize: 13.5 }}
               >
                 {t("common.refresh")}
               </Button>
 
-              <Button
-                type="primary"
-                icon={<IconPlus size={16} strokeWidth={2} />}
-                style={{
-                  background: "#008f89",
-                  borderColor: "#008f89",
-                  height: 36,
-                  borderRadius: 8,
-                  fontWeight: 500,
-                  boxShadow: "0 2px 4px rgba(0, 143, 137, 0.2)",
-                }}
-                onClick={handleOpenCreate}
-              >
-                {t("common.createReceipt")}
-              </Button>
-            </Space>
+              <span style={{ fontSize: 13, color: "#64748b", whiteSpace: "nowrap" }}>
+                {t("common.total") || "Tổng"}: <strong style={{ color: "#008f89" }}>{pagination.total || filteredReceipts.length}</strong> {t("receipt.receiptCount") || "phiếu"}
+              </span>
+            </div>
           </div>
 
           {/* Main Table */}
-          <Card
-            bodyStyle={{ padding: 0 }}
-            bordered={false}
+          <div
             style={{
-              boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-              borderRadius: 8,
+              background: "#FFFFFF",
               border: "1px solid #dce5e6",
+              borderRadius: 8,
               overflow: "hidden",
             }}
           >
             <Table
               className="stockin-main-table"
+              tableLayout="fixed"
               components={{ header: { cell: ResizableTitle } }}
               rowKey="id"
               size="middle"
@@ -937,11 +785,14 @@ export default function StockInPage() {
                 onChange: (page, pageSize) => {
                   fetchReceipts(page, pageSize, searchKeyword.trim());
                 },
-                showTotal: (total) => `${t.common.total} ${total} ${t.receipt.receiptCount}`,
+                showTotal: (total, range) => `${range[0]}–${range[1]} / ${total} ${t("receipt.receiptCount") || "phiếu"}`,
               }}
-              scroll={{ x: scrollX }}
+              scroll={{ x: scrollX, y: "calc(100vh - 250px)" }}
+              onRow={(record) => ({
+                onDoubleClick: () => handleOpenEdit(record),
+              })}
             />
-          </Card>
+          </div>
         </div>
       ),
     },
@@ -950,10 +801,9 @@ export default function StockInPage() {
       label: (
         <Space size={6}>
           <IconScale size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />
-          <span>{t.receipt.reconcilePO}</span>
+          <span>{t("receipt.reconcilePO")}</span>
         </Space>
       ),
-      closable: false,
       children:
         activeTabKey === "reconcile" || hasLoadedReconcileTab ? (
           <PendingPoReconcileTab
@@ -962,53 +812,68 @@ export default function StockInPage() {
           />
         ) : null,
     },
-    ...(isEditTabOpen
-      ? [
-          {
-            key: "edit",
-            label: (
-              <Space size={6}>
-                <IconPencil size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />
-                <span>
-                  {editingReceipt
-                    ? `${t.receipt.updateReceipt}: ${editingReceipt.DocCode || editingReceipt.receiptCode || ""}`
-                    : t.receipt.saveReceipt}
-                </span>
-              </Space>
-            ),
-            closable: true,
-            children: (
-              <div style={{ background: "#fff", minHeight: "calc(100vh - 110px)" }}>
-                <StockInEditTab
-                  open={isEditTabOpen}
-                  onClose={handleCloseEditTab}
-                  editingReceipt={editingReceipt}
-                  onSave={handleSaveReceipt}
-                  onFetchWorkflow={(item) => setSelectedWorkflowItem(item)}
-                  items={items}
-                  setItems={setItems}
-                  loadingItems={loadingItems}
-                  onRefreshItems={() => {
-                    const tId =
-                      editingReceipt?.TransactionId ??
-                      editingReceipt?.Id ??
-                      (!isNaN(Number(editingReceipt?.id)) ? Number(editingReceipt?.id) : undefined);
-                    if (tId) fetchReceiptItems(tId);
-                  }}
-                />
-              </div>
-            ),
-          },
-        ]
-      : []),
   ];
 
   return (
-    <div style={{ padding: 0, width: "100%", minHeight: "calc(100vh - 100px)", background: "#FFFFFF", borderRadius: 16, border: "1px solid #dce5e6", overflow: "hidden", boxShadow: "0 1px 3px rgba(18, 52, 67, 0.04)" }}>
+    <ErpPageContainer>
+      {/* Scoped CSS for stockin main table and tabs */}
+      <style jsx global>{`
+        .stockin-flat-tabs .ant-tabs-nav {
+          margin-bottom: 12px !important;
+        }
+        .stockin-flat-tabs .ant-tabs-nav::before {
+          border-bottom: 1px solid #dce5e6 !important;
+        }
+        .stockin-flat-tabs .ant-tabs-tab {
+          padding: 6px 14px 10px 14px !important;
+          font-size: 13.5px !important;
+          font-weight: 500 !important;
+          color: #64748b !important;
+        }
+        .stockin-flat-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
+          color: #008f89 !important;
+          font-weight: 600 !important;
+        }
+        .stockin-flat-tabs .ant-tabs-ink-bar {
+          background-color: #008f89 !important;
+          height: 2px !important;
+        }
+        .stockin-main-table .ant-table-thead > tr > th {
+          background: #f7fbfa !important;
+          color: #123443 !important;
+          font-size: 12px !important;
+          font-weight: 600 !important;
+          line-height: 18px !important;
+          border-color: #dce5e6 !important;
+          padding: 8px 10px !important;
+        }
+        .stockin-main-table .ant-table-tbody > tr > td {
+          color: #123443 !important;
+          font-size: 12px !important;
+          line-height: 18px !important;
+          border-color: #dce5e6 !important;
+          padding: 8px 10px !important;
+          height: 40px !important;
+        }
+        .stockin-main-table .ant-table-tbody > tr:hover > td {
+          background-color: #eef8f6 !important;
+        }
+        .stockin-main-table .ant-table-container {
+          border: 1px solid #dce5e6 !important;
+          border-radius: 8px !important;
+          overflow: hidden;
+        }
+        .stockin-main-table .ant-pagination .ant-pagination-item-active {
+          border-color: #008f89 !important;
+          background-color: #008f89 !important;
+        }
+        .stockin-main-table .ant-pagination .ant-pagination-item-active a {
+          color: #FFFFFF !important;
+        }
+      `}</style>
+
       <Tabs
-        className="stockin-page-tabs"
-        type="editable-card"
-        hideAdd
+        className="stockin-flat-tabs"
         activeKey={activeTabKey}
         onChange={(key) => {
           setActiveTabKey(key);
@@ -1016,18 +881,7 @@ export default function StockInPage() {
             setHasLoadedReconcileTab(true);
           }
         }}
-        onEdit={(targetKey, action) => {
-          if (action === "remove" && targetKey === "edit") {
-            handleCloseEditTab();
-          }
-        }}
         items={tabItems}
-        tabBarStyle={{
-          margin: 0,
-          background: "#f7fbfa",
-          padding: "6px 16px 0 16px",
-          borderBottom: "1px solid #dce5e6",
-        }}
       />
 
       {/* Drawer xem quy trình phê duyệt & duyệt từng phân công */}
@@ -1045,6 +899,6 @@ export default function StockInPage() {
           }
         }}
       />
-    </div>
+    </ErpPageContainer>
   );
 }

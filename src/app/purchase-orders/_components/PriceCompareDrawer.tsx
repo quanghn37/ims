@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useMemo, useEffect } from "react";
 import {
@@ -55,7 +55,6 @@ export default function PriceCompareDrawer({
   onAddSelectedToOrder,
   existingItemIds,
   budgetList = [],
-  loadingBudgetList = false,
 }: PriceCompareDrawerProps) {
   const { t, language } = useTranslation();
   const budgetOptions = useMemo(() => {
@@ -67,7 +66,7 @@ export default function PriceCompareDrawer({
         value: code,
         label: (
           <div title={fullLabel} style={{ whiteSpace: "normal", wordBreak: "break-word", lineHeight: "1.3", padding: "2px 0" }}>
-            <span style={{ fontWeight: 600, color: "#722ed1" }}>{code}</span>
+            <span style={{ fontWeight: 600, color: "#008f89" }}>{code}</span>
             {desc && <span style={{ color: "#595959", marginLeft: 6 }}>- {desc}</span>}
           </div>
         ),
@@ -291,8 +290,8 @@ export default function PriceCompareDrawer({
     <Modal
       title={
         <Space>
-          <AuditOutlined style={{ color: "#722ed1" }} />
-          <Text strong style={{ fontSize: 16, color: "#722ed1" }}>
+          <AuditOutlined style={{ color: "#008f89" }} />
+          <Text strong style={{ fontSize: 16, color: "#008f89" }}>
             {language === "en"
               ? `Reconcile from Contract ${selectedOrderId ? `- Purchase Order #${selectedOrderId}` : ""}`
               : `Đối chiếu từ hợp đồng ${selectedOrderId ? `- Đơn hàng PO #${selectedOrderId}` : ""}`}
@@ -323,7 +322,7 @@ export default function PriceCompareDrawer({
             <Button
               type="primary"
               icon={<PlusOutlined />}
-              style={{ background: "#722ed1", borderColor: "#722ed1" }}
+              style={{ background: "#008f89", borderColor: "#008f89" }}
               loading={submittingPriceCompare}
               onClick={onAddSelectedToOrder}
             >
@@ -359,7 +358,7 @@ export default function PriceCompareDrawer({
         {searchText.trim() && (
           <Text type="secondary" style={{ fontSize: 13 }}>
             {language === "en" ? "Found " : "Tìm thấy "}
-            <Text strong style={{ color: "#722ed1" }}>{filteredItems.length}</Text> / {priceCompareItems.length} {language === "en" ? "materials" : "vật tư"}
+            <Text strong style={{ color: "#008f89" }}>{filteredItems.length}</Text> / {priceCompareItems.length} {language === "en" ? "materials" : "vật tư"}
           </Text>
         )}
       </div>

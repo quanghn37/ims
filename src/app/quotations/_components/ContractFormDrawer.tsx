@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useEffect, useState } from "react";
 import {
@@ -7,7 +7,6 @@ import {
   Select,
   DatePicker,
   Input,
-  Divider,
   Popconfirm,
   Space,
   Typography,
@@ -17,11 +16,11 @@ import {
 import {
   IconTrash,
   IconCircleX,
-  IconSearch,
   IconDeviceFloppy,
   IconPaperclip,
   IconX,
 } from "@tabler/icons-react";
+import { CaretDownOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { AttachmentFile, parseDateSafe } from "./types";
 import { SubmissionItem } from "@/types";
@@ -89,6 +88,13 @@ export default function ContractFormDrawer({
   onDeleteContract,
 }: ContractFormDrawerProps) {
   const isEditing = Boolean(editingContract);
+  const isDraft =
+    editingContract?.StatusCode === 0 ||
+    editingContract?.StatusCode === "0" ||
+    editingContract?.Status === 0 ||
+    editingContract?.Status === "0" ||
+    editingContract?.StatusCode === "DRAFT" ||
+    editingContract?.StatusCode === "Draft";
   const isReadOnly = Boolean(
     editingContract && (editingContract.Editable === 0 || editingContract.Editable === "0")
   );
@@ -147,35 +153,6 @@ export default function ContractFormDrawer({
         boxSizing: "border-box",
       }}
     >
-      {/* STYLE OVERRIDES DÀNH CHO CHI TIẾT BẢNG GIÁ */}
-      <style>{`
-        .quotation-detail-table .ant-table {
-          font-family: inherit;
-        }
-        .quotation-detail-table .ant-table-thead > tr > th {
-          background-color: #f7fbfa !important;
-          color: #475569 !important;
-          font-size: 13px !important;
-          font-weight: 600 !important;
-          line-height: 18px !important;
-          border-color: #dce5e6 !important;
-          padding: 10px 12px !important;
-        }
-        .quotation-detail-table .ant-table-tbody > tr > td {
-          color: #123443 !important;
-          font-size: 13px !important;
-          line-height: 18px !important;
-          border-color: #dce5e6 !important;
-          padding: 10px 12px !important;
-          height: 46px !important;
-        }
-        .quotation-detail-table .ant-table-container {
-          border: 1px solid #dce5e6 !important;
-          border-radius: 8px !important;
-          overflow: hidden;
-        }
-      `}</style>
-
       {/* HEADER SECTION I: TIÊU ĐỀ + NÚT TỆP ĐÍNH KÈM / ĐÓNG / LƯU */}
       <div
         style={{
@@ -243,7 +220,8 @@ export default function ContractFormDrawer({
             ) : null}
           </Button>
 
-          {isEditing && !isReadOnly && submissions.length === 0 && onDeleteContract && editingContract?.ContractId && (
+          {/* Chỉ hiển thị button Xóa khi bảng giá có StatusCode === 0 (Bản nháp) và đã có ContractId */}
+          {isEditing && isDraft && onDeleteContract && editingContract?.ContractId && (
             <Popconfirm
               title={t.quotation.deleteQuotation}
               description={t.common.confirmDelete}
@@ -320,106 +298,78 @@ export default function ContractFormDrawer({
           <Form.Item name="MainContractId" style={{ display: "none" }}><Input /></Form.Item>
           <Form.Item name="MainContractCode" style={{ display: "none" }}><Input /></Form.Item>
 
-          <div
-            style={{
-              background: "#FFFFFF",
-              border: "1px solid #dce5e6",
-              borderRadius: 6,
-              padding: "5px 12px",
-              boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
-            }}
-          >
+          <div className="erp-general-info-card">
             {/* Hàng 1: 4 Cột */}
             <Row gutter={[0, 0]} align="middle">
               {/* Cột 1: HĐ chủ đầu tư */}
-              <Col span={6} style={{ paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
-                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={6} className="erp-info-cell">
+                <span className="erp-info-label">
                   {t.quotation.mainContract}
-                </div>
+                </span>
                 <div
                   onClick={() => !isEditing && !isReadOnly && onOpenMainContractLov()}
+                  className="erp-info-value mono"
                   style={{
                     cursor: (isEditing || isReadOnly) ? "default" : "pointer",
-                    fontWeight: 600,
-                    fontSize: 13,
-                    lineHeight: "18px",
-                    color: selectedMainContractDisplay ? "#123443" : "#94A3B8",
-                    display: "flex",
-                    alignItems: "center",
+                    color: selectedMainContractDisplay ? "#1e293b" : "#94A3B8",
                     justifyContent: "space-between",
-                    minHeight: 20,
                   }}
                   title={selectedMainContractDisplay}
                 >
                   <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {selectedMainContractDisplay || t.quotation.selectMainContract}
                   </span>
-                  {!isEditing && !isReadOnly && (
-                    <Space size={2}>
-                      {selectedMainContractDisplay && (
-                        <IconCircleX
-                          size={14}
-                          strokeWidth={1.8}
-                          style={{ color: "#94A3B8", cursor: "pointer" }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onClearMainContract();
-                          }}
-                        />
-                      )}
-                      <IconSearch size={14} strokeWidth={1.8} style={{ color: "#94A3B8", marginLeft: 4 }} />
-                    </Space>
+                  {!isEditing && !isReadOnly && selectedMainContractDisplay && (
+                    <IconCircleX
+                      size={14}
+                      strokeWidth={1.8}
+                      style={{ color: "#94A3B8", cursor: "pointer", marginLeft: 4 }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onClearMainContract();
+                      }}
+                    />
                   )}
                 </div>
               </Col>
 
               {/* Cột 2: Đối tượng (NCC) */}
-              <Col span={6} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
-                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={6} className="erp-info-cell">
+                <span className="erp-info-label">
                   {t.quotation.vendor} <span style={{ color: "#ff4d4f" }}>*</span>
-                </div>
+                </span>
                 <div
                   onClick={() => !isEditing && !isReadOnly && onOpenClientLov()}
+                  className="erp-info-value"
                   style={{
                     cursor: (isEditing || isReadOnly) ? "default" : "pointer",
-                    fontWeight: 600,
-                    fontSize: 13,
-                    lineHeight: "18px",
-                    color: selectedClientDisplay ? "#123443" : "#94A3B8",
-                    display: "flex",
-                    alignItems: "center",
+                    color: selectedClientDisplay ? "#1e293b" : "#94A3B8",
                     justifyContent: "space-between",
-                    minHeight: 20,
                   }}
                   title={selectedClientDisplay}
                 >
                   <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {selectedClientDisplay || t.quotation.selectVendor}
                   </span>
-                  {!isEditing && !isReadOnly && (
-                    <Space size={2}>
-                      {selectedClientDisplay && (
-                        <IconCircleX
-                          size={14}
-                          strokeWidth={1.8}
-                          style={{ color: "#94A3B8", cursor: "pointer" }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onClearClient();
-                          }}
-                        />
-                      )}
-                      <IconSearch size={14} strokeWidth={1.8} style={{ color: "#94A3B8", marginLeft: 4 }} />
-                    </Space>
+                  {!isEditing && !isReadOnly && selectedClientDisplay && (
+                    <IconCircleX
+                      size={14}
+                      strokeWidth={1.8}
+                      style={{ color: "#94A3B8", cursor: "pointer", marginLeft: 4 }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onClearClient();
+                      }}
+                    />
                   )}
                 </div>
               </Col>
 
               {/* Cột 3: Số hiệu bảng giá */}
-              <Col span={5} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
-                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={5} className="erp-info-cell">
+                <span className="erp-info-label">
                   {t.quotation.code}
-                </div>
+                </span>
                 <Form.Item name="ContractCode" style={{ margin: 0 }}>
                   <Input
                     variant="borderless"
@@ -427,10 +377,10 @@ export default function ContractFormDrawer({
                     placeholder={isEditing ? "" : t.quotation.autoGenerated}
                     style={{
                       padding: 0,
-                      fontWeight: 600,
-                      fontSize: 13,
-                      lineHeight: "18px",
-                      color: "#123443",
+                      fontWeight: 400,
+                      fontSize: 12.5,
+                      lineHeight: "16px",
+                      color: "#1e293b",
                       fontFamily: "monospace",
                     }}
                   />
@@ -438,10 +388,10 @@ export default function ContractFormDrawer({
               </Col>
 
               {/* Cột 4: Tên bảng giá */}
-              <Col span={7} style={{ paddingLeft: 10 }}>
-                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={7} className="erp-info-cell">
+                <span className="erp-info-label">
                   {t.quotation.name} <span style={{ color: "#ff4d4f" }}>*</span>
-                </div>
+                </span>
                 <Form.Item
                   name="Description"
                   style={{ margin: 0 }}
@@ -451,75 +401,76 @@ export default function ContractFormDrawer({
                     variant="borderless"
                     disabled={isReadOnly}
                     placeholder={t.quotation.namePlaceholder}
-                    style={{ padding: 0, fontWeight: 500, fontSize: 13, lineHeight: "18px", color: "#123443" }}
+                    style={{ padding: 0, fontWeight: 400, fontSize: 12.5, lineHeight: "16px", color: "#1e293b" }}
                   />
                 </Form.Item>
               </Col>
             </Row>
 
-            <Divider style={{ margin: "3px 0", borderColor: "#dce5e6" }} />
+            <div className="erp-info-divider" />
 
             {/* Hàng 2: 5 Cột */}
             <Row gutter={[0, 0]} align="middle">
               {/* Cột 1: Ngày bảng giá */}
-              <Col span={5} style={{ paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
-                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={5} className="erp-info-cell">
+                <span className="erp-info-label">
                   {t.quotation.date}
-                </div>
+                </span>
                 <Form.Item name="ContractDate" style={{ margin: 0 }}>
                   <DatePicker
                     variant="borderless"
                     disabled={isReadOnly}
                     format="DD/MM/YYYY"
                     placeholder={t.quotation.selectDate}
-                    style={{ padding: 0, width: "100%", fontWeight: 500, fontSize: 13, color: "#123443" }}
+                    style={{ padding: 0, width: "100%", fontWeight: 400, fontSize: 12.5, color: "#1e293b" }}
                   />
                 </Form.Item>
               </Col>
 
               {/* Cột 2: Ngày hiệu lực */}
-              <Col span={5} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
-                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={5} className="erp-info-cell">
+                <span className="erp-info-label">
                   {t.quotation.effectiveDate}
-                </div>
+                </span>
                 <Form.Item name="FromDate" style={{ margin: 0 }}>
                   <DatePicker
                     variant="borderless"
                     disabled={isReadOnly}
                     format="DD/MM/YYYY"
                     placeholder={t.quotation.selectDate}
-                    style={{ padding: 0, width: "100%", fontWeight: 500, fontSize: 13, color: "#123443" }}
+                    style={{ padding: 0, width: "100%", fontWeight: 400, fontSize: 12.5, color: "#1e293b" }}
                   />
                 </Form.Item>
               </Col>
 
               {/* Cột 3: Ngày hết hiệu lực */}
-              <Col span={5} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
-                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={5} className="erp-info-cell">
+                <span className="erp-info-label">
                   {t.quotation.expiryDate}
-                </div>
+                </span>
                 <Form.Item name="ToDate" style={{ margin: 0 }}>
                   <DatePicker
                     variant="borderless"
                     disabled={isReadOnly}
                     format="DD/MM/YYYY"
                     placeholder={t.quotation.selectDate}
-                    style={{ padding: 0, width: "100%", fontWeight: 500, fontSize: 13, color: "#123443" }}
+                    style={{ padding: 0, width: "100%", fontWeight: 400, fontSize: 12.5, color: "#1e293b" }}
                   />
                 </Form.Item>
               </Col>
 
               {/* Cột 4: Điều khoản thanh toán */}
-              <Col span={6} style={{ paddingLeft: 10, paddingRight: 10, borderRight: "1px solid #dce5e6" }}>
-                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={6} className="erp-info-cell">
+                <span className="erp-info-label">
                   {t.quotation.paymentTerm}
-                </div>
+                </span>
                 <Form.Item name="PaymentTerm" style={{ margin: 0 }}>
                   <Select
                     variant="borderless"
                     disabled={isReadOnly}
+                    suffixIcon={<CaretDownOutlined style={{ fontSize: 10, color: "#94a3b8" }} />}
                     placeholder={t.quotation.selectPaymentTerm}
-                    style={{ padding: 0, width: "100%", fontWeight: 500, fontSize: 13, color: "#123443" }}
+                    style={{ padding: 0, width: "100%", fontWeight: 400, fontSize: 12.5, color: "#1e293b" }}
                     options={[
                       { value: "DK03", label: "DK03 - Thanh toán 100% sau 60 ngày" },
                       { value: "DK01", label: "DK01 - Thanh toán ngay khi nhận hàng" },
@@ -532,15 +483,16 @@ export default function ContractFormDrawer({
               </Col>
 
               {/* Cột 5: Loại tiền */}
-              <Col span={3} style={{ paddingLeft: 10 }}>
-                <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+              <Col span={3} className="erp-info-cell">
+                <span className="erp-info-label">
                   {t.quotation.currency}
-                </div>
+                </span>
                 <Form.Item name="Currency" style={{ margin: 0 }}>
                   <Select
                     variant="borderless"
                     disabled={isReadOnly}
-                    style={{ padding: 0, width: "100%", fontWeight: 500, fontSize: 13, color: "#123443" }}
+                    suffixIcon={<CaretDownOutlined style={{ fontSize: 10, color: "#94a3b8" }} />}
+                    style={{ padding: 0, width: "100%", fontWeight: 400, fontSize: 12.5, color: "#1e293b" }}
                     options={[
                       { value: "VND", label: "VND" },
                       { value: "USD", label: "USD" },

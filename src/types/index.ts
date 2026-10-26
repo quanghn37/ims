@@ -47,9 +47,14 @@ export interface ContractItem {
   WSId?: string;
   TotalAmount?: number;
   Status?: string;
+  StatusName?: string;
+  StatusCode?: number | string;
+  CurrentAssignee?: string;
+  CurrentRole?: string;
   WarehouseId?: number | string;
   WarehouseName?: string;
   Editable?: number | string | boolean;
+  TaskAssign?: string;
   [key: string]: any;
 }
 

@@ -4,7 +4,6 @@ import React from "react";
 import {
   Button,
   Upload,
-  Tooltip,
   Popconfirm,
   Space,
   Typography,
@@ -16,7 +15,6 @@ import {
   IconPaperclip,
   IconUpload,
   IconTrash,
-  IconDownload,
   IconFileTypePdf,
   IconFileTypeXls,
   IconFileTypeDoc,

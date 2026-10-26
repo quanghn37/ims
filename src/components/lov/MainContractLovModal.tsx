@@ -1,12 +1,10 @@
 ﻿"use client";
 
 import React, { useMemo } from "react";
-import { Button, Typography } from "antd";
+import { Button } from "antd";
 import { IconFileText } from "@tabler/icons-react";
 import BaseLovModal from "@/components/lov/BaseLovModal";
 import { useTranslation } from "@/locales/LanguageContext";
-
-const { Text } = Typography;
 
 export interface MainContractLovModalProps {
   open: boolean;

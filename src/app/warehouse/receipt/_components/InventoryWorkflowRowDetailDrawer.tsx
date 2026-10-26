@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useMemo } from "react";
 import {
@@ -17,6 +17,7 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
+import { renderStatusDotItem } from "@/config/statusConfig";
 import { useTranslation } from "@/locales/LanguageContext";
 
 interface InventoryWorkflowRowDetailDrawerProps {
@@ -98,7 +99,7 @@ export default function InventoryWorkflowRowDetailDrawer({
 
           return {
             value: raw,
-            label: finalLabel,
+            label: renderStatusDotItem(raw, finalLabel),
           };
         })
         .filter((it: any) => {
@@ -109,9 +110,18 @@ export default function InventoryWorkflowRowDetailDrawer({
     }
 
     return [
-      { value: language === "en" ? "Approved" : "Chấp thuận", label: language === "en" ? "Approved" : "Chấp thuận" },
-      { value: language === "en" ? "In-Progress" : "Đang làm", label: language === "en" ? "In-Progress" : "Đang làm" },
-      { value: language === "en" ? "Rejected" : "Từ chối", label: language === "en" ? "Rejected" : "Từ chối" },
+      {
+        value: language === "en" ? "Approved" : "Chấp thuận",
+        label: renderStatusDotItem("Approved", language === "en" ? "Approved" : "Chấp thuận"),
+      },
+      {
+        value: language === "en" ? "In-Progress" : "Đang làm",
+        label: renderStatusDotItem("In-Progress", language === "en" ? "In-Progress" : "Đang làm"),
+      },
+      {
+        value: language === "en" ? "Rejected" : "Từ chối",
+        label: renderStatusDotItem("Rejected", language === "en" ? "Rejected" : "Từ chối"),
+      },
     ];
   }, [processingStatusList, language]);
 

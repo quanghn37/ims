@@ -7,7 +7,6 @@ import {
   Select,
   DatePicker,
   Input,
-  InputNumber,
   Table,
   Space,
   Typography,
@@ -16,11 +15,8 @@ import {
   Tag,
   Popconfirm,
   message,
-  Modal,
   Divider,
   Tooltip,
-  Drawer,
-  Checkbox,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
@@ -28,7 +24,6 @@ import {
   IconDeviceFloppy,
   IconPlus,
   IconRefresh,
-  IconSearch,
   IconCircleX,
 } from "@tabler/icons-react";
 import ActionIconButton from "@/components/common/ActionIconButton";
@@ -37,10 +32,9 @@ import {
   MaterialRequisition,
   MaterialRequisitionItem,
   MOCK_WAREHOUSES,
-  MOCK_MATERIALS_CATALOG,
 } from "../../types";
 import { warehouseApi } from "../../api";
-import { extractApiList, extractTotalRows } from "@/lib/api-client";
+import { extractApiList } from "@/lib/api-client";
 import { useRequisitionLov } from "../_hooks/useRequisitionLov";
 import RequisitionLovModals from "./RequisitionLovModals";
 import RequisitionPendingDrawer from "./RequisitionPendingDrawer";
@@ -48,6 +42,9 @@ import RequisitionItemEditDrawer from "./RequisitionItemEditDrawer";
 import InventoryWorkflowDrawer from "../../receipt/_components/InventoryWorkflowDrawer";
 import { renderApprovalBadge } from "@/components/common/ApprovalBadge";
 import { useTranslation } from "@/locales/LanguageContext";
+import ResizableTitle from "@/components/table/ResizableTitle";
+import { usePersistedTableColumns } from "@/components/table/usePersistedTableColumns";
+import ErpDetailCard from "@/components/common/ErpDetailCard";
 
 const { Text } = Typography;
 
@@ -65,7 +62,6 @@ export default function RequisitionEditTab({
   onSave,
 }: RequisitionEditTabProps) {
   const { t, language } = useTranslation();
-  const isEn = language === "en";
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
 
@@ -601,66 +597,78 @@ export default function RequisitionEditTab({
       {
         title: t.table.stt,
         key: "stt",
-        width: 42,
+        width: 45,
         align: "center",
+        cannotHide: true,
         render: (_, __, index) => index + 1,
       },
       {
-        title: t.table.orgCode,
+        title: "OrgCode",
         dataIndex: "orgCode",
         key: "orgCode",
-        width: 140,
+        width: 100,
         render: (val: any, r: any) => {
-          const code = val || r.Orgcode || r.orgCode || "---";
-          const orgName = r.OrgName || r.orgName || "";
+          const code = val || r.Orgcode || r.orgCode || "";
+          if (!code) return <span style={{ color: "#94A3B8", fontSize: 12.5 }}>---</span>;
           return (
-            <div>
-              <div
-                style={{
-                  color: "#123443",
-                  fontSize: 12,
-                  lineHeight: "17px",
-                  wordBreak: "break-word",
-                }}
-                title={orgName}
-              >
-                {orgName || code}
-              </div>
-              {orgName && code && (
-                <div
-                  style={{
-                    fontSize: 11,
-                    color: "#008f89",
-                    fontFamily: "monospace",
-                    marginTop: 2,
-                  }}
-                >
-                  {code}
-                </div>
-              )}
-            </div>
+            <span
+              style={{
+                fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                color: "#1e293b",
+                fontSize: 12.5,
+              }}
+            >
+              {code}
+            </span>
           );
         },
       },
       {
-        title: t.table.itemName,
+        title: "OrgName",
+        dataIndex: "orgName",
+        key: "orgName",
+        width: 160,
+        render: (val: any, r: any) => {
+          const orgName = val || r.OrgName || r.orgName || "";
+          if (!orgName) return <span style={{ color: "#94A3B8", fontSize: 12.5 }}>---</span>;
+          return (
+            <span style={{ color: "#123443", fontSize: 12.5 }} title={orgName}>
+              {orgName}
+            </span>
+          );
+        },
+      },
+      {
+        title: t.table.itemCode || "Item Code",
+        dataIndex: "itemCode",
+        key: "itemCode",
+        width: 120,
+        render: (_: any, r: any) => {
+          const code = r.SystemCode || r.itemCode || r.ItemCode || "";
+          return (
+            <span
+              style={{
+                fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                color: code ? "#1e293b" : "#94A3B8",
+                fontSize: 12.5,
+              }}
+            >
+              {code || "---"}
+            </span>
+          );
+        },
+      },
+      {
+        title: t.table.itemName || "Item Name",
         dataIndex: "itemName",
         key: "itemName",
         width: 240,
         render: (name: string, r: any) => {
-          const code = r.SystemCode || r.itemCode || r.ItemCode || "";
           const desc = name || r.Description || r.ItemName || "---";
           return (
-            <div>
-              <div style={{ color: "#123443", fontSize: 12, lineHeight: "17px" }}>
-                {desc}
-              </div>
-              {code && (
-                <div style={{ fontSize: 11, color: "#718894", fontFamily: "monospace", lineHeight: "15px" }}>
-                  {code}
-                </div>
-              )}
-            </div>
+            <span style={{ color: "#123443", fontSize: 12.5 }} title={desc}>
+              {desc}
+            </span>
           );
         },
       },
@@ -748,7 +756,7 @@ export default function RequisitionEditTab({
                   display: "inline-block",
                 }}
               >
-                {renderApprovalBadge(statusText, record)}
+                {renderApprovalBadge(statusText, record, language)}
               </span>
             </Tooltip>
           );
@@ -759,6 +767,8 @@ export default function RequisitionEditTab({
         key: "action",
         width: 70,
         align: "center",
+        fixed: "right" as const,
+        cannotHide: true,
         render: (_: any, record: MaterialRequisitionItem) => (
           <Space size={6}>
             <ActionIconButton
@@ -786,6 +796,13 @@ export default function RequisitionEditTab({
     [approvedBudgetList, t]
   );
 
+  const { tableColumns, scrollX } = usePersistedTableColumns({
+    tableKey: "warehouse_requisition_detail_items_v2",
+    columns: columns as any,
+    actionColumnKey: "action",
+    defaultScrollX: 1150,
+  });
+
   const handleRefreshItems = () => {
     const transId = getEditingTransId();
     if (transId) {
@@ -806,34 +823,6 @@ export default function RequisitionEditTab({
 
   return (
     <div style={{ padding: "10px 18px", minHeight: "calc(100vh - 110px)", background: "#fff" }}>
-      {/* Scoped CSS cho bảng chi tiết */}
-      <style jsx global>{`
-        .requisition-detail-table .ant-table-thead > tr > th {
-          background: #f7fbfa !important;
-          color: #123443 !important;
-          font-size: 12px !important;
-          font-weight: 600 !important;
-          line-height: 18px !important;
-          border-color: #dce5e6 !important;
-          padding: 8px 10px !important;
-        }
-        .requisition-detail-table .ant-table-tbody > tr > td {
-          color: #123443 !important;
-          font-size: 12px !important;
-          line-height: 18px !important;
-          border-color: #dce5e6 !important;
-          padding: 6px 10px !important;
-        }
-        .requisition-detail-table .ant-table-tbody > tr:hover > td {
-          background-color: #eef8f6 !important;
-        }
-        .requisition-detail-table .ant-table-container {
-          border: 1px solid #dce5e6 !important;
-          border-radius: 8px !important;
-          overflow: hidden;
-        }
-      `}</style>
-
       <Form form={form} layout="vertical" onFinish={handleSubmit}>
         {/* Top Action Bar (Compact) */}
         <div
@@ -880,23 +869,14 @@ export default function RequisitionEditTab({
         </div>
 
         {/* Khung Thông Tin Chung (Compact - Chuẩn đồng bộ dự án ~80px) */}
-        <div
-          style={{
-            background: "#FFFFFF",
-            border: "1px solid #dce5e6",
-            borderRadius: 6,
-            padding: "5px 12px",
-            boxShadow: "0 1px 2px rgba(0, 0, 0, 0.03)",
-            marginBottom: 8,
-          }}
-        >
+        <div className="erp-general-info-card" style={{ marginBottom: 8 }}>
           {/* Hàng 1: 4 Cột */}
           <Row gutter={[0, 0]} align="middle">
             {/* Cột 1: Hợp đồng CĐT (Map API get-contract-list) */}
-            <Col span={7} style={{ paddingRight: 8, borderRight: "1px solid #dce5e6" }}>
-              <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+            <Col span={7} className="erp-info-cell">
+              <span className="erp-info-label">
                 {t.requisition.contractClient} <span style={{ color: "#ff4d4f" }}>*</span>
-              </div>
+              </span>
               <Form.Item
                 name="contractCode"
                 style={{ display: "none" }}
@@ -909,15 +889,10 @@ export default function RequisitionEditTab({
               </Form.Item>
               <div
                 onClick={lov.handleOpenMainContractLov}
+                className="erp-info-value"
                 style={{
                   cursor: "pointer",
-                  fontWeight: 600,
-                  fontSize: 12,
-                  lineHeight: "22px",
-                  height: 22,
-                  color: lov.selectedMainContractDisplay ? "#123443" : "#94A3B8",
-                  display: "flex",
-                  alignItems: "center",
+                  color: lov.selectedMainContractDisplay ? "#1e293b" : "#94A3B8",
                   justifyContent: "space-between",
                   userSelect: "none",
                 }}
@@ -926,28 +901,25 @@ export default function RequisitionEditTab({
                 <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {lov.selectedMainContractDisplay || t.requisition.selectContractClient}
                 </span>
-                <Space size={2} style={{ flexShrink: 0, marginLeft: 4 }}>
-                  {lov.selectedMainContractDisplay && (
-                    <IconCircleX
-                      size={14}
-                      strokeWidth={1.8}
-                      style={{ color: "#94A3B8", cursor: "pointer" }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        lov.handleClearMainContract();
-                      }}
-                    />
-                  )}
-                  <IconSearch size={14} strokeWidth={1.8} style={{ color: "#008f89" }} />
-                </Space>
+                {lov.selectedMainContractDisplay && (
+                  <IconCircleX
+                    size={14}
+                    strokeWidth={1.8}
+                    style={{ color: "#94A3B8", cursor: "pointer", flexShrink: 0, marginLeft: 4 }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      lov.handleClearMainContract();
+                    }}
+                  />
+                )}
               </div>
             </Col>
 
             {/* Cột 2: Loại xuất */}
-            <Col span={5} style={{ paddingLeft: 8, paddingRight: 8, borderRight: "1px solid #dce5e6" }}>
-              <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+            <Col span={5} className="erp-info-cell">
+              <span className="erp-info-label">
                 {t.requisition.issueType} <span style={{ color: "#ff4d4f" }}>*</span>
-              </div>
+              </span>
               <Form.Item
                 name="issueType"
                 style={{ margin: 0 }}
@@ -956,7 +928,6 @@ export default function RequisitionEditTab({
                 <Select
                   size="small"
                   variant="borderless"
-                  style={{ padding: 0, width: "100%", fontWeight: 600, fontSize: 12, color: "#123443", height: 22 }}
                   options={[
                     { value: "Project", label: t.requisition.issueTypeProject },
                     { value: "SUB_CONTRACTOR", label: t.requisition.issueTypeSubcon },
@@ -966,10 +937,10 @@ export default function RequisitionEditTab({
             </Col>
 
             {/* Cột 3: Tên đối tượng (Map API get-client-list) */}
-            <Col span={6} style={{ paddingLeft: 8, paddingRight: 8, borderRight: "1px solid #dce5e6" }}>
-              <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+            <Col span={6} className="erp-info-cell">
+              <span className="erp-info-label">
                 {t.requisition.targetName} <span style={{ color: "#ff4d4f" }}>*</span>
-              </div>
+              </span>
               <Form.Item
                 name="targetName"
                 style={{ display: "none" }}
@@ -982,15 +953,10 @@ export default function RequisitionEditTab({
               </Form.Item>
               <div
                 onClick={lov.handleOpenClientLov}
+                className="erp-info-value"
                 style={{
                   cursor: "pointer",
-                  fontWeight: 600,
-                  fontSize: 12,
-                  lineHeight: "22px",
-                  height: 22,
-                  color: lov.selectedClientDisplay ? "#123443" : "#94A3B8",
-                  display: "flex",
-                  alignItems: "center",
+                  color: lov.selectedClientDisplay ? "#1e293b" : "#94A3B8",
                   justifyContent: "space-between",
                   userSelect: "none",
                 }}
@@ -999,28 +965,25 @@ export default function RequisitionEditTab({
                 <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {lov.selectedClientDisplay || t.requisition.selectTarget}
                 </span>
-                <Space size={2} style={{ flexShrink: 0, marginLeft: 4 }}>
-                  {lov.selectedClientDisplay && (
-                    <IconCircleX
-                      size={14}
-                      strokeWidth={1.8}
-                      style={{ color: "#94A3B8", cursor: "pointer" }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        lov.handleClearClient();
-                      }}
-                    />
-                  )}
-                  <IconSearch size={14} strokeWidth={1.8} style={{ color: "#008f89" }} />
-                </Space>
+                {lov.selectedClientDisplay && (
+                  <IconCircleX
+                    size={14}
+                    strokeWidth={1.8}
+                    style={{ color: "#94A3B8", cursor: "pointer", flexShrink: 0, marginLeft: 4 }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      lov.handleClearClient();
+                    }}
+                  />
+                )}
               </div>
             </Col>
 
             {/* Cột 4: Kho xuất (Map API get-warehouse-list) */}
-            <Col span={6} style={{ paddingLeft: 8 }}>
-              <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+            <Col span={6} className="erp-info-cell">
+              <span className="erp-info-label">
                 {t.requisition.issueWarehouse} <span style={{ color: "#ff4d4f" }}>*</span>
-              </div>
+              </span>
               <Form.Item
                 name="warehouseId"
                 style={{ display: "none" }}
@@ -1033,15 +996,10 @@ export default function RequisitionEditTab({
               </Form.Item>
               <div
                 onClick={lov.handleOpenWarehouseLov}
+                className="erp-info-value"
                 style={{
                   cursor: "pointer",
-                  fontWeight: 600,
-                  fontSize: 12,
-                  lineHeight: "22px",
-                  height: 22,
-                  color: lov.selectedWarehouseDisplay ? "#123443" : "#94A3B8",
-                  display: "flex",
-                  alignItems: "center",
+                  color: lov.selectedWarehouseDisplay ? "#1e293b" : "#94A3B8",
                   justifyContent: "space-between",
                   userSelect: "none",
                 }}
@@ -1050,33 +1008,30 @@ export default function RequisitionEditTab({
                 <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {lov.selectedWarehouseDisplay || t.requisition.selectIssueWarehouse}
                 </span>
-                <Space size={2} style={{ flexShrink: 0, marginLeft: 4 }}>
-                  {lov.selectedWarehouseDisplay && (
-                    <IconCircleX
-                      size={14}
-                      strokeWidth={1.8}
-                      style={{ color: "#94A3B8", cursor: "pointer" }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        lov.handleClearWarehouse();
-                      }}
-                    />
-                  )}
-                  <IconSearch size={14} strokeWidth={1.8} style={{ color: "#008f89" }} />
-                </Space>
+                {lov.selectedWarehouseDisplay && (
+                  <IconCircleX
+                    size={14}
+                    strokeWidth={1.8}
+                    style={{ color: "#94A3B8", cursor: "pointer", flexShrink: 0, marginLeft: 4 }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      lov.handleClearWarehouse();
+                    }}
+                  />
+                )}
               </div>
             </Col>
           </Row>
 
-          <Divider style={{ margin: "3px 0", borderColor: "#dce5e6" }} />
+          <div className="erp-info-divider" />
 
           {/* Hàng 2: 4 Cột (Ngày yêu cầu, Số yêu cầu, Nội dung yêu cầu, Trạng thái phiếu) */}
           <Row gutter={[0, 0]} align="middle">
             {/* Cột 1: Ngày yêu cầu */}
-            <Col span={5} style={{ paddingRight: 8, borderRight: "1px solid #dce5e6" }}>
-              <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+            <Col span={5} className="erp-info-cell">
+              <span className="erp-info-label">
                 {t.requisition.requisitionDate} <span style={{ color: "#ff4d4f" }}>*</span>
-              </div>
+              </span>
               <Form.Item
                 name="requisitionDate"
                 style={{ margin: 0 }}
@@ -1086,16 +1041,15 @@ export default function RequisitionEditTab({
                   size="small"
                   variant="borderless"
                   format="DD/MM/YYYY"
-                  style={{ padding: 0, width: "100%", fontWeight: 500, fontSize: 12, color: "#123443", height: 22 }}
                 />
               </Form.Item>
             </Col>
 
             {/* Cột 2: Số yêu cầu (Tự sinh) */}
-            <Col span={5} style={{ paddingLeft: 8, paddingRight: 8, borderRight: "1px solid #dce5e6" }}>
-              <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+            <Col span={5} className="erp-info-cell">
+              <span className="erp-info-label">
                 {t.requisition.requisitionCodeAuto}
-              </div>
+              </span>
               <Form.Item name="requisitionCode" style={{ margin: 0 }}>
                 <Input
                   size="small"
@@ -1103,11 +1057,6 @@ export default function RequisitionEditTab({
                   readOnly
                   placeholder={t.requisition.autoGenOnSave}
                   style={{
-                    padding: 0,
-                    fontWeight: 600,
-                    fontSize: 12,
-                    color: "#123443",
-                    height: 22,
                     fontFamily: "monospace",
                   }}
                 />
@@ -1115,10 +1064,10 @@ export default function RequisitionEditTab({
             </Col>
 
             {/* Cột 3: Nội dung yêu cầu */}
-            <Col span={10} style={{ paddingLeft: 8, paddingRight: 8, borderRight: "1px solid #dce5e6" }}>
-              <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+            <Col span={10} className="erp-info-cell">
+              <span className="erp-info-label">
                 {t.requisition.contentDescription} <span style={{ color: "#ff4d4f" }}>*</span>
-              </div>
+              </span>
               <Form.Item
                 name="description"
                 style={{ margin: 0 }}
@@ -1128,178 +1077,134 @@ export default function RequisitionEditTab({
                   size="small"
                   variant="borderless"
                   placeholder={t.requisition.contentPlaceholder}
-                  style={{ padding: 0, fontWeight: 500, fontSize: 12, color: "#123443", height: 22 }}
                 />
               </Form.Item>
             </Col>
 
             {/* Cột 4: Trạng thái phiếu */}
-            <Col span={4} style={{ paddingLeft: 8 }}>
-              <div style={{ fontSize: 11, color: "#718894", marginBottom: 1, fontWeight: 500, lineHeight: "14px" }}>
+            <Col span={4} className="erp-info-cell">
+              <span className="erp-info-label">
                 {t.requisition.docStatus}
-              </div>
-              <div style={{ height: 22, display: "flex", alignItems: "center" }}>
-                <span
-                  style={{
-                    fontWeight: 700,
-                    fontSize: 12,
-                    color:
-                      editingRequisition?.status === "APPROVED"
-                        ? "#059669"
-                        : editingRequisition?.status === "REJECTED"
-                        ? "#DC2626"
-                        : editingRequisition?.status === "COMPLETED"
-                        ? "#2563EB"
-                        : "#D97706",
-                  }}
-                >
-                  {editingRequisition?.status === "APPROVED"
-                    ? t.status.approved
-                    : editingRequisition?.status === "REJECTED"
-                    ? t.status.rejected
-                    : editingRequisition?.status === "COMPLETED"
-                    ? t.status.completed
-                    : t.status.pending}
-                </span>
+              </span>
+              <div className="erp-info-value" style={{ fontWeight: 400 }}>
+                {editingRequisition?.status === "APPROVED"
+                  ? t.status.approved
+                  : editingRequisition?.status === "REJECTED"
+                  ? t.status.rejected
+                  : editingRequisition?.status === "COMPLETED"
+                  ? t.status.completed
+                  : t.status.pending}
               </div>
             </Col>
           </Row>
         </div>
 
-        {/* Section II: THÔNG TIN CHI TIẾT */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 10,
-            flexWrap: "wrap",
-            gap: 8,
-          }}
+        {/* VÙNG II: CHI TIẾT VẬT TƯ (BỌC TRONG ERP DETAIL CARD DÙNG CHUNG) */}
+        <ErpDetailCard
+          title={t.section.detailList}
+          actions={
+            <Space size={8}>
+              <Button
+                icon={<IconRefresh size={15} strokeWidth={1.8} />}
+                loading={loadingItems}
+                onClick={() => {
+                  const transId = getEditingTransId();
+                  if (transId) {
+                    fetchSubmissions(transId).then((res) => {
+                      if (res && res.length > 0) {
+                        message.success(t.requisition.itemRefreshed);
+                      } else {
+                        message.info(t.requisition.emptyItemsInReq);
+                      }
+                    });
+                  } else if (editingRequisition?.items) {
+                    setItems(editingRequisition.items);
+                    message.success(t.requisition.itemRefreshed);
+                  } else {
+                    message.info(t.requisition.emptyItems);
+                  }
+                }}
+                style={{
+                  height: 32,
+                  borderRadius: 6,
+                  borderColor: "#dce5e6",
+                  fontSize: 13,
+                }}
+              >
+                {t.common.refresh}
+              </Button>
+              <Button
+                type="primary"
+                icon={<IconPlus size={16} strokeWidth={2} />}
+                onClick={handleOpenAddItem}
+                style={{
+                  background: "#008f89",
+                  borderColor: "#008f89",
+                  height: 32,
+                  borderRadius: 6,
+                  fontWeight: 500,
+                  fontSize: 13,
+                  boxShadow: "0 2px 4px rgba(0, 143, 137, 0.2)",
+                }}
+              >
+                {t.common.addNew}
+              </Button>
+            </Space>
+          }
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <Text strong style={{ fontSize: 13, color: "#008f89", fontWeight: 700, textTransform: "uppercase" }}>
-              {t.section.detailList}
-            </Text>
-            <Tag
-              style={{
-                background: "#dce5e6",
-                color: "#008f89",
-                borderRadius: 12,
-                border: "none",
-                fontSize: 11,
-                fontWeight: 500,
-                padding: "1px 8px",
-                margin: 0,
-              }}
-            >
-              {items.length} {t.table.itemsCount}
-            </Tag>
-          </div>
-
-          <Space size={8}>
-            <Button
-              icon={<IconRefresh size={15} strokeWidth={1.8} />}
-              loading={loadingItems}
-              onClick={() => {
-                const transId = getEditingTransId();
-                if (transId) {
-                  fetchSubmissions(transId).then((res) => {
-                    if (res && res.length > 0) {
-                      message.success(t.requisition.itemRefreshed);
-                    } else {
-                      message.info(t.requisition.emptyItemsInReq);
-                    }
-                  });
-                } else if (editingRequisition?.items) {
-                  setItems(editingRequisition.items);
-                  message.success(t.requisition.itemRefreshed);
-                } else {
-                  message.info(t.requisition.emptyItems);
-                }
-              }}
-              style={{
-                height: 32,
-                borderRadius: 6,
-                borderColor: "#dce5e6",
-                fontSize: 13,
-              }}
-            >
-              {t.common.refresh}
-            </Button>
-            <Button
-              type="primary"
-              icon={<IconPlus size={16} strokeWidth={2} />}
-              onClick={handleOpenAddItem}
-              style={{
-                background: "#008f89",
-                borderColor: "#008f89",
-                height: 32,
-                borderRadius: 6,
-                fontWeight: 500,
-                fontSize: 13,
-                boxShadow: "0 2px 4px rgba(0, 143, 137, 0.2)",
-              }}
-            >
-              {t.common.addNew}
-            </Button>
-          </Space>
-        </div>
-
-
-
-        {/* Bảng Chi Tiết Vật Tư */}
-        <Table
-          className="requisition-detail-table"
-          rowKey="id"
-          size="middle"
-          columns={columns}
-          dataSource={items}
-          loading={loadingItems}
-          pagination={false}
-          scroll={{ x: 950 }}
-          summary={() => {
-            const totalReq = items.reduce((sum, it) => sum + Number(it.requestedQty || 0), 0);
-            const totalApp = items.reduce((sum, it) => sum + Number(it.approvedQty || 0), 0);
-            return (
-              <Table.Summary fixed>
-                <Table.Summary.Row style={{ background: "#eef8f6", fontWeight: "bold" }}>
-                  {columns.map((col: any, idx: number) => {
-                    const key = String(col.key || col.dataIndex || idx);
-                    if (key === "unit" || (key === "itemName" && !columns.some((c: any) => (c.key || c.dataIndex) === "unit"))) {
-                      return (
-                        <Table.Summary.Cell key={key} index={idx} align="right">
-                          <Text strong style={{ color: "#008f89", fontSize: 12 }}>
-                            {t.table.total}
-                          </Text>
-                        </Table.Summary.Cell>
-                      );
-                    }
-                    if (key === "requestedQty") {
-                      return (
-                        <Table.Summary.Cell key={key} index={idx} align="right">
-                          <Text strong style={{ color: "#123443", fontSize: 12 }}>
-                            {totalReq.toLocaleString("vi-VN")}
-                          </Text>
-                        </Table.Summary.Cell>
-                      );
-                    }
-                    if (key === "approvedQty") {
-                      return (
-                        <Table.Summary.Cell key={key} index={idx} align="right">
-                          <Text strong style={{ color: totalApp > 0 ? "#059669" : "#94A3B8", fontSize: 12 }}>
-                            {totalApp > 0 ? totalApp.toLocaleString("vi-VN") : "---"}
-                          </Text>
-                        </Table.Summary.Cell>
-                      );
-                    }
-                    return <Table.Summary.Cell key={key} index={idx} />;
-                  })}
-                </Table.Summary.Row>
-              </Table.Summary>
-            );
-          }}
-        />
+          <Table
+            className="erp-detail-table"
+            components={{ header: { cell: ResizableTitle } }}
+            rowKey="id"
+            size="middle"
+            columns={tableColumns}
+            dataSource={items}
+            loading={loadingItems}
+            pagination={false}
+            scroll={{ x: scrollX }}
+            summary={() => {
+              const totalReq = items.reduce((sum, it) => sum + Number(it.requestedQty || 0), 0);
+              const totalApp = items.reduce((sum, it) => sum + Number(it.approvedQty || 0), 0);
+              return (
+                <Table.Summary fixed>
+                  <Table.Summary.Row style={{ background: "#eef8f6", fontWeight: "bold" }}>
+                    {tableColumns.map((col: any, idx: number) => {
+                      const key = String(col.key || col.dataIndex || idx);
+                      if (key === "unit" || (key === "itemName" && !tableColumns.some((c: any) => (c.key || c.dataIndex) === "unit"))) {
+                        return (
+                          <Table.Summary.Cell key={key} index={idx} align="right">
+                            <Text strong style={{ color: "#008f89", fontSize: 12 }}>
+                              {t.table.total}
+                            </Text>
+                          </Table.Summary.Cell>
+                        );
+                      }
+                      if (key === "requestedQty") {
+                        return (
+                          <Table.Summary.Cell key={key} index={idx} align="right">
+                            <Text strong style={{ color: "#123443", fontSize: 12 }}>
+                              {totalReq.toLocaleString("vi-VN")}
+                            </Text>
+                          </Table.Summary.Cell>
+                        );
+                      }
+                      if (key === "approvedQty") {
+                        return (
+                          <Table.Summary.Cell key={key} index={idx} align="right">
+                            <Text strong style={{ color: totalApp > 0 ? "#059669" : "#94A3B8", fontSize: 12 }}>
+                              {totalApp > 0 ? totalApp.toLocaleString("vi-VN") : "---"}
+                            </Text>
+                          </Table.Summary.Cell>
+                        );
+                      }
+                      return <Table.Summary.Cell key={key} index={idx} />;
+                    })}
+                  </Table.Summary.Row>
+                </Table.Summary>
+              );
+            }}
+          />
+        </ErpDetailCard>
       </Form>
 
       {/* DRAWER THÊM VẬT TƯ TỒN KHO (Được tách thành Component RequisitionPendingDrawer riêng biệt) */}

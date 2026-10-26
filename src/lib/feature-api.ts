@@ -7,7 +7,7 @@ export { clearErpCache };
 export function getFeatureData<T = any>(
   endpoint: string,
   params: ApiParams,
-  options?: { skipCache?: boolean; ttlMs?: number }
+  options?: { skipCache?: boolean; ttlMs?: number; timeoutMs?: number }
 ) {
   return erpGet<T>(endpoint, params, options);
 }

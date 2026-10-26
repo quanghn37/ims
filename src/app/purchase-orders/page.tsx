@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect, Suspense } from "react";
 import dynamic from "next/dynamic";
-import { Form, message, Tabs, Space, Spin } from "antd";
-import { IconList, IconPencil } from "@tabler/icons-react";
+import { Form, message, Spin } from "antd";
+import { useSearchParams } from "next/navigation";
 import { extractApiList } from "@/lib/api-client";
 import { purchaseOrdersApi } from "./api";
 import { ContractItem } from "@/types";
@@ -19,6 +19,7 @@ import { usePriceCompare } from "./_hooks/usePriceCompare";
 import { useOrderWorkflow } from "./_hooks/useOrderWorkflow";
 import { useOrderSubmissionItem } from "./_hooks/useOrderSubmissionItem";
 import { useTranslation } from "@/locales/LanguageContext";
+import { ErpPageContainer, ErpDetailContainer } from "@/components/layout/ErpPageContainer";
 
 // Dynamic imports for heavy drawers/modals to optimize initial JS bundle
 const OrderFormDrawer = dynamic(() => import("./_components/OrderFormDrawer"), {
@@ -35,35 +36,58 @@ const PriceCompareDrawer = dynamic(() => import("./_components/PriceCompareDrawe
 const ImportExcelModal = dynamic(() => import("./_components/ImportExcelModal"), { ssr: false });
 const WorkflowDrawer = dynamic(() => import("./_components/WorkflowDrawer"), { ssr: false });
 
-export default function PurchaseOrdersPage() {
+function PurchaseOrdersPageContent() {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const {
-    loading,
-    searchKeyword,
-    setSearchKeyword,
-    pagination,
-    fetchOrders,
-    filteredOrders,
-  } = usePurchaseOrders();
+  const searchParams = useSearchParams();
+
+  const queryOrderId = searchParams.get("id") || searchParams.get("contractId");
+  const queryAction = searchParams.get("action");
+  const isDetailPage = Boolean(queryOrderId || queryAction);
 
   const currentUserId = user?.LogIn || "";
   const STORAGE_KEY_MAIN = `table_cols_purchase_orders_main_${currentUserId}`;
 
-  // --- Tab Quản lý PO: List vs Edit ---
-  const [activeTabKey, setActiveTabKey] = useState<string>("list");
-  const [isEditTabOpen, setIsEditTabOpen] = useState(false);
-  const handleCloseEditTab = () => {
-    setIsEditTabOpen(false);
-    setActiveTabKey("list");
-  };
+  // ===============================================================
+  // STATE CHO MÀN HÌNH DANH SÁCH (KHI Ở TAB DANH SÁCH /purchase-orders)
+  // ===============================================================
+  const {
+    loading,
+    searchKeyword,
+    setSearchKeyword,
+    columnFilters,
+    setColumnFilters,
+    columnSuggestions,
+    isFiltering,
+    pagination,
+    setPagination,
+    fetchOrders,
+    filteredOrders,
+  } = usePurchaseOrders();
+
+  // Tự động đồng bộ danh sách khi có cập nhật từ tab chi tiết khác
+  useEffect(() => {
+    if (isDetailPage) return;
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "consims_po_updated") {
+        fetchOrders(pagination.current, pagination.pageSize);
+      }
+    };
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, [isDetailPage, pagination.current, pagination.pageSize, fetchOrders]);
+
+  // ===============================================================
+  // STATE CHO MÀN HÌNH CHI TIẾT ĐƠN HÀNG
+  // ===============================================================
   const [orderForm] = Form.useForm();
   const [submittingOrder, setSubmittingOrder] = useState(false);
+  const [loadingSingleOrder, setLoadingSingleOrder] = useState(false);
   const [editingOrder, setEditingOrder] = useState<ContractItem | null>(null);
   const [attachments, setAttachments] = useState<AttachmentFile[]>([]);
   const [selectedAttachmentKeys, setSelectedAttachmentKeys] = useState<React.Key[]>([]);
 
-  // --- LOV Modals Hook ---
+  // LOV Modals Hook
   const lov = useOrderLovModals(orderForm);
   const {
     setIsClientLovOpen,
@@ -99,15 +123,15 @@ export default function PurchaseOrdersPage() {
     handleClearWarehouse,
   } = lov;
 
-  // --- Detail Items directly in OrderFormDrawer (Master-Detail) ---
+  // Detail Items directly in OrderFormDrawer (Master-Detail)
   const [orderDrawerItems, setOrderDrawerItems] = useState<any[]>([]);
   const [loadingDrawerItems, setLoadingDrawerItems] = useState(false);
   const [deletedDrawerItemIds, setDeletedDrawerItemIds] = useState<any[]>([]);
 
-  // --- Selected Order for actions/modals ---
+  // Selected Order for actions/modals
   const [selectedOrder, setSelectedOrder] = useState<ContractItem | null>(null);
 
-  // --- Import Excel ---
+  // Import Excel
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [importFileList, setImportFileList] = useState<any[]>([]);
   const [importing, setImporting] = useState(false);
@@ -144,34 +168,24 @@ export default function PurchaseOrdersPage() {
           LocalId: it.LocalId || subId,
           MaterialId: matId || itemId,
           ItemId: itemId,
-          ItemCode: it.ItemCode || it.Itemid || "",
-          SystemCode: it.SystemCode || it.ItemCode || it.Itemid || "",
-          Description: it.Description || it.ItemName || "",
-          ItemName: it.Description || it.ItemName || "",
-          Unit: it.Unit || "Cái",
-          Qnty: Number(it.Qnty ?? 1),
-          UnitPrice: Number(it.UnitPrice ?? 0),
-          TaxRate: Number(it.TaxRate ?? 0.08),
-          TotalPrice: Number(it.ItemTotal ?? it.Amount ?? ((Number(it.Qnty) || 1) * (Number(it.UnitPrice) || 0))),
-          Remarks: it.Remarks || "",
-          ItemDate: it.ItemDate || dayjs().format("YYYY-MM-DD"),
-          StatusCode: it.StatusCode !== undefined && it.StatusCode !== null && it.StatusCode !== ""
-            ? String(it.StatusCode)
-            : (it.Statuscode ?? it.ApprovalStatus ?? it.Status ?? it.StatusName ?? ""),
-          Orgcode: it.Orgcode || it.OrgCode || it.WBS || it.Wbs || it.WbsCode || "",
-          WBS: it.Orgcode || it.OrgCode || it.WBS || it.Wbs || it.WbsCode || "",
+          StatusCode: it.StatusCode !== undefined && it.StatusCode !== null ? String(it.StatusCode).trim() : it.StatusCode,
+          Qnty: Number(it.Qnty ?? it.Quantity ?? 0),
+          UnitPrice: Number(it.UnitPrice ?? it.Price ?? 0),
+          Amount: Number(it.Amount ?? (Number(it.Qnty ?? 0) * Number(it.UnitPrice ?? 0))),
+          TaxRate: Number(it.TaxRate ?? 0),
+          TaxAmount: Number(it.TaxAmount ?? 0),
+          TotalAmount: Number(it.TotalAmount ?? (Number(it.Amount ?? 0) + Number(it.TaxAmount ?? 0))),
         };
       });
       setOrderDrawerItems(mapped);
-    } catch (err) {
-      console.error("Error loading order items:", err);
-      setOrderDrawerItems([]);
+    } catch (e: any) {
+      console.error("Error fetching order items:", e);
     } finally {
       setLoadingDrawerItems(false);
     }
   }, []);
 
-  // --- Sub-hooks ---
+  // Hook for editing items modal
   const {
     isItemModalOpen,
     setIsItemModalOpen,
@@ -199,6 +213,7 @@ export default function PurchaseOrdersPage() {
     fetchOrderDrawerItems,
   });
 
+  // Hook for price comparison
   const {
     isPriceCompareOpen,
     setIsPriceCompareOpen,
@@ -222,6 +237,7 @@ export default function PurchaseOrdersPage() {
     fetchOrderDrawerItems,
   });
 
+  // Hook for order workflow
   const {
     isWorkflowDrawerOpen,
     setIsWorkflowDrawerOpen,
@@ -248,38 +264,12 @@ export default function PurchaseOrdersPage() {
     handleSaveRowDetail,
   } = useOrderWorkflow({
     editingOrder,
-    selectedOrder,
+    selectedOrder: editingOrder || selectedOrder,
     fetchOrderDrawerItems,
   });
 
-  const handleOpenCreateOrder = () => {
-    setEditingOrder(null);
-    orderForm.resetFields();
-    orderForm.setFieldsValue({
-      Currency: "VND",
-      Amount: 0,
-      ContractDate: dayjs(),
-      FromDate: dayjs(),
-      DeliveryDate: dayjs().add(7, "day"),
-      ToDate: dayjs().add(7, "day"),
-      ContractCode: "",
-      PaymentTerm: undefined,
-    });
-    setSelectedClientDisplay("");
-    setSelectedContractDisplay("");
-    setSelectedPriceListDisplay("");
-    setSelectedWarehouseDisplay("");
-    setAttachments([]);
-    setSelectedAttachmentKeys([]);
-    setContractRefList([]);
-    setPriceListRefList([]);
-    setOrderDrawerItems([]);
-    setDeletedDrawerItemIds([]);
-    setIsEditTabOpen(true);
-    setActiveTabKey("edit");
-  };
-
-  const handleOpenEditOrder = (record: ContractItem) => {
+  // Điền dữ liệu một bản ghi đơn hàng vào Form
+  const applyOrderToForm = useCallback((record: ContractItem) => {
     setEditingOrder(record);
     setSelectedOrder(record);
     orderForm.resetFields();
@@ -379,7 +369,6 @@ export default function PurchaseOrdersPage() {
           },
         ];
       });
-      // Chỉ gọi API lấy tên bảng giá nếu bản ghi PO chưa có sẵn mã bảng giá hiển thị
       if (!rawPlCode && currentSourceId) {
         fetchPriceListRefList("", currentClientId, currentParentId).then((list) => {
           if (list && list.length > 0) {
@@ -416,10 +405,73 @@ export default function PurchaseOrdersPage() {
     setDeletedDrawerItemIds([]);
 
     fetchOrderDrawerItems(record.ContractId);
+  }, [currentUserId, fetchOrderDrawerItems, fetchPriceListRefList, orderForm, setClientList, setContractRefList, setPriceListRefList, setSelectedClientDisplay, setSelectedContractDisplay, setSelectedPriceListDisplay, setSelectedWarehouseDisplay]);
 
-    setIsEditTabOpen(true);
-    setActiveTabKey("edit");
-  };
+  // Load đơn hàng khi mở tab trình duyệt có id
+  useEffect(() => {
+    if (!queryOrderId) return;
+    const loadSingleOrder = async () => {
+      setLoadingSingleOrder(true);
+      try {
+        const data = await purchaseOrdersApi.getPurchaseOrders({
+          DisplayMode: "purchase_order",
+          ClientId: "",
+          WSId: "",
+          PageNum: 1,
+          PageSize: 10,
+          ContractId: queryOrderId,
+        });
+        const list = extractApiList<ContractItem>(data);
+        const found = list.find((c) => String(c.ContractId) === String(queryOrderId)) || list[0];
+        if (found) {
+          applyOrderToForm(found);
+          if (typeof document !== "undefined") {
+            document.title = `${found.ContractCode || found.ContractId} - Chi tiết đơn hàng`;
+          }
+        } else {
+          message.error("Không tìm thấy thông tin đơn hàng.");
+        }
+      } catch (e) {
+        console.error("Lỗi tải đơn hàng:", e);
+        message.error("Không thể tải thông tin đơn hàng.");
+      } finally {
+        setLoadingSingleOrder(false);
+      }
+    };
+    loadSingleOrder();
+  }, [queryOrderId, applyOrderToForm]);
+
+  // Mở tab tạo mới
+  useEffect(() => {
+    if (queryAction === "create") {
+      setEditingOrder(null);
+      setSelectedOrder(null);
+      orderForm.resetFields();
+      orderForm.setFieldsValue({
+        Currency: "VND",
+        Amount: 0,
+        ContractDate: dayjs(),
+        FromDate: dayjs(),
+        DeliveryDate: dayjs().add(7, "day"),
+        ToDate: dayjs().add(7, "day"),
+        ContractCode: "",
+        PaymentTerm: undefined,
+      });
+      setSelectedClientDisplay("");
+      setSelectedContractDisplay("");
+      setSelectedPriceListDisplay("");
+      setSelectedWarehouseDisplay("");
+      setAttachments([]);
+      setSelectedAttachmentKeys([]);
+      setContractRefList([]);
+      setPriceListRefList([]);
+      setOrderDrawerItems([]);
+      setDeletedDrawerItemIds([]);
+      if (typeof document !== "undefined") {
+        document.title = "Tạo Đơn Hàng Mới";
+      }
+    }
+  }, [queryAction, orderForm, setContractRefList, setPriceListRefList, setSelectedClientDisplay, setSelectedContractDisplay, setSelectedPriceListDisplay, setSelectedWarehouseDisplay]);
 
   const handleRefreshDrawerItems = async () => {
     const targetId = editingOrder?.ContractId || selectedOrder?.ContractId;
@@ -444,24 +496,26 @@ export default function PurchaseOrdersPage() {
     }
 
     try {
+      const parentContractId =
+        editingOrder?.ContractId ||
+        selectedOrder?.ContractId ||
+        record.ContractId;
+
       await purchaseOrdersApi.upsertSubmission(
         {
+          ContractId: Number(parentContractId),
+          SubmissionId: Number(subId),
           ContractType: "purchase_order",
-          ContractId: String(editingOrder?.ContractId || selectedOrder?.ContractId || ""),
-          SubmissionId: String(subId),
-          UpdateMode: "Delete_PurchaseorderSubmission",
+          UpdateMode: "delete_purchaseordersubmission",
         },
-        "Delete_PurchaseorderSubmission"
+        "delete_purchaseordersubmission"
       );
-      message.success("Đã xóa mặt hàng khỏi đơn hàng!");
+
+      message.success("Đã xóa mặt hàng thành công!");
+      setDeletedDrawerItemIds((prev) => [...prev, subId]);
       setOrderDrawerItems((prev) =>
         prev.filter((it) => {
-          const itSubId =
-            it.SubmissionId ??
-            it.SubmissionID ??
-            it.Submissionid ??
-            it.LocalId ??
-            it.Id;
+          const itSubId = it.SubmissionId ?? it.SubmissionID ?? it.LocalId ?? it.Id;
           return String(itSubId) !== String(subId) && it.id !== record.id;
         })
       );
@@ -503,7 +557,6 @@ export default function PurchaseOrdersPage() {
           WSId: "",
           Attachments: attachments,
         }, "update_purchase_order");
-        message.success("Cập nhật đơn hàng thành công!");
       } else {
         const createRes: any = await purchaseOrdersApi.updateContractInfo({
           ClientId: values.ClientId || "5081",
@@ -545,51 +598,46 @@ export default function PurchaseOrdersPage() {
           try {
             await purchaseOrdersApi.upsertSubmission(
               {
+                ContractId: Number(targetContractId),
+                SubmissionId: Number(delId),
                 ContractType: "purchase_order",
-                SubmissionId: String(delId),
-                UpdateMode: "Delete_PurchaseorderSubmission",
+                UpdateMode: "delete_purchaseordersubmission",
               },
-              "Delete_PurchaseorderSubmission"
+              "delete_purchaseordersubmission"
             );
-          } catch (err) {
-            console.error("Error deleting order item:", err);
+          } catch (delErr) {
+            console.error("Error committing delete submission:", delErr);
           }
         }
+        setDeletedDrawerItemIds([]);
       }
 
       if (targetContractId && orderDrawerItems.length > 0) {
         for (const item of orderDrawerItems) {
-          if (!item.ItemId) continue;
-          const subId =
-            item.SubmissionId ??
-            item.SubmissionID ??
-            item.Submissionid ??
-            item.Id ??
-            item.LocalId;
+          const subId = item.SubmissionId ?? item.SubmissionID ?? item.LocalId;
+          const isEditItem = subId && !String(subId).startsWith("item_") && !String(subId).startsWith("mat_");
+          const matId = item.MaterialId || item.ItemId || item.SourceId;
 
-          if (subId && !item.isModified && !item.isNew) {
-            continue;
-          }
-
-          const isEditItem = !!subId;
-          const targetMaterialId = Number(item.MaterialId ?? item.ItemId);
           const payload: any = {
+            ContractId: Number(targetContractId),
             ContractType: "purchase_order",
-            ContractId: Number(targetContractId) || targetContractId,
-            MaterialId: targetMaterialId,
-            ItemDate: item.ItemDate || orderDateFormatted,
-            UnitPrice: Number(item.UnitPrice || 0),
-            Qnty: Number(item.Qnty || 1),
-            TaxRate: Number(item.TaxRate ?? 0.08),
-            Remarks: item.Remarks || "",
-            StartProcessNow: "Yes",
-            ApplyDefinedAssignment: "Yes",
             Stage: "plan",
+            ItemId: matId ? Number(matId) : undefined,
+            MaterialId: matId ? Number(matId) : undefined,
+            Qnty: Number(item.Qnty || 0),
+            UnitPrice: Number(item.UnitPrice || 0),
+            Amount: Number(item.Amount || (Number(item.Qnty || 0) * Number(item.UnitPrice || 0))),
+            TaxRate: Number(item.TaxRate || 0),
+            TaxAmount: Number(item.TaxAmount || 0),
+            TotalAmount: Number(item.TotalAmount || 0),
+            Brand: item.Brand || "",
+            Origin: item.Origin || "",
+            Unit: item.Unit || "",
+            Remarks: item.Remarks || "",
+            SourceId: item.SourceId ? String(item.SourceId) : (values.SourceId ? String(values.SourceId) : ""),
+            StartProcessNow: item.StartProcessNow || "No",
+            ApplyDefinedAssignment: "Yes",
           };
-          if (!isEditItem) {
-            const rawParentId = item.ParentId || values.ParentId;
-            payload.ParentId = rawParentId && !isNaN(Number(rawParentId)) && Number(rawParentId) > 0 ? Number(rawParentId) : "";
-          }
           if (item.Orgcode) {
             payload.Orgcode = item.Orgcode;
             payload.Orgname = item.Orgname || item.OrgName || "";
@@ -629,7 +677,9 @@ export default function PurchaseOrdersPage() {
         }
       }
 
-      fetchOrders(pagination.current, pagination.pageSize);
+      try {
+        localStorage.setItem("consims_po_updated", String(Date.now()));
+      } catch (e) {}
 
       let refreshedOrder: any = null;
       try {
@@ -653,12 +703,15 @@ export default function PurchaseOrdersPage() {
       }
 
       if (refreshedOrder) {
-        handleOpenEditOrder(refreshedOrder);
+        applyOrderToForm(refreshedOrder);
         message.success(
           editingOrder
             ? "Cập nhật đơn hàng thành công!"
             : "Tạo mới đơn hàng PO thành công! Đã chuyển sang màn hình chi tiết."
         );
+        if (!editingOrder && refreshedOrder.ContractId) {
+          window.location.href = `/purchase-orders?id=${refreshedOrder.ContractId}`;
+        }
       } else if (!editingOrder && targetContractId) {
         const fallbackOrder: any = {
           ContractId: targetContractId,
@@ -676,8 +729,9 @@ export default function PurchaseOrdersPage() {
           ContractDate: orderDateFormatted,
           DeliveryDate: deliveryDateFormatted,
         };
-        handleOpenEditOrder(fallbackOrder);
+        applyOrderToForm(fallbackOrder);
         message.success("Tạo mới đơn hàng PO thành công! Đã chuyển sang màn hình chi tiết.");
+        window.location.href = `/purchase-orders?id=${targetContractId}`;
       } else {
         message.success("Cập nhật đơn hàng thành công!");
       }
@@ -699,15 +753,24 @@ export default function PurchaseOrdersPage() {
         "delete_contract"
       );
       message.success("Đã xóa đơn hàng thành công!");
+      try {
+        localStorage.setItem("consims_po_updated", String(Date.now()));
+      } catch (e) {}
+      if (isDetailPage) {
+        if (typeof window !== "undefined") {
+          if (window.opener) {
+            window.close();
+          } else {
+            window.location.href = "/purchase-orders";
+          }
+        }
+      }
       fetchOrders(pagination.current, pagination.pageSize);
     } catch (e: any) {
       message.error(e.message || "Xóa đơn hàng thất bại.");
     }
   };
 
-  // ---------------------------------------------------------------
-  // Attachment handlers
-  // ---------------------------------------------------------------
   const handleCustomUploadAttachment = (options: any) => {
     const { file, onSuccess } = options;
     setTimeout(() => {
@@ -742,9 +805,6 @@ export default function PurchaseOrdersPage() {
     setAttachments((prev) => prev.map((item) => (item.id === id ? { ...item, isClientDoc: checked } : item)));
   };
 
-  // ---------------------------------------------------------------
-  // Import Excel
-  // ---------------------------------------------------------------
   const handleImportExcel = async () => {
     if (!selectedOrder || importFileList.length === 0) {
       message.warning("Vui lòng chọn file Excel!");
@@ -771,112 +831,15 @@ export default function PurchaseOrdersPage() {
     }
   };
 
-  // ---------------------------------------------------------------
-  // Tab Items
-  // ---------------------------------------------------------------
-  const tabItems = [
-    {
-      key: "list",
-      label: (
-        <Space size={6}>
-          <IconList size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />
-          <span>{t.menu.purchaseOrders}</span>
-        </Space>
-      ),
-      closable: false,
-      children: (
-        <PurchaseOrdersTable
-          filteredOrders={filteredOrders}
-          loading={loading}
-          pagination={pagination}
-          searchKeyword={searchKeyword}
-          setSearchKeyword={setSearchKeyword}
-          storageKey={STORAGE_KEY_MAIN}
-          onRefresh={fetchOrders}
-          onCreate={handleOpenCreateOrder}
-          onEdit={handleOpenEditOrder}
-          onDelete={handleDeleteContract}
-        />
-      ),
-    },
-    ...(isEditTabOpen
-      ? [
-          {
-            key: "edit",
-            label: (
-              <Space size={6}>
-                <IconPencil size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />
-                <span>
-                  {editingOrder
-                    ? `${editingOrder.ContractCode || editingOrder.ContractId || t.table.poCode}`
-                    : t.common.createOrder}
-                </span>
-              </Space>
-            ),
-            closable: true,
-            children: (
-              <div style={{ background: "#fff", minHeight: "calc(100vh - 110px)" }}>
-                <OrderFormDrawer
-                  open={isEditTabOpen}
-                  onClose={handleCloseEditTab}
-                  editingOrder={editingOrder}
-                  form={orderForm}
-                  submitting={submittingOrder}
-                  selectedClientDisplay={selectedClientDisplay}
-                  onOpenClientLov={() => {
-                    setClientSearchInput("");
-                    fetchClientList("");
-                    setIsClientLovOpen(true);
-                  }}
-                  onClearClient={handleClearClient}
-                  selectedContractDisplay={selectedContractDisplay}
-                  onOpenContractLov={() => {
-                    setContractSearchInput("");
-                    fetchContractRefList("", orderForm.getFieldValue("ClientId"));
-                    setIsContractLovOpen(true);
-                  }}
-                  onClearContract={handleClearContract}
-                  selectedPriceListDisplay={selectedPriceListDisplay}
-                  onOpenPriceListLov={() => {
-                    setPriceListSearchInput("");
-                    const cId = orderForm.getFieldValue("ClientId");
-                    const pId = orderForm.getFieldValue("ParentId");
-                    fetchPriceListRefList("", cId, pId);
-                    setIsPriceListLovOpen(true);
-                  }}
-                  onClearPriceList={handleClearPriceList}
-                  selectedWarehouseDisplay={selectedWarehouseDisplay}
-                  onOpenWarehouseLov={() => {
-                    setWarehouseSearchInput("");
-                    fetchWarehouseList("");
-                    setIsWarehouseLovOpen(true);
-                  }}
-                  onClearWarehouse={handleClearWarehouse}
-                  items={orderDrawerItems}
-                  setItems={setOrderDrawerItems}
-                  availableItems={availableItems}
-                  loadingItems={loadingDrawerItems}
-                  onSearchItem={handleSearchItem}
-                  onDeleteItem={handleDeleteDrawerItem}
-                  onEditItem={handleOpenEditItem}
-                  attachments={attachments}
-                  selectedAttachmentKeys={selectedAttachmentKeys}
-                  setSelectedAttachmentKeys={setSelectedAttachmentKeys}
-                  onUploadAttachment={handleCustomUploadAttachment}
-                  onDeleteAttachment={handleDeleteAttachment}
-                  onBatchDeleteAttachments={handleBatchDeleteAttachments}
-                  onToggleClientDoc={handleToggleClientDoc}
-                  onFinish={handleSubmitOrder}
-                  onOpenPriceCompare={openPriceCompare}
-                  onFetchWorkflow={fetchWorkflowStatus}
-                  onRefreshItems={handleRefreshDrawerItems}
-                />
-              </div>
-            ),
-          },
-        ]
-      : []),
-  ];
+  const handleCloseDetail = () => {
+    if (typeof window !== "undefined") {
+      if (window.opener) {
+        window.close();
+      } else {
+        window.location.href = "/purchase-orders";
+      }
+    }
+  };
 
   const existingOrderItemIds = useMemo(() => {
     return new Set(
@@ -886,154 +849,216 @@ export default function PurchaseOrdersPage() {
     );
   }, [orderDrawerItems]);
 
-  // ---------------------------------------------------------------
-  // Render
-  // ---------------------------------------------------------------
+  // ===============================================================
+  // GIAO DIỆN 1: MÀN HÌNH CHI TIẾT ĐƠN HÀNG (/purchase-orders?id=...)
+  // ===============================================================
+  if (isDetailPage) {
+    if (loadingSingleOrder) {
+      return (
+        <ErpDetailContainer>
+          <div style={{ padding: 60, textAlign: "center" }}>
+            <Spin size="large" />
+            <div style={{ marginTop: 12, color: "#718894", fontSize: 13 }}>
+              Đang tải chi tiết đơn hàng #{queryOrderId}...
+            </div>
+          </div>
+        </ErpDetailContainer>
+      );
+    }
+
+    return (
+      <ErpDetailContainer>
+        <OrderFormDrawer
+          open={true}
+          onClose={handleCloseDetail}
+          editingOrder={editingOrder}
+          form={orderForm}
+          submitting={submittingOrder}
+          selectedClientDisplay={selectedClientDisplay}
+          onOpenClientLov={() => {
+            setClientSearchInput("");
+            fetchClientList("");
+            setIsClientLovOpen(true);
+          }}
+          onClearClient={handleClearClient}
+          selectedContractDisplay={selectedContractDisplay}
+          onOpenContractLov={() => {
+            setContractSearchInput("");
+            fetchContractRefList("", orderForm.getFieldValue("ClientId"));
+            setIsContractLovOpen(true);
+          }}
+          onClearContract={handleClearContract}
+          selectedPriceListDisplay={selectedPriceListDisplay}
+          onOpenPriceListLov={() => {
+            setPriceListSearchInput("");
+            const cId = orderForm.getFieldValue("ClientId");
+            const pId = orderForm.getFieldValue("ParentId");
+            fetchPriceListRefList("", cId, pId);
+            setIsPriceListLovOpen(true);
+          }}
+          onClearPriceList={handleClearPriceList}
+          selectedWarehouseDisplay={selectedWarehouseDisplay}
+          onOpenWarehouseLov={() => {
+            setWarehouseSearchInput("");
+            fetchWarehouseList("");
+            setIsWarehouseLovOpen(true);
+          }}
+          onClearWarehouse={handleClearWarehouse}
+          items={orderDrawerItems}
+          setItems={setOrderDrawerItems}
+          availableItems={availableItems}
+          loadingItems={loadingDrawerItems}
+          onSearchItem={handleSearchItem}
+          onDeleteItem={handleDeleteDrawerItem}
+          onEditItem={handleOpenEditItem}
+          attachments={attachments}
+          selectedAttachmentKeys={selectedAttachmentKeys}
+          setSelectedAttachmentKeys={setSelectedAttachmentKeys}
+          onUploadAttachment={handleCustomUploadAttachment}
+          onDeleteAttachment={handleDeleteAttachment}
+          onBatchDeleteAttachments={handleBatchDeleteAttachments}
+          onToggleClientDoc={handleToggleClientDoc}
+          onFinish={handleSubmitOrder}
+          onOpenPriceCompare={openPriceCompare}
+          onFetchWorkflow={fetchWorkflowStatus}
+          onRefreshItems={handleRefreshDrawerItems}
+          onDeleteOrder={handleDeleteContract}
+        />
+
+        {isItemModalOpen && (
+          <ItemFormDrawer
+            open={isItemModalOpen}
+            onClose={() => setIsItemModalOpen(false)}
+            editingSubmissionItem={editingSubmissionItem}
+            form={itemForm}
+            submitting={submittingItem}
+            availableItems={availableItems}
+            loadingAvailableItems={loadingAvailableItems}
+            onSearchItem={handleSearchItem}
+            onFetchItems={fetchAvailableItems}
+            budgetList={budgetList}
+            loadingBudgetList={loadingBudgetList}
+            rawItemTotal={rawItemTotal}
+            taxItemTotal={taxItemTotal}
+            grandItemTotal={grandItemTotal}
+            watchedTaxRate={watchedTaxRate}
+            onFinish={handleCreateSubmission}
+          />
+        )}
+
+        {isPriceCompareOpen && (
+          <PriceCompareDrawer
+            open={isPriceCompareOpen}
+            onClose={() => setIsPriceCompareOpen(false)}
+            selectedOrderId={selectedOrder?.ContractId}
+            priceCompareItems={priceCompareItems}
+            loadingPriceCompare={loadingPriceCompare}
+            selectedPriceCompareKeys={selectedPriceCompareKeys}
+            setSelectedPriceCompareKeys={setSelectedPriceCompareKeys}
+            priceCompareStartProcess={priceCompareStartProcess}
+            setPriceCompareStartProcess={setPriceCompareStartProcess}
+            submittingPriceCompare={submittingPriceCompare}
+            onChangeQnty={handleChangePriceCompareQnty}
+            onChangeOrgcode={handleChangePriceCompareOrgcode}
+            onAddSelectedToOrder={handleAddSelectedToOrder}
+            existingItemIds={existingOrderItemIds}
+            budgetList={budgetList}
+            loadingBudgetList={loadingBudgetList}
+          />
+        )}
+
+        {isImportModalOpen && (
+          <ImportExcelModal
+            open={isImportModalOpen}
+            onClose={() => setIsImportModalOpen(false)}
+            selectedOrderId={selectedOrder?.ContractId}
+            importFileList={importFileList}
+            setImportFileList={setImportFileList}
+            importing={importing}
+            onImport={handleImportExcel}
+          />
+        )}
+
+        {isWorkflowDrawerOpen && (
+          <WorkflowDrawer
+            open={isWorkflowDrawerOpen}
+            onClose={() => {
+              setIsWorkflowDrawerOpen(false);
+              const targetContractId = editingOrder?.ContractId || selectedOrder?.ContractId;
+              if (targetContractId) {
+                fetchOrderDrawerItems(targetContractId);
+              }
+            }}
+            currentSubmissionId={currentSubmissionId}
+            itemDetail={itemDetail}
+            workflowData={workflowData}
+            loadingWorkflow={loadingWorkflow}
+            isRowDetailOpen={isRowDetailOpen}
+            selectedWorkflowRow={selectedWorkflowRow}
+            processingStatusList={processingStatusList}
+            loadingProcessingStatus={loadingProcessingStatus}
+            rowDetailDecision={rowDetailDecision}
+            setRowDetailDecision={setRowDetailDecision}
+            rowDetailQnty={rowDetailQnty}
+            setRowDetailQnty={setRowDetailQnty}
+            rowDetailUnitPrice={rowDetailUnitPrice}
+            setRowDetailUnitPrice={setRowDetailUnitPrice}
+            rowDetailRemarks={rowDetailRemarks}
+            setRowDetailRemarks={setRowDetailRemarks}
+            savingRowDetail={savingRowDetail}
+            onOpenRowDetail={openRowDetail}
+            onCloseRowDetail={() => setIsRowDetailOpen(false)}
+            onSaveRowDetail={handleSaveRowDetail}
+          />
+        )}
+
+        <OrderLovModals lov={lov} orderForm={orderForm} />
+      </ErpDetailContainer>
+    );
+  }
+
+  // ===============================================================
+  // GIAO DIỆN 2: MÀN HÌNH DANH SÁCH ĐƠN HÀNG (/purchase-orders) - FULL TRÀN VIỀN
+  // ===============================================================
   return (
-    <div style={{ padding: 0, width: "100%", minHeight: "calc(100vh - 100px)", background: "#FFFFFF", borderRadius: 16, border: "1px solid #dce5e6", overflow: "hidden", boxShadow: "0 1px 3px rgba(18, 52, 67, 0.04)" }}>
-      <style>{`
-        .po-page-tabs .ant-tabs-nav {
-          margin-bottom: 0 !important;
-        }
-        .po-page-tabs .ant-tabs-nav::before {
-          border-bottom: 1px solid #dce5e6 !important;
-        }
-        .po-page-tabs .ant-tabs-tab {
-          border-color: #dce5e6 !important;
-          background: #f7fbfa !important;
-          color: #718894 !important;
-          border-radius: 8px 8px 0 0 !important;
-          font-weight: 500 !important;
-          font-size: 13px !important;
-          transition: all 0.2s ease;
-        }
-        .po-page-tabs .ant-tabs-tab:hover {
-          color: #008f89 !important;
-        }
-        .po-page-tabs .ant-tabs-tab-active {
-          background: #FFFFFF !important;
-          border-bottom-color: #FFFFFF !important;
-          color: #008f89 !important;
-          font-weight: 600 !important;
-        }
-        .po-page-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
-          color: #008f89 !important;
-        }
-        .po-page-tabs .ant-tabs-tab .ant-tabs-tab-remove {
-          color: #94A3B8 !important;
-        }
-        .po-page-tabs .ant-tabs-tab .ant-tabs-tab-remove:hover {
-          color: #EF4444 !important;
-        }
-      `}</style>
-      <Tabs
-        className="po-page-tabs"
-        type="editable-card"
-        hideAdd
-        activeKey={activeTabKey}
-        onChange={setActiveTabKey}
-        onEdit={(targetKey, action) => {
-          if (action === "remove" && targetKey === "edit") {
-            handleCloseEditTab();
-          }
+    <ErpPageContainer>
+      <PurchaseOrdersTable
+        filteredOrders={filteredOrders}
+        loading={loading}
+        pagination={pagination}
+        setPagination={setPagination}
+        searchKeyword={searchKeyword}
+        setSearchKeyword={setSearchKeyword}
+        columnFilters={columnFilters}
+        setColumnFilters={setColumnFilters}
+        columnSuggestions={columnSuggestions}
+        isFiltering={isFiltering}
+        storageKey={STORAGE_KEY_MAIN}
+        onRefresh={fetchOrders}
+        onCreate={() => {
+          window.open("/purchase-orders?action=create", "_blank");
         }}
-        items={tabItems}
-        tabBarStyle={{
-          margin: 0,
-          background: "#FFFFFF",
-          padding: "8px 24px 0 24px",
-          borderBottom: "1px solid #dce5e6",
+        onEdit={(record) => {
+          window.open(`/purchase-orders?id=${record.ContractId}`, "_blank");
         }}
       />
+    </ErpPageContainer>
+  );
+}
 
-      {isItemModalOpen && (
-        <ItemFormDrawer
-          open={isItemModalOpen}
-          onClose={() => setIsItemModalOpen(false)}
-          editingSubmissionItem={editingSubmissionItem}
-          form={itemForm}
-          submitting={submittingItem}
-          availableItems={availableItems}
-          loadingAvailableItems={loadingAvailableItems}
-          onSearchItem={handleSearchItem}
-          onFetchItems={() => fetchAvailableItems("")}
-          budgetList={budgetList}
-          loadingBudgetList={loadingBudgetList}
-          rawItemTotal={rawItemTotal}
-          taxItemTotal={taxItemTotal}
-          grandItemTotal={grandItemTotal}
-          watchedTaxRate={watchedTaxRate}
-          onFinish={handleCreateSubmission}
-        />
-      )}
-
-      {isPriceCompareOpen && (
-        <PriceCompareDrawer
-          open={isPriceCompareOpen}
-          onClose={() => setIsPriceCompareOpen(false)}
-          selectedOrderId={selectedOrder?.ContractId}
-          priceCompareItems={priceCompareItems}
-          loadingPriceCompare={loadingPriceCompare}
-          selectedPriceCompareKeys={selectedPriceCompareKeys}
-          setSelectedPriceCompareKeys={setSelectedPriceCompareKeys}
-          priceCompareStartProcess={priceCompareStartProcess}
-          setPriceCompareStartProcess={setPriceCompareStartProcess}
-          submittingPriceCompare={submittingPriceCompare}
-          onChangeQnty={handleChangePriceCompareQnty}
-          onChangeOrgcode={handleChangePriceCompareOrgcode}
-          onAddSelectedToOrder={handleAddSelectedToOrder}
-          existingItemIds={existingOrderItemIds}
-          budgetList={budgetList}
-          loadingBudgetList={loadingBudgetList}
-        />
-      )}
-
-      {isImportModalOpen && (
-        <ImportExcelModal
-          open={isImportModalOpen}
-          onClose={() => setIsImportModalOpen(false)}
-          selectedOrderId={selectedOrder?.ContractId}
-          importFileList={importFileList}
-          setImportFileList={setImportFileList}
-          importing={importing}
-          onImport={handleImportExcel}
-        />
-      )}
-
-      {isWorkflowDrawerOpen && (
-        <WorkflowDrawer
-          open={isWorkflowDrawerOpen}
-          onClose={() => {
-            setIsWorkflowDrawerOpen(false);
-            const targetContractId = editingOrder?.ContractId || selectedOrder?.ContractId;
-            if (targetContractId) {
-              fetchOrderDrawerItems(targetContractId);
-            }
-          }}
-          currentSubmissionId={currentSubmissionId}
-          itemDetail={itemDetail}
-          workflowData={workflowData}
-          loadingWorkflow={loadingWorkflow}
-          isRowDetailOpen={isRowDetailOpen}
-          selectedWorkflowRow={selectedWorkflowRow}
-          processingStatusList={processingStatusList}
-          loadingProcessingStatus={loadingProcessingStatus}
-          rowDetailDecision={rowDetailDecision}
-          setRowDetailDecision={setRowDetailDecision}
-          rowDetailQnty={rowDetailQnty}
-          setRowDetailQnty={setRowDetailQnty}
-          rowDetailUnitPrice={rowDetailUnitPrice}
-          setRowDetailUnitPrice={setRowDetailUnitPrice}
-          rowDetailRemarks={rowDetailRemarks}
-          setRowDetailRemarks={setRowDetailRemarks}
-          savingRowDetail={savingRowDetail}
-          onOpenRowDetail={openRowDetail}
-          onCloseRowDetail={() => setIsRowDetailOpen(false)}
-          onSaveRowDetail={handleSaveRowDetail}
-        />
-      )}
-
-      <OrderLovModals lov={lov} orderForm={orderForm} />
-    </div>
+export default function PurchaseOrdersPage() {
+  return (
+    <Suspense
+      fallback={
+        <div style={{ padding: 60, textAlign: "center" }}>
+          <Spin size="large" />
+          <div style={{ marginTop: 12, color: "#718894", fontSize: 13 }}>
+            Đang tải dữ liệu Đơn hàng...
+          </div>
+        </div>
+      }
+    >
+      <PurchaseOrdersPageContent />
+    </Suspense>
   );
 }

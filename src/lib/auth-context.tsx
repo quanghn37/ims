@@ -33,6 +33,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(false);
   }, []);
 
+  useEffect(() => {
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key !== "consims_session" || event.newValue !== null) return;
+      if (localStorage.getItem("consims_session")) return;
+
+      try {
+        sessionStorage.removeItem("consims_session");
+      } catch (error) {
+        console.error("Error clearing session in this tab:", error);
+      }
+      setUser(null);
+      if (window.location.pathname !== "/login") {
+        window.location.href = "/login";
+      }
+    };
+
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
+
   const login = async (email: string, pass: string, lang = "vi"): Promise<boolean> => {
     try {
       // Direct API call: /api/validate-user?params={"Email":"...","Password":"...","Language":"vi"}

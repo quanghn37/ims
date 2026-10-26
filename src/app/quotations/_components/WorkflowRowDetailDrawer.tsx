@@ -14,6 +14,7 @@ import {
 } from "antd";
 import { AuditOutlined, SaveOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
+import { renderStatusDotItem } from "@/config/statusConfig";
 import { useTranslation } from "@/locales/LanguageContext";
 
 const { Text } = Typography;
@@ -60,7 +61,7 @@ export default function WorkflowRowDetailDrawer({
     <Drawer
       title={
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <AuditOutlined style={{ color: "#722ed1" }} />
+          <AuditOutlined style={{ color: "#008f89" }} />
           <Text>{selectedWorkflowRow?.FullName || "---"}</Text>
           <Tag color="default">{selectedWorkflowRow?.Role || ""}</Tag>
         </div>
@@ -155,7 +156,7 @@ export default function WorkflowRowDetailDrawer({
                               }
                             }
 
-                            return { value: raw, label };
+                            return { value: raw, label: renderStatusDotItem(raw, label) };
                           })
                           .filter((it: any) => {
                             if (!it.value || seen.has(it.value)) return false;
@@ -164,9 +165,18 @@ export default function WorkflowRowDetailDrawer({
                           });
                       })()
                     : [
-                        { value: language === "en" ? "Approved" : "Chấp thuận", label: language === "en" ? "Approved" : "Chấp thuận" },
-                        { value: language === "en" ? "In-Progress" : "Đang làm", label: language === "en" ? "In-Progress" : "Đang làm" },
-                        { value: language === "en" ? "Rejected" : "Từ chối", label: language === "en" ? "Rejected" : "Từ chối" },
+                        {
+                          value: language === "en" ? "Approved" : "Chấp thuận",
+                          label: renderStatusDotItem("Approved", language === "en" ? "Approved" : "Chấp thuận"),
+                        },
+                        {
+                          value: language === "en" ? "In-Progress" : "Đang làm",
+                          label: renderStatusDotItem("In-Progress", language === "en" ? "In-Progress" : "Đang làm"),
+                        },
+                        {
+                          value: language === "en" ? "Rejected" : "Từ chối",
+                          label: renderStatusDotItem("Rejected", language === "en" ? "Rejected" : "Từ chối"),
+                        },
                       ]
                 }
               />

@@ -5,7 +5,6 @@ import {
   Drawer,
   Table,
   Space,
-  Typography,
   Row,
   Col,
   Button,
@@ -24,7 +23,6 @@ import dayjs from "dayjs";
 import { StockCardReportData, StockCardTransactionItem } from "../../types";
 import { useTranslation } from "@/locales/LanguageContext";
 
-const { Text } = Typography;
 const { RangePicker } = DatePicker;
 
 interface StockCardDrawerProps {
@@ -489,15 +487,9 @@ export default function StockCardDrawer({
               fontWeight: 600,
               fontSize: 14,
               color: "#123443",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
             }}
           >
             <span>{language === "en" ? "Stock card transaction details" : "Chi tiết các giao dịch xuất nhập Thẻ kho"}</span>
-            <Tag style={{ margin: 0, background: "#dce5e6", color: "#008f89", border: "none" }}>
-              {transactions.length} {language === "en" ? "movements" : "phát sinh"}
-            </Tag>
           </div>
 
           <Table

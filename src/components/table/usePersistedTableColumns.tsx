@@ -23,29 +23,31 @@ export function usePersistedTableColumns<T extends Record<string, any>>({
   const configStorageKey = `${tableKey}_columns_config_v1`;
   const widthsStorageKey = `${tableKey}_columns_widths_v1`;
 
-  // Trích xuất cấu hình mặc định ban đầu từ initialColumns
+  // Trích xuất cấu hình mặc định ban đầu từ initialColumns (loại trừ _spacer)
   const defaultConfigs: ColumnSettingItem[] = useMemo(() => {
-    return initialColumns.map((col, idx) => {
-      const key = String(col.key ?? col.dataIndex ?? `col_${idx}`);
-      let titleStr = "Cột";
-      if (typeof col.title === "string" && col.title.trim() !== "") {
-        titleStr = col.title;
-      } else if (typeof col.title === "number") {
-        titleStr = String(col.title);
-      } else if (key === "stt") {
-        titleStr = "STT";
-      } else if (key === actionColumnKey) {
-        titleStr = "Thao tác";
-      }
+    return initialColumns
+      .filter((col) => col.key !== "_spacer")
+      .map((col, idx) => {
+        const key = String(col.key ?? col.dataIndex ?? `col_${idx}`);
+        let titleStr = "Cột";
+        if (typeof col.title === "string" && col.title.trim() !== "") {
+          titleStr = col.title;
+        } else if (typeof col.title === "number") {
+          titleStr = String(col.title);
+        } else if (key === "stt") {
+          titleStr = "STT";
+        } else if (key === actionColumnKey) {
+          titleStr = "Thao tác";
+        }
 
-      return {
-        key,
-        title: titleStr,
-        visible: true,
-        cannotHide: Boolean(col.cannotHide || key === actionColumnKey),
-        fixed: col.fixed,
-      };
-    });
+        return {
+          key,
+          title: titleStr,
+          visible: true,
+          cannotHide: Boolean(col.cannotHide || key === actionColumnKey),
+          fixed: col.fixed,
+        };
+      });
   }, [initialColumns, actionColumnKey]);
 
   const [columnConfigs, setColumnConfigs] = useState<ColumnSettingItem[]>(defaultConfigs);
@@ -182,7 +184,7 @@ export function usePersistedTableColumns<T extends Record<string, any>>({
 
   // 4. Sinh mảng tableColumns đã xử lý thứ tự, ẩn hiện, resize và nhúng icon ⚙️ vào cột Thao tác
   const tableColumns = useMemo(() => {
-    return columnConfigs
+    const cols = columnConfigs
       .filter((cfg) => cfg.visible)
       .map((cfg) => {
         const colDef = initialColumnsMap.get(cfg.key);
@@ -240,8 +242,28 @@ export function usePersistedTableColumns<T extends Record<string, any>>({
         };
       })
       .filter(Boolean) as ColumnsType<T>;
+
+    // Chèn cột đệm _spacer trước cột action (nếu có định nghĩa _spacer trong initialColumns)
+    const hasSpacer = initialColumns.some((c) => c.key === "_spacer");
+    if (hasSpacer) {
+      const actionIndex = cols.findIndex((c) => c.key === actionColumnKey);
+      const spacerCol = {
+        key: "_spacer",
+        title: "",
+        width: undefined,
+        render: () => null,
+      };
+      if (actionIndex !== -1) {
+        cols.splice(actionIndex, 0, spacerCol as any);
+      } else {
+        cols.push(spacerCol as any);
+      }
+    }
+
+    return cols;
   }, [
     columnConfigs,
+    initialColumns,
     initialColumnsMap,
     columnWidths,
     actionColumnKey,
@@ -254,8 +276,11 @@ export function usePersistedTableColumns<T extends Record<string, any>>({
   ]);
 
   const scrollX = useMemo(() => {
-    const total = tableColumns.reduce((sum, c) => sum + (Number(c.width) || 120), 0);
-    return Math.max(total, defaultScrollX);
+    const total = tableColumns.reduce((sum, c) => {
+      if (c.key === "_spacer") return sum;
+      return sum + (Number(c.width) || 120);
+    }, 0);
+    return total > 0 ? total : defaultScrollX;
   }, [tableColumns, defaultScrollX]);
 
   return {

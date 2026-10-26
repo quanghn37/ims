@@ -1,5 +1,3 @@
-import dayjs from "dayjs";
-
 export interface StockItemDetail {
   id: string;
   itemCode: string;
@@ -614,4 +612,3 @@ export const MOCK_REQUISITIONS: MaterialRequisition[] = [
     ],
   },
 ];
-

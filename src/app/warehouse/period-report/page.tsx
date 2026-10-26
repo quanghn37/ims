@@ -9,16 +9,13 @@ import {
   DatePicker,
   Checkbox,
   Space,
-  Typography,
   message,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
-  BarChartOutlined,
   SearchOutlined,
   ReloadOutlined,
   FileExcelOutlined,
-  CalendarOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { InventoryPeriodReportItem } from "../types";
@@ -27,8 +24,7 @@ import { purchaseOrdersApi } from "@/app/purchase-orders/api";
 import { extractApiList, extractTotalRows } from "@/lib/api-client";
 import { useTranslation } from "@/locales/LanguageContext";
 import { exportToExcel } from "@/lib/excel-export";
-
-const { Title, Text } = Typography;
+import { ErpPageContainer } from "@/components/layout/ErpPageContainer";
 
 export default function InventoryPeriodReportPage() {
   const { t } = useTranslation();
@@ -458,65 +454,25 @@ export default function InventoryPeriodReportPage() {
   };
 
   return (
-    <div style={{ padding: "20px 24px", background: "#FFFFFF", borderRadius: 16, border: "1px solid #dce5e6", minHeight: "calc(100vh - 100px)", boxShadow: "0 1px 3px rgba(18, 52, 67, 0.04)" }}>
-      {/* 1. TIÊU ĐỀ TRANG */}
+    <ErpPageContainer>
+      {/* BỘ LỌC VÀ CÔNG CỤ TÌM KIẾM */}
       <div
         style={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          marginBottom: 18,
-        }}
-      >
-        <Space size={10} align="center">
-          <div
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 8,
-              background: "#eef8f6",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#008f89",
-            }}
-          >
-            <BarChartOutlined style={{ fontSize: 20 }} />
-          </div>
-          <div>
-            <Title level={4} style={{ margin: 0, color: "#123443", fontWeight: 700 }}>
-              {t.periodReport.title}
-            </Title>
-            <Text type="secondary" style={{ fontSize: 13 }}>
-              {t.pageTitles.periodReport}
-            </Text>
-          </div>
-        </Space>
-      </div>
-
-      {/* 2. BỘ LỌC VÀ CÔNG CỤ TÌM KIẾM */}
-      <div
-        style={{
-          background: "#FFFFFF",
-          border: "1px solid #dce5e6",
-          borderRadius: 8,
-          padding: "12px 16px",
-          marginBottom: 16,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
+          marginBottom: 14,
           gap: 12,
         }}
       >
-        <Space size={10} wrap>
+        <Space size={10} wrap style={{ flex: 1 }}>
           {/* Chọn Kỳ / Tháng */}
           <DatePicker
             picker="month"
             format="MM/YYYY"
             value={selectedPeriod}
             onChange={(d) => setSelectedPeriod(d)}
-            style={{ width: 140 }}
+            style={{ width: 130, height: 36 }}
             placeholder={t.periodReport.period}
             allowClear={false}
           />
@@ -525,7 +481,7 @@ export default function InventoryPeriodReportPage() {
           <Select
             value={selectedWarehouseId}
             onChange={setSelectedWarehouseId}
-            style={{ width: 260 }}
+            style={{ width: 240, height: 36 }}
             options={warehouseOptions}
             placeholder={t.periodReport.selectWarehouse}
           />
@@ -537,7 +493,7 @@ export default function InventoryPeriodReportPage() {
             value={searchKeyword}
             onChange={(e) => setSearchKeyword(e.target.value)}
             onPressEnter={handleSearch}
-            style={{ width: 240, borderRadius: 6 }}
+            style={{ width: 240, height: 36, borderRadius: 8, fontSize: 13.5 }}
             allowClear
           />
 
@@ -555,25 +511,32 @@ export default function InventoryPeriodReportPage() {
             style={{
               background: "#008f89",
               borderColor: "#008f89",
-              borderRadius: 6,
+              borderRadius: 8,
+              height: 36,
+              fontSize: 13.5,
+              fontWeight: 500,
             }}
           >
             {t.common.search}
           </Button>
 
           <Button
-            icon={<ReloadOutlined />}
+            icon={<ReloadOutlined style={{ color: "#008f89" }} />}
             onClick={handleReset}
-            style={{ borderRadius: 6, borderColor: "#CBD5E1" }}
+            style={{ height: 36, borderRadius: 8, borderColor: "#dce5e6", color: "#334155", fontSize: 13.5, fontWeight: 500 }}
           >
             {t.periodReport.refresh}
           </Button>
+
+          <span style={{ fontSize: 13, color: "#64748b" }}>
+            {t.common.total || "Tổng"}: <strong style={{ color: "#008f89" }}>{pagination.total}</strong> {t.table.itemsCount || "mặt hàng"}
+          </span>
         </Space>
 
-        <Space size={8}>
+        <Space size={10}>
           <Button
             icon={<FileExcelOutlined style={{ color: "#16A34A" }} />}
-            style={{ borderRadius: 6, borderColor: "#CBD5E1", fontWeight: 500 }}
+            style={{ height: 36, borderRadius: 8, borderColor: "#dce5e6", color: "#334155", fontSize: 13.5, fontWeight: 500 }}
             loading={exporting}
             onClick={handleExportExcel}
           >
@@ -597,14 +560,14 @@ export default function InventoryPeriodReportPage() {
           dataSource={dataList}
           columns={columns}
           rowKey={(r) => `${r.PeriodId ?? r.Period}_${r.WarehouseId}_${r.MaterialId ?? r.ItemCode}`}
-          scroll={{ x: 1500 }}
+          scroll={{ x: 1500, y: "calc(100vh - 225px)" }}
           bordered
           pagination={{
             current: pagination.current,
             pageSize: pagination.pageSize,
             total: pagination.total,
             showSizeChanger: true,
-            pageSizeOptions: ["20", "50", "100"],
+            pageSizeOptions: ["20", "50", "100", "200"],
             onChange: (page, pageSize) => {
               fetchPeriodReport(page, pageSize);
             },
@@ -692,6 +655,6 @@ export default function InventoryPeriodReportPage() {
           }}
         />
       </div>
-    </div>
+    </ErpPageContainer>
   );
 }

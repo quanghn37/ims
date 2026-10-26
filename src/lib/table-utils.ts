@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 interface ResizableColumn {
-  key?: string | number;
+  key?: React.Key;
   dataIndex?: string;
   width?: number;
 }

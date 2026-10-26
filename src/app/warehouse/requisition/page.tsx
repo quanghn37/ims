@@ -8,21 +8,16 @@ import {
   Select,
   Tag,
   Space,
-  Typography,
-  Tabs,
   Popconfirm,
   message,
-  Tooltip,
 } from "antd";
-import type { ColumnsType, ColumnType } from "antd/es/table";
+import type { ColumnType } from "antd/es/table";
 import {
   IconFileText,
   IconPlus,
   IconSearch,
   IconRefresh,
   IconFileSpreadsheet,
-  IconList,
-  IconPencil,
   IconClockHour4,
   IconCheck,
   IconUpload,
@@ -42,11 +37,10 @@ import RequisitionDetailDrawer from "./_components/RequisitionDetailDrawer";
 import RequisitionCreateModal from "./_components/RequisitionCreateModal";
 import RequisitionEditTab from "./_components/RequisitionEditTab";
 import { useTranslation } from "@/locales/LanguageContext";
-
-const { Text, Title } = Typography;
+import { ErpPageContainer, ErpDetailContainer } from "@/components/layout/ErpPageContainer";
 
 export default function MaterialRequisitionPage() {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [requisitions, setRequisitions] = useState<MaterialRequisition[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -416,9 +410,9 @@ export default function MaterialRequisitionPage() {
         render: (val, r: any) => {
           const createDate = val || r.DocDate;
           return (
-            <Text style={{ color: "#123443" }}>
+            <span style={{ color: "#123443" }}>
               {createDate ? dayjs(createDate).format("DD/MM/YYYY") : "---"}
-            </Text>
+            </span>
           );
         },
       },
@@ -434,41 +428,52 @@ export default function MaterialRequisitionPage() {
         ),
       },
       {
-        title: t.requisition.projectClient,
+        title: t.requisition?.projectName || (language === "en" ? "Project" : "Dự án"),
         dataIndex: "projectName",
         key: "projectName",
-        width: 250,
+        width: 180,
+        render: (val, r: any) => (
+          <span style={{ color: "#123443", fontSize: 13, fontWeight: 400 }}>
+            {val || r.ProjectName || r.projectName || "---"}
+          </span>
+        ),
+      },
+      {
+        title: t.requisition?.clientContract || (language === "en" ? "Client Contract" : "HĐ Chủ đầu tư"),
+        dataIndex: "contractCode",
+        key: "contractCode",
+        width: 160,
         render: (val, r: any) => {
-          const pName = val || r.ProjectName || r.projectName || "---";
-          const pCode = r.ProjectCode || r.contractCode || r.workPackage || "";
+          const code = val || r.ProjectCode || r.contractCode || r.workPackage || "";
           return (
-            <div>
-              <div style={{ color: "#123443", fontSize: 13 }}>{pName}</div>
-              {pCode && (
-                <div style={{ fontSize: 12, color: "#718894" }}>
-                  {pCode}
-                </div>
-              )}
-            </div>
+            <span style={{ fontFamily: "ui-monospace, monospace", color: "#1e293b", fontSize: 12.5, fontWeight: 400 }}>
+              {code || "---"}
+            </span>
           );
         },
       },
       {
-        title: t.requisition.receiverRequester,
-        key: "contractorAndRequester",
+        title: t.requisition?.receiver || (language === "en" ? "Receiver" : "Đơn vị nhận"),
+        dataIndex: "contractorName",
+        key: "contractorName",
         width: 220,
-        render: (_, r: any) => {
-          const receiver = r.contractorName || r.ReceiverName || r.targetName || "---";
-          const requester = r.requesterName || r.CreatedBy || "r@gmail.com";
+        render: (val, r: any) => (
+          <span style={{ color: "#123443", fontSize: 13, fontWeight: 400 }}>
+            {val || r.contractorName || r.ReceiverName || r.targetName || "---"}
+          </span>
+        ),
+      },
+      {
+        title: t.requisition?.requester || (language === "en" ? "Requester" : "Người yêu cầu"),
+        dataIndex: "requesterName",
+        key: "requesterName",
+        width: 150,
+        render: (val, r: any) => {
+          const req = val || r.requesterName || r.CreatedBy || "";
           return (
-            <div>
-              <div style={{ color: "#123443", fontSize: 13 }}>
-                {receiver}
-              </div>
-              <div style={{ fontSize: 12, color: "#718894" }}>
-                {requester}
-              </div>
-            </div>
+            <span style={{ color: "#123443", fontSize: 13, fontWeight: 400 }}>
+              {req || "---"}
+            </span>
           );
         },
       },
@@ -479,6 +484,13 @@ export default function MaterialRequisitionPage() {
         width: 250,
         ellipsis: true,
         render: (val, r: any) => val || r.Description || "---",
+      },
+      {
+        key: "_spacer",
+        title: "",
+        width: undefined,
+        cannotHide: true,
+        render: () => null,
       },
       {
         title: "",
@@ -501,286 +513,208 @@ export default function MaterialRequisitionPage() {
         ),
       },
     ],
-    [pagination.current, pagination.pageSize, t]
+    [pagination.current, pagination.pageSize, t, language]
   );
 
   const { tableColumns, scrollX } = usePersistedTableColumns({
-    tableKey: "warehouse_material_requisitions_v2",
+    tableKey: "warehouse_material_requisitions_v3",
     columns: baseColumns,
     actionColumnKey: "action",
-    defaultScrollX: 1100,
+    defaultScrollX: 1300,
   });
 
+  if (isEditTabOpen) {
+    return (
+      <ErpDetailContainer>
+        <RequisitionEditTab
+          open={isEditTabOpen}
+          onClose={handleCloseEditTab}
+          editingRequisition={editingRequisition}
+          onSave={handleSaveRequisition}
+        />
+        <RequisitionDetailDrawer
+          open={isDetailDrawerOpen}
+          onClose={handleCloseDetail}
+          requisition={selectedRequisition}
+          onApprove={handleApprove}
+          onReject={handleReject}
+          onSubmitForApproval={handleSubmitForApproval}
+        />
+        <RequisitionCreateModal
+          open={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          onSave={handleSaveCreate}
+        />
+      </ErpDetailContainer>
+    );
+  }
+
   return (
-    <div style={{ padding: 0, width: "100%", minHeight: "calc(100vh - 100px)", background: "#FFFFFF", borderRadius: 16, border: "1px solid #dce5e6", overflow: "hidden", boxShadow: "0 1px 3px rgba(18, 52, 67, 0.04)" }}>
-      <Tabs
-        className="requisition-page-tabs"
-        type="editable-card"
-        hideAdd
-        activeKey={activeTabKey}
-        onChange={setActiveTabKey}
-        onEdit={(targetKey, action) => {
-          if (action === "remove" && targetKey === "edit") {
-            handleCloseEditTab();
-          }
+    <ErpPageContainer>
+      {/* Scoped CSS for requisition main table */}
+      <style jsx global>{`
+        .requisition-main-table .ant-table-thead > tr > th {
+          background: #f7fbfa !important;
+          color: #123443 !important;
+          font-size: 13px !important;
+          font-weight: 600 !important;
+          line-height: 18px !important;
+          border-color: #dce5e6 !important;
+          padding: 10px 12px !important;
+        }
+        .requisition-main-table .ant-table-tbody > tr > td {
+          color: #123443 !important;
+          font-size: 13px !important;
+          line-height: 18px !important;
+          border-color: #dce5e6 !important;
+          padding: 10px 12px !important;
+          height: 46px !important;
+        }
+        .requisition-main-table .ant-table-tbody > tr:hover > td {
+          background-color: #eef8f6 !important;
+        }
+        .requisition-main-table .ant-table-container {
+          border: 1px solid #dce5e6 !important;
+          border-radius: 8px !important;
+          overflow: hidden;
+        }
+        .requisition-main-table .ant-pagination .ant-pagination-item-active {
+          border-color: #008f89 !important;
+          background-color: #008f89 !important;
+        }
+        .requisition-main-table .ant-pagination .ant-pagination-item-active a {
+          color: #FFFFFF !important;
+        }
+      `}</style>
+
+      {/* Toolbar Header */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 14,
+          gap: 12,
         }}
-        tabBarStyle={{
-          margin: 0,
-          background: "#f7fbfa",
-          padding: "6px 16px 0 16px",
-          borderBottom: "1px solid #dce5e6",
-        }}
-        items={[
-          {
-            key: "list",
-            label: (
-              <Space size={6}>
-                <IconList size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />
-                <span>{t.requisition.tabList}</span>
-              </Space>
-            ),
-            closable: false,
-            children: (
-              <div style={{ padding: 24 }}>
-                {/* Scoped CSS for requisition main table and tabs */}
-                <style jsx global>{`
-                  .requisition-main-table .ant-table-thead > tr > th {
-                    background: #f7fbfa !important;
-                    color: #123443 !important;
-                    font-size: 13px !important;
-                    font-weight: 600 !important;
-                    line-height: 18px !important;
-                    border-color: #dce5e6 !important;
-                    padding: 10px 12px !important;
-                  }
-                  .requisition-main-table .ant-table-tbody > tr > td {
-                    color: #123443 !important;
-                    font-size: 13px !important;
-                    line-height: 18px !important;
-                    border-color: #dce5e6 !important;
-                    padding: 10px 12px !important;
-                    height: 46px !important;
-                  }
-                  .requisition-main-table .ant-table-tbody > tr:hover > td {
-                    background-color: #eef8f6 !important;
-                  }
-                  .requisition-main-table .ant-table-container {
-                    border: 1px solid #dce5e6 !important;
-                    border-radius: 8px !important;
-                    overflow: hidden;
-                  }
-                  .requisition-main-table .ant-pagination .ant-pagination-item-active {
-                    border-color: #008f89 !important;
-                    background-color: #008f89 !important;
-                  }
-                  .requisition-main-table .ant-pagination .ant-pagination-item-active a {
-                    color: #FFFFFF !important;
-                  }
-                  .requisition-page-tabs .ant-tabs-nav {
-                    margin-bottom: 0 !important;
-                    background: #f7fbfa !important;
-                    border-bottom: 1px solid #dce5e6 !important;
-                    padding: 6px 16px 0 16px !important;
-                  }
-                  .requisition-page-tabs .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
-                    color: #008f89 !important;
-                    font-weight: 600 !important;
-                  }
-                  .requisition-page-tabs .ant-tabs-ink-bar {
-                    background: #008f89 !important;
-                  }
-                `}</style>
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", flex: 1 }}>
+          <Select
+            value={selectedWarehouseFilter}
+            onChange={setSelectedWarehouseFilter}
+            style={{ width: 180, height: 36 }}
+            options={warehouseOptions}
+          />
 
-                {/* Header bar */}
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginBottom: 16,
-                    flexWrap: "wrap",
-                    gap: 12,
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <Text
-                      strong
-                      style={{
-                        fontSize: 18,
-                        color: "#008f89",
-                        fontWeight: 700,
-                        lineHeight: "28px",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 8,
-                      }}
-                    >
-                      <IconFileText size={18} strokeWidth={1.8} style={{ color: "#008f89" }} /> {t.requisition.listTitle}
-                    </Text>
-                    <Tag
-                      style={{
-                        background: "#dce5e6",
-                        color: "#008f89",
-                        borderRadius: 12,
-                        border: "none",
-                        fontSize: 12,
-                        fontWeight: 500,
-                        lineHeight: "16px",
-                        padding: "2px 8px",
-                        margin: 0,
-                      }}
-                    >
-                      {pagination.total || filteredRequisitions.length} {t.requisition.reqCount}
-                    </Tag>
-                  </div>
+          <Select
+            value={selectedStatusFilter}
+            onChange={setSelectedStatusFilter}
+            style={{ width: 140, height: 36 }}
+            options={[
+              { value: "ALL", label: t.common.allStatus },
+              { value: "PENDING", label: t.status.pending },
+              { value: "APPROVED", label: t.status.approved },
+              { value: "PARTIAL_ISSUED", label: t.status.partialIssued },
+              { value: "COMPLETED", label: t.status.completed },
+              { value: "REJECTED", label: t.status.rejected },
+              { value: "DRAFT", label: t.status.draft },
+            ]}
+          />
 
-                  <Space size={8} wrap>
-                    <Select
-                      value={selectedWarehouseFilter}
-                      onChange={setSelectedWarehouseFilter}
-                      style={{ width: 200, height: 36 }}
-                      options={warehouseOptions}
-                    />
+          <Select
+            value={selectedPriorityFilter}
+            onChange={setSelectedPriorityFilter}
+            style={{ width: 130, height: 36 }}
+            options={[
+              { value: "ALL", label: t.requisition.allPriority },
+              { value: "URGENT", label: t.status.urgent },
+              { value: "HIGH", label: t.status.high },
+              { value: "NORMAL", label: t.status.normal },
+            ]}
+          />
 
-                    <Select
-                      value={selectedStatusFilter}
-                      onChange={setSelectedStatusFilter}
-                      style={{ width: 155, height: 36 }}
-                      options={[
-                        { value: "ALL", label: t.common.allStatus },
-                        { value: "PENDING", label: t.status.pending },
-                        { value: "APPROVED", label: t.status.approved },
-                        { value: "PARTIAL_ISSUED", label: t.status.partialIssued },
-                        { value: "COMPLETED", label: t.status.completed },
-                        { value: "REJECTED", label: t.status.rejected },
-                        { value: "DRAFT", label: t.status.draft },
-                      ]}
-                    />
+          <Input
+            placeholder={t.requisition.searchPlaceholder}
+            allowClear
+            value={searchKeyword}
+            onChange={(e) => setSearchKeyword(e.target.value)}
+            onPressEnter={() => fetchRequisitions(1, pagination.pageSize, searchKeyword)}
+            style={{ width: 220, height: 36, borderRadius: 8, fontSize: 13.5 }}
+            prefix={<IconSearch size={16} strokeWidth={1.8} style={{ color: "#94A3B8" }} />}
+          />
 
-                    <Select
-                      value={selectedPriorityFilter}
-                      onChange={setSelectedPriorityFilter}
-                      style={{ width: 140, height: 36 }}
-                      options={[
-                        { value: "ALL", label: t.requisition.allPriority },
-                        { value: "URGENT", label: t.status.urgent },
-                        { value: "HIGH", label: t.status.high },
-                        { value: "NORMAL", label: t.status.normal },
-                      ]}
-                    />
+          <span style={{ fontSize: 13, color: "#64748b", whiteSpace: "nowrap" }}>
+            {t.common.total || "Tổng"}: <strong style={{ color: "#008f89" }}>{filteredRequisitions.length}</strong> {t.requisition.reqCount || "yêu cầu"}
+          </span>
+        </div>
 
-                    <Input
-                      placeholder={t.requisition.searchPlaceholder}
-                      allowClear
-                      value={searchKeyword}
-                      onChange={(e) => setSearchKeyword(e.target.value)}
-                      onPressEnter={() => fetchRequisitions(1, pagination.pageSize, searchKeyword)}
-                      style={{ width: 230, height: 36, borderRadius: 8 }}
-                      prefix={<IconSearch size={16} strokeWidth={1.8} style={{ color: "#94A3B8" }} />}
-                    />
+        <Space size={10} style={{ flexShrink: 0 }}>
+          <Button
+            icon={<IconRefresh size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />}
+            onClick={() => {
+              setSearchKeyword("");
+              setSelectedWarehouseFilter("ALL");
+              setSelectedStatusFilter("ALL");
+              setSelectedPriorityFilter("ALL");
+              fetchRequisitions(1, pagination.pageSize, "");
+            }}
+            style={{ height: 36, borderRadius: 8, borderColor: "#dce5e6", color: "#334155", fontSize: 13.5, fontWeight: 500 }}
+          >
+            {t.common.refresh}
+          </Button>
 
-                    <Button
-                      icon={<IconSearch size={16} strokeWidth={1.8} />}
-                      onClick={() => fetchRequisitions(1, pagination.pageSize, searchKeyword)}
-                      style={{ height: 36, borderRadius: 8, borderColor: "#dce5e6" }}
-                    >
-                      {t.common.search}
-                    </Button>
+          <Button
+            icon={<IconFileSpreadsheet size={16} strokeWidth={1.8} style={{ color: "#16A34A" }} />}
+            onClick={() => message.info("Đang xuất danh sách yêu cầu ra file Excel...")}
+            style={{ height: 36, borderRadius: 8, borderColor: "#dce5e6", color: "#334155", fontSize: 13.5, fontWeight: 500 }}
+          >
+            {t.common.exportExcel}
+          </Button>
 
-                    <Button
-                      icon={<IconRefresh size={16} strokeWidth={1.8} />}
-                      onClick={() => {
-                        setSearchKeyword("");
-                        setSelectedWarehouseFilter("ALL");
-                        setSelectedStatusFilter("ALL");
-                        setSelectedPriorityFilter("ALL");
-                        fetchRequisitions(1, pagination.pageSize, "");
-                      }}
-                      style={{ height: 36, borderRadius: 8, borderColor: "#dce5e6" }}
-                    >
-                      {t.common.refresh}
-                    </Button>
+          <Button
+            type="primary"
+            icon={<IconPlus size={16} strokeWidth={2} />}
+            style={{
+              background: "#008f89",
+              borderColor: "#008f89",
+              height: 36,
+              borderRadius: 8,
+              fontSize: 13.5,
+              fontWeight: 500,
+              color: "#FFFFFF",
+              boxShadow: "0 2px 4px rgba(0, 143, 137, 0.2)",
+            }}
+            onClick={handleOpenCreate}
+          >
+            {t.common.createRequisition}
+          </Button>
+        </Space>
+      </div>
 
-                    <Button
-                      icon={<IconFileSpreadsheet size={16} strokeWidth={1.8} />}
-                      onClick={() => message.info("Đang xuất danh sách yêu cầu ra file Excel...")}
-                      style={{ height: 36, borderRadius: 8, borderColor: "#dce5e6" }}
-                    >
-                      {t.common.exportExcel}
-                    </Button>
-
-                    <Button
-                      type="primary"
-                      icon={<IconPlus size={16} strokeWidth={2} />}
-                      style={{
-                        background: "#008f89",
-                        borderColor: "#008f89",
-                        height: 36,
-                        borderRadius: 8,
-                        fontWeight: 500,
-                        boxShadow: "0 2px 4px rgba(0, 143, 137, 0.2)",
-                      }}
-                      onClick={handleOpenCreate}
-                    >
-                      {t.common.createRequisition}
-                    </Button>
-                  </Space>
-                </div>
-
-                {/* Table */}
-                <Table
-                  className="requisition-main-table"
-                  components={{ header: { cell: ResizableTitle } }}
-                  rowKey="id"
-                  size="small"
-                  columns={tableColumns}
-                  dataSource={filteredRequisitions}
-                  loading={loading}
-                  pagination={{
-                    current: pagination.current,
-                    pageSize: pagination.pageSize,
-                    total: pagination.total,
-                    showSizeChanger: true,
-                    pageSizeOptions: ["10", "20", "50", "100"],
-                    showTotal: (total) => `${t.table.total} ${total} ${t.requisition.reqCount}`,
-                    onChange: (page, pageSize) => {
-                      fetchRequisitions(page, pageSize, searchKeyword);
-                    },
-                  }}
-                  scroll={{ x: scrollX }}
-                />
-              </div>
-            ),
+      {/* Table */}
+      <Table
+        className="requisition-main-table"
+        tableLayout="fixed"
+        components={{ header: { cell: ResizableTitle } }}
+        rowKey="id"
+        size="small"
+        columns={tableColumns}
+        dataSource={filteredRequisitions}
+        loading={loading}
+        scroll={{ x: scrollX, y: "calc(100vh - 215px)" }}
+        onRow={(record) => ({
+          onDoubleClick: () => handleOpenEdit(record),
+        })}
+        pagination={{
+          current: pagination.current,
+          pageSize: pagination.pageSize,
+          total: pagination.total,
+          showSizeChanger: true,
+          pageSizeOptions: ["20", "50", "100", "200"],
+          showTotal: (total, range) => `${range[0]}–${range[1]} / ${total} ${t.requisition.reqCount || "yêu cầu"}`,
+          onChange: (page, pageSize) => {
+            fetchRequisitions(page, pageSize, searchKeyword);
           },
-          ...(isEditTabOpen
-            ? [
-                {
-                  key: "edit",
-                  label: (
-                    <Space size={6}>
-                      <IconPencil size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />
-                      <span>
-                        {editingRequisition
-                          ? `${editingRequisition.requisitionCode}`
-                          : t.common.createRequisition}
-                      </span>
-                    </Space>
-                  ),
-                  closable: true,
-                  children: (
-                    <div style={{ background: "#fff", minHeight: "calc(100vh - 110px)" }}>
-                      <RequisitionEditTab
-                        open={isEditTabOpen}
-                        onClose={handleCloseEditTab}
-                        editingRequisition={editingRequisition}
-                        onSave={handleSaveRequisition}
-                      />
-                    </div>
-                  ),
-                },
-              ]
-            : []),
-        ]}
+        }}
       />
 
       {/* Detail Drawer */}
@@ -799,6 +733,6 @@ export default function MaterialRequisitionPage() {
         onClose={() => setIsCreateModalOpen(false)}
         onSave={handleSaveCreate}
       />
-    </div>
+    </ErpPageContainer>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useTransition } from "react";
-import { Layout, Menu, Button, Avatar, Dropdown, Space, Typography, Tag, Spin, message } from "antd";
+import { Layout, Menu, Button, Avatar, Dropdown, Space, Typography, Tag, Spin } from "antd";
 import type { MenuProps } from "antd";
 import {
   IconFileText,
@@ -131,7 +131,6 @@ export const ErpLayout: React.FC<ErpLayoutProps> = ({ children }) => {
     },
   ];
 
-  const sessionIdText = mounted && user?.SessionId ? user.SessionId.substring(0, 8) : "";
   const userFullName = mounted && user?.FullName ? user.FullName : mounted && user?.LogIn ? user.LogIn : "";
   const userInitial = mounted && (user?.FullName?.[0] || user?.LogIn?.[0]) ? (user?.FullName?.[0] || user?.LogIn?.[0]).toUpperCase() : "U";
   const userJobTitle = mounted && user?.JobTitle ? user.JobTitle : "";
@@ -201,7 +200,7 @@ export const ErpLayout: React.FC<ErpLayoutProps> = ({ children }) => {
       >
         <div
           style={{
-            height: 64,
+            height: 48,
             display: "flex",
             alignItems: "center",
             padding: "0 16px",
@@ -210,10 +209,10 @@ export const ErpLayout: React.FC<ErpLayoutProps> = ({ children }) => {
             borderBottom: "1px solid rgba(220, 229, 230, 0.1)",
           }}
         >
-          <IconBuildingCommunity size={24} strokeWidth={1.8} style={{ color: "#008f89" }} />
+          <IconBuildingCommunity size={22} strokeWidth={1.8} style={{ color: "#008f89" }} />
           {!collapsed && (
             <div>
-              <Text strong style={{ color: "#fff", fontSize: 16, display: "block", lineHeight: "1.2", letterSpacing: "-0.3px" }}>
+              <Text strong style={{ color: "#fff", fontSize: 15, display: "block", lineHeight: "1.2", letterSpacing: "-0.3px" }}>
                 ConsIMS
               </Text>
             </div>
@@ -243,8 +242,10 @@ export const ErpLayout: React.FC<ErpLayoutProps> = ({ children }) => {
       <Layout style={{ background: "#f2f6f5" }}>
         <Header
           style={{
+            height: 48,
+            lineHeight: "48px",
             background: "#fff",
-            padding: "0 24px",
+            padding: "0 18px",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
@@ -256,8 +257,8 @@ export const ErpLayout: React.FC<ErpLayoutProps> = ({ children }) => {
           }}
         >
           <Space size="middle">
-            <IconLayoutDashboard size={20} strokeWidth={1.8} style={{ color: "#008f89" }} />
-            <Text strong style={{ fontSize: 16, color: "#123443" }}>
+            <IconLayoutDashboard size={18} strokeWidth={1.8} style={{ color: "#008f89" }} />
+            <Text strong style={{ fontSize: 15, color: "#123443" }}>
               {activePath === "/quotations" && t("pageTitles.quotations")}
               {activePath === "/contracts" && t("pageTitles.contracts")}
               {activePath === "/purchase-orders" && t("pageTitles.purchaseOrders")}
@@ -268,32 +269,27 @@ export const ErpLayout: React.FC<ErpLayoutProps> = ({ children }) => {
               {activePath.startsWith("/warehouse/period-report") && t("pageTitles.periodReport")}
             </Text>
             {isNavigating && <Spin size="small" />}
-            {sessionIdText ? (
-              <Tag style={{ background: "#eef8f6", color: "#008f89", borderColor: "#79c7bf", borderRadius: 6 }} suppressHydrationWarning>
-                {t("common.session")}: {sessionIdText}...
-              </Tag>
-            ) : null}
           </Space>
 
           <Space size="middle">
             <Dropdown menu={{ items: languageMenuItems }} placement="bottomRight">
-              <Button style={{ display: "inline-flex", alignItems: "center", gap: 6, borderRadius: 8, height: 32, borderColor: "#dce5e6", color: "#123443" }}>
-                <IconWorld size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />
+              <Button style={{ display: "inline-flex", alignItems: "center", gap: 6, borderRadius: 6, height: 30, borderColor: "#dce5e6", color: "#123443", fontSize: 12.5 }}>
+                <IconWorld size={15} strokeWidth={1.8} style={{ color: "#008f89" }} />
                 <span>{language === "en" ? "English (en)" : "Tiếng Việt (vi)"}</span>
               </Button>
             </Dropdown>
             <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
-              <Space style={{ cursor: "pointer" }}>
+              <Space style={{ cursor: "pointer" }} size={8}>
                 <span suppressHydrationWarning>
-                  <Avatar style={{ backgroundColor: "#008f89" }} icon={<IconUser size={16} />}>
+                  <Avatar size={30} style={{ backgroundColor: "#008f89" }} icon={<IconUser size={15} />}>
                     {userInitial}
                   </Avatar>
                 </span>
                 <div style={{ textAlign: "left", lineHeight: 1.2 }}>
-                  <Text strong style={{ display: "block", fontSize: 13, color: "#123443" }} suppressHydrationWarning>
+                  <Text strong style={{ display: "block", fontSize: 12.5, color: "#123443" }} suppressHydrationWarning>
                     {userFullName}
                   </Text>
-                  <Text style={{ fontSize: 11, color: "#718894" }} suppressHydrationWarning>
+                  <Text style={{ fontSize: 10.5, color: "#718894" }} suppressHydrationWarning>
                     {userJobTitle}
                   </Text>
                 </div>

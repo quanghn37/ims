@@ -8,7 +8,7 @@ const BASE_URL = "/api/consims";
 
 export const apiClient = axios.create({
   baseURL: BASE_URL,
-  timeout: 10000,
+  timeout: 60000, // Tăng lên 60s để các API truy vấn báo cáo / danh sách hợp đồng lớn không bị timeout 10s
 });
 
 export const DEFAULT_SESSION: UserSession = {
@@ -341,8 +341,10 @@ const erpGetCache = new Map<string, CacheEntry>();
 const erpInFlightRequests = new Map<string, Promise<any>>();
 const recentRequestTimestamps = new Map<string, number>();
 const DEFAULT_CACHE_TTL_MS = 60 * 1000; // 60s in-memory cache for snappy navigation
+let erpCacheGeneration = 0;
 
 export function clearErpCache() {
+  erpCacheGeneration += 1;
   erpGetCache.clear();
   erpInFlightRequests.clear();
 }
@@ -373,7 +375,7 @@ function handleSessionError(msg?: string) {
 export async function erpGet<T = any>(
   endpoint: string,
   params: Record<string, any> = {},
-  options?: { skipCache?: boolean; ttlMs?: number }
+  options?: { skipCache?: boolean; ttlMs?: number; timeoutMs?: number }
 ): Promise<T> {
   const session = getStoredSession();
   const cleanEndpoint = endpoint.startsWith("/") ? endpoint.substring(1) : endpoint;
@@ -394,6 +396,7 @@ export async function erpGet<T = any>(
   const cacheKey = `${cleanEndpoint}?${JSON.stringify(mergedParams)}`;
   const now = Date.now();
   const ttl = options?.ttlMs ?? DEFAULT_CACHE_TTL_MS;
+  const cacheGeneration = erpCacheGeneration;
 
   // 1. Kiểm tra cache đã hoàn tất và còn hạn (TTL)
   if (!options?.skipCache && erpGetCache.has(cacheKey)) {
@@ -427,10 +430,12 @@ export async function erpGet<T = any>(
   const separator = cleanEndpoint.includes("?") ? "&" : "?";
   const url = `/${cleanEndpoint}${separator}${queryString}`;
 
-  const fetchPromise = (async () => {
+  let fetchPromise: Promise<T> | null = null;
+  fetchPromise = (async () => {
     try {
       const response = await apiClient.get<any>(url, {
         headers: getSessionHeaders(cleanEndpoint, session),
+        timeout: options?.timeoutMs ?? 60000,
       });
       const data = response.data;
       if (data?.Success === "false" || data?.success === false) {
@@ -439,10 +444,14 @@ export async function erpGet<T = any>(
         throw new Error(errMsg);
       }
 
-      erpGetCache.set(cacheKey, { data, timestamp: Date.now() });
+      if (cacheGeneration === erpCacheGeneration) {
+        erpGetCache.set(cacheKey, { data, timestamp: Date.now() });
+      }
       return data as T;
     } finally {
-      erpInFlightRequests.delete(cacheKey);
+      if (fetchPromise && erpInFlightRequests.get(cacheKey) === fetchPromise) {
+        erpInFlightRequests.delete(cacheKey);
+      }
     }
   })();
 
@@ -484,33 +493,37 @@ export async function erpPost<T = any>(
 
   auditApiParams("POST", cleanEndpoint, mergedParams);
 
-  const response = await apiClient.post<any>(`/${cleanEndpoint}`, {
-    ...mergedParams,
-    params: mergedParams,
-  }, {
-    headers: getSessionHeaders(cleanEndpoint, session),
-  });
+  try {
+    const response = await apiClient.post<any>(`/${cleanEndpoint}`, {
+      ...mergedParams,
+      params: mergedParams,
+    }, {
+      headers: getSessionHeaders(cleanEndpoint, session),
+    });
 
-  let data = response.data;
-  if (typeof data === "string") {
-    try {
-      data = JSON.parse(data);
-    } catch {}
-  }
+    let data = response.data;
+    if (typeof data === "string") {
+      try {
+        data = JSON.parse(data);
+      } catch {}
+    }
 
-  if (Array.isArray(data) && data.length > 0 && typeof data[0] === "object") {
-    const first = data[0];
-    if (first?.Success === "false" || first?.success === false) {
-      const errMsg = first?.Message || first?.message || "Thao tác không thành công";
+    if (Array.isArray(data) && data.length > 0 && typeof data[0] === "object") {
+      const first = data[0];
+      if (first?.Success === "false" || first?.success === false) {
+        const errMsg = first?.Message || first?.message || "Thao tác không thành công";
+        handleSessionError(errMsg);
+        throw new Error(errMsg);
+      }
+    } else if (data?.Success === "false" || data?.success === false) {
+      const errMsg = data?.Message || data?.message || data?.error || "Thao tác không thành công";
       handleSessionError(errMsg);
       throw new Error(errMsg);
     }
-  } else if (data?.Success === "false" || data?.success === false) {
-    const errMsg = data?.Message || data?.message || data?.error || "Thao tác không thành công";
-    handleSessionError(errMsg);
-    throw new Error(errMsg);
+    return data as T;
+  } finally {
+    clearErpCache();
   }
-  return data as T;
 }
 
 /**
@@ -533,19 +546,27 @@ export async function erpPostForm<T = any>(endpoint: string, formData: FormData)
     formData.append("SessionId", sessionId);
   }
   if (!formData.has("Language")) {
-    formData.append("Language", "vi");
+    const language =
+      session?.Language ||
+      (IS_BROWSER ? localStorage.getItem("consims_lang") : null) ||
+      "vi";
+    formData.append("Language", language);
   }
 
-  const response = await apiClient.post<any>(`/${cleanEndpoint}`, formData, {
-    headers: {
-      ...getSessionHeaders(cleanEndpoint, session),
-      "Content-Type": "multipart/form-data",
-    },
-  });
+  try {
+    const response = await apiClient.post<any>(`/${cleanEndpoint}`, formData, {
+      headers: {
+        ...getSessionHeaders(cleanEndpoint, session),
+        "Content-Type": "multipart/form-data",
+      },
+    });
 
-  const data = response.data;
-  if (data?.Success === "false" || data?.success === false) {
-    throw new Error(data?.Message || data?.message || "Tải lên thất bại");
+    const data = response.data;
+    if (data?.Success === "false" || data?.success === false) {
+      throw new Error(data?.Message || data?.message || "Tải lên thất bại");
+    }
+    return data as T;
+  } finally {
+    clearErpCache();
   }
-  return data as T;
 }

@@ -70,6 +70,12 @@ export function useContractMaterialsAndPriceLists(
                   SubmissionId: subId,
                   id: subId,
                   uniqueKey: `sub_${subId}`,
+                  ContractCode:
+                    it.ContractCode ||
+                    (it as any).Contractcode ||
+                    editingContract?.ContractCode ||
+                    form.getFieldValue("ContractCode") ||
+                    "",
                   MaterialId: it.MaterialId ?? it.ItemId,
                   ItemId: it.ItemId ?? it.MaterialId,
                   ItemName: it.Description || it.ItemName || "",
@@ -122,6 +128,12 @@ export function useContractMaterialsAndPriceLists(
                   ...it,
                   id: it.SubmissionId || it.LocalId || `${pl.id}_${it.ItemId || idx}`,
                   uniqueKey: `${pl.id}_${it.SubmissionId || it.LocalId || it.ItemId || idx}`,
+                  ContractCode:
+                    it.ContractCode ||
+                    (it as any).Contractcode ||
+                    editingContract?.ContractCode ||
+                    form.getFieldValue("ContractCode") ||
+                    "",
                   PriceListId: pl.id,
                   PriceListCode: pl.code,
                   QuotationCode: pl.code,
@@ -287,18 +299,14 @@ export function useContractMaterialsAndPriceLists(
       const newParentIds = newParentLists.map((pl) => Number(pl.id));
 
       if (newParentIds.length > 0) {
-        try {
-          await contractsApi.updateQuotationInfo(
-            {
-              ContractId: cId,
-              PriceListIds: newParentIds,
-              WSId: "",
-            },
-            "add_pricelist"
-          );
-        } catch (err: any) {
-          console.error("Lỗi khi gán bảng giá vào hợp đồng:", err);
-        }
+        await contractsApi.updateQuotationInfo(
+          {
+            ContractId: cId,
+            PriceListIds: newParentIds,
+            WSId: "",
+          },
+          "add_pricelist"
+        );
       }
 
       // 2. Tạo chi tiết vật tư vào database ngay qua api/upsert-matequipsubmission

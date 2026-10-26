@@ -1,19 +1,20 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
-import { Button, Form, message, Space, Tabs, Spin } from "antd";
+import React, { useState, useEffect, Suspense, useCallback } from "react";
+import { Form, message, Spin } from "antd";
+import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
-import { IconFileText, IconPencil } from "@tabler/icons-react";
 import { extractApiList, extractTotalRows } from "@/lib/api-client";
 import { contractsApi } from "./api";
 import { ContractItem } from "@/types";
 import dayjs from "dayjs";
 
 import { useAuth } from "@/lib/auth-context";
-import { AttachmentFile, parseDateSafe, debounce } from "./_components/types";
+import { AttachmentFile, parseDateSafe } from "./_components/types";
 import ContractsTable from "./_components/ContractsTable";
 import { useContracts } from "./_hooks/useContracts";
 import { useTranslation } from "@/locales/LanguageContext";
+import { ErpPageContainer, ErpDetailContainer } from "@/components/layout/ErpPageContainer";
 
 const ContractFormDrawer = dynamic(() => import("./_components/ContractFormDrawer"), {
   loading: () => (
@@ -27,36 +28,66 @@ const ContractFormDrawer = dynamic(() => import("./_components/ContractFormDrawe
 const ClientLovModal = dynamic(() => import("@/components/lov/ClientLovModal"), { ssr: false });
 const MainContractLovModal = dynamic(() => import("@/components/lov/MainContractLovModal"), { ssr: false });
 
-export default function ContractsPage() {
+function ContractsPageContent() {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const {
-    contracts, loading, searchKeyword, setSearchKeyword, columnFilters, setColumnFilters,
-    pagination, setPagination, fetchContracts, columnSuggestions, filteredContracts, isFiltering,
-  } = useContracts();
+  const searchParams = useSearchParams();
 
+  const queryContractId = searchParams.get("id") || searchParams.get("contractId");
+  const queryAction = searchParams.get("action");
+  const queryParentId = searchParams.get("parentId");
+
+  const isDetailPage = Boolean(queryContractId || queryAction);
   const currentUserId = user?.LogIn || "";
   const STORAGE_KEY_MAIN = `table_cols_contracts_main_${currentUserId}`;
 
-  // --- Tab Navigation & Edit Contract Tab ---
-  const [activeTabKey, setActiveTabKey] = useState<string>("list");
-  const [isEditTabOpen, setIsEditTabOpen] = useState(false);
+  // ===============================================================
+  // STATE CHO MÀN HÌNH DANH SÁCH (KHI Ở TAB DANH SÁCH /contracts)
+  // ===============================================================
+  const {
+    contracts,
+    loading: loadingList,
+    searchKeyword,
+    setSearchKeyword,
+    columnFilters,
+    setColumnFilters,
+    pagination,
+    setPagination,
+    fetchContracts,
+    columnSuggestions,
+    filteredContracts,
+    isFiltering,
+  } = useContracts();
 
-  // --- Modal Create / Edit Contract Form ---
+  // Tự động đồng bộ danh sách khi có cập nhật từ tab chi tiết khác
+  useEffect(() => {
+    if (isDetailPage) return;
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "consims_contract_updated") {
+        fetchContracts(pagination.current, pagination.pageSize);
+      }
+    };
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, [isDetailPage, pagination.current, pagination.pageSize, fetchContracts]);
+
+  // ===============================================================
+  // STATE CHO MÀN HÌNH CHI TIẾT (KHI MỞ TAB TRÌNH DUYỆT RIÊNG)
+  // ===============================================================
   const [editingContract, setEditingContract] = useState<ContractItem | null>(null);
   const [contractForm] = Form.useForm();
   const [submittingContract, setSubmittingContract] = useState(false);
+  const [loadingSingleContract, setLoadingSingleContract] = useState(false);
   const [attachments, setAttachments] = useState<AttachmentFile[]>([]);
   const [selectedAttachmentKeys, setSelectedAttachmentKeys] = useState<React.Key[]>([]);
 
-  // --- LOV NCC ---
+  // LOVs
   const [clientList, setClientList] = useState<any[]>([]);
   const [loadingClients, setLoadingClients] = useState(false);
   const [isClientLovOpen, setIsClientLovOpen] = useState(false);
   const [clientSearchInput, setClientSearchInput] = useState("");
   const [selectedClientDisplay, setSelectedClientDisplay] = useState("");
 
-  // --- LOV Hợp đồng CĐT ---
   const [mainContractList, setMainContractList] = useState<any[]>([]);
   const [loadingMainContracts, setLoadingMainContracts] = useState(false);
   const [isMainContractLovOpen, setIsMainContractLovOpen] = useState(false);
@@ -64,9 +95,6 @@ export default function ContractsPage() {
   const [selectedMainContractDisplay, setSelectedMainContractDisplay] = useState("");
   const [mainContractPagination, setMainContractPagination] = useState({ current: 1, pageSize: 20, total: 0 });
 
-  // ---------------------------------------------------------------
-  // Data Fetching
-  // ---------------------------------------------------------------
   const fetchClientList = async (keyword = "") => {
     setLoadingClients(true);
     try {
@@ -140,41 +168,12 @@ export default function ContractsPage() {
   };
 
   const handleClearMainContract = () => {
-    contractForm.setFieldsValue({
-      MainContractId: undefined,
-    });
+    contractForm.setFieldsValue({ MainContractId: undefined });
     setSelectedMainContractDisplay("");
   };
 
-  // ---------------------------------------------------------------
-  // Open / Close Handlers
-  // ---------------------------------------------------------------
-  const handleOpenCreateContract = () => {
-    setEditingContract(null);
-    contractForm.resetFields();
-    setSelectedClientDisplay("");
-    setSelectedMainContractDisplay("");
-    contractForm.setFieldsValue({
-      Currency: "VND",
-      Amount: 0,
-      SignDate: dayjs(),
-      FromDate: dayjs(),
-      ToDate: null,
-      IsVcontract: false,
-      S_Type: undefined,
-      ContractCategory: undefined,
-      ContractCode: "",
-      ParentContractId: undefined,
-      ParentContractCode: "",
-      PayTerms: undefined,
-    });
-    setAttachments([]);
-    setSelectedAttachmentKeys([]);
-    setIsEditTabOpen(true);
-    setActiveTabKey("edit");
-  };
-
-  const handleEditContract = (record: ContractItem) => {
+  // Điền dữ liệu một bản ghi hợp đồng vào Form
+  const applyContractToForm = useCallback((record: ContractItem) => {
     setEditingContract(record);
     contractForm.resetFields();
 
@@ -188,7 +187,6 @@ export default function ContractsPage() {
 
     const sourceId = record.SourceId ? Number(record.SourceId) : undefined;
 
-    // PLHĐ của: Ưu tiên lấy từ thuộc tính MasterContract / MasterContractCode / ParentContractCode trả về từ API get-contract-list (mat_equip)
     const masterContractVal =
       (record as any).MasterContract ??
       (record as any).MasterContractCode ??
@@ -203,14 +201,6 @@ export default function ContractsPage() {
     const rawParentId = (record as any).ParentContractId || (record as any).ParentId || (record as any).MasterContractId;
     const parentContractId = rawParentId ? Number(rawParentId) : undefined;
 
-    let parentContractCode = String(masterContractVal || "");
-    if (!parentContractCode && parentContractId) {
-      const parentInList = contracts.find((c) => Number(c.ContractId) === Number(parentContractId));
-      if (parentInList?.ContractCode) {
-        parentContractCode = parentInList.ContractCode;
-      }
-    }
-
     const sTypeVal =
       record.S_Type ??
       (record as any).s_type ??
@@ -224,7 +214,7 @@ export default function ContractsPage() {
       MainContractId: mainContractId,
       ContractCode: record.ContractCode || "",
       ParentContractId: parentContractId || undefined,
-      ParentContractCode: parentContractCode || "",
+      ParentContractCode: masterContractVal || "",
       SourceId: sourceId,
       Amount: Number((record as any).ContractedAmount ?? record.Amount ?? 0),
       Description: record.Description || "",
@@ -245,87 +235,124 @@ export default function ContractsPage() {
 
     setAttachments([]);
     setSelectedAttachmentKeys([]);
+  }, [contractForm]);
 
-    setIsEditTabOpen(true);
-    setActiveTabKey("edit");
-  };
+  // Khi mở tab trình duyệt có queryContractId: tự động tải thông tin hợp đồng
+  useEffect(() => {
+    if (!queryContractId) return;
 
-  const handleCreateAddendum = (record: ContractItem) => {
-    setEditingContract(null);
-    contractForm.resetFields();
+    const loadSingleContract = async () => {
+      setLoadingSingleContract(true);
+      try {
+        const data = await contractsApi.getContracts(
+          {
+            DisplayMode: "mat_equip",
+            ContractId: queryContractId,
+          },
+          { skipCache: true }
+        );
+        const list = extractApiList<ContractItem>(data);
+        const contract = list.find((c) => Number(c.ContractId) === Number(queryContractId)) || list[0];
+        if (contract) {
+          applyContractToForm(contract);
+          if (typeof document !== "undefined") {
+            document.title = `Chi tiết HĐ: ${contract.ContractCode || queryContractId}`;
+          }
+        } else {
+          message.error("Không tìm thấy thông tin hợp đồng này.");
+        }
+      } catch (err) {
+        console.error("Lỗi tải chi tiết hợp đồng:", err);
+        message.error("Không thể tải thông tin hợp đồng.");
+      } finally {
+        setLoadingSingleContract(false);
+      }
+    };
 
-    const clientId = record.ClientID ?? record.ClientId ?? undefined;
-    const clientName = record.Venname || record.ClientName || (clientId ? `NCC #${clientId}` : "");
-    setSelectedClientDisplay(clientName);
+    loadSingleContract();
+  }, [queryContractId, applyContractToForm]);
 
-    const mainContractId = record.MainContractId ?? (record as any).SubconOf ?? (record as any).MainId ?? undefined;
-    const mainContractDisplay = record.MainCode || record.MainContractCode || (mainContractId ? `HĐ #${mainContractId}` : "");
-    setSelectedMainContractDisplay(mainContractDisplay);
+  // Khi mở tab trình duyệt với action=create hoặc action=addendum
+  useEffect(() => {
+    if (queryAction === "create") {
+      setEditingContract(null);
+      contractForm.resetFields();
+      setSelectedClientDisplay("");
+      setSelectedMainContractDisplay("");
+      contractForm.setFieldsValue({
+        Currency: "VND",
+        Amount: 0,
+        SignDate: dayjs(),
+        FromDate: dayjs(),
+        ToDate: null,
+        IsVcontract: false,
+        S_Type: undefined,
+        ContractCategory: undefined,
+        ContractCode: "",
+        ParentContractId: undefined,
+        ParentContractCode: "",
+        PayTerms: undefined,
+      });
+      setAttachments([]);
+      setSelectedAttachmentKeys([]);
+      if (typeof document !== "undefined") {
+        document.title = "Tạo Hợp đồng mới";
+      }
+    } else if (queryAction === "addendum" && queryParentId) {
+      const loadParent = async () => {
+        try {
+          const data = await contractsApi.getContracts(
+            {
+              DisplayMode: "mat_equip",
+              ContractId: queryParentId,
+            },
+            { skipCache: true }
+          );
+          const list = extractApiList<ContractItem>(data);
+          const parent = list.find((c) => Number(c.ContractId) === Number(queryParentId)) || list[0];
+          if (parent) {
+            setEditingContract(null);
+            contractForm.resetFields();
+            const clientId = parent.ClientID ?? parent.ClientId ?? undefined;
+            const clientName = parent.Venname || parent.ClientName || (clientId ? `NCC #${clientId}` : "");
+            setSelectedClientDisplay(clientName);
 
-    const parentContractId = Number(record.ContractId);
-    const parentContractCode = record.ContractCode || String(record.ContractId);
+            const mainContractId = parent.MainContractId ?? (parent as any).SubconOf ?? (parent as any).MainId ?? undefined;
+            const mainContractDisplay = parent.MainCode || parent.MainContractCode || (mainContractId ? `HĐ #${mainContractId}` : "");
+            setSelectedMainContractDisplay(mainContractDisplay);
 
-    const sTypeVal =
-      record.S_Type ??
-      (record as any).s_type ??
-      (record as any).S_type ??
-      (record as any).ContractCategory ??
-      (record as any).Category ??
-      undefined;
+            const sTypeVal = parent.S_Type ?? (parent as any).s_type ?? (parent as any).ContractCategory ?? undefined;
 
-    contractForm.setFieldsValue({
-      ClientId: clientId,
-      MainContractId: mainContractId,
-      ContractCode: "",
-      ParentContractId: parentContractId,
-      ParentContractCode: parentContractCode,
-      Description: `Phụ lục cho HĐ ${record.ContractCode || record.ContractId}`,
-      Currency: record.Currency || "VND",
-      Amount: 0,
-      SignDate: dayjs(),
-      FromDate: parseDateSafe(record.StartDate || record.FromDate) || dayjs(),
-      ToDate: parseDateSafe(record.EndDate || record.ToDate) || null,
-      IsVcontract: false,
-      S_Type: sTypeVal,
-      ContractCategory: sTypeVal,
-      PayTerms:
-        record.PayTerms ||
-        (record as any).PaymentTerm ||
-        (record as any).PaytermId ||
-        (record as any).PaytermsId ||
-        undefined,
-    });
-
-    setAttachments([]);
-    setSelectedAttachmentKeys([]);
-
-    setIsEditTabOpen(true);
-    setActiveTabKey("edit");
-  };
-
-  const handleCloseEditTab = () => {
-    setIsEditTabOpen(false);
-    setActiveTabKey("list");
-    setEditingContract(null);
-  };
-
-  const handleDeleteContract = async (record: ContractItem) => {
-    try {
-      await contractsApi.updateContractInfo(
-        {
-          ContractId: String(record.ContractId),
-          ContractType: "mat_equip",
-          WSId: "",
-        },
-        "delete_contract"
-      );
-      message.success(`Đã xóa hợp đồng ${record.ContractCode || ""} thành công!`);
-      fetchContracts(pagination.current, pagination.pageSize);
-    } catch (e: any) {
-      message.error(e.message || "Xóa hợp đồng thất bại.");
+            contractForm.setFieldsValue({
+              ClientId: clientId,
+              MainContractId: mainContractId,
+              ContractCode: "",
+              ParentContractId: Number(parent.ContractId),
+              ParentContractCode: parent.ContractCode || String(parent.ContractId),
+              Description: `Phụ lục cho HĐ ${parent.ContractCode || parent.ContractId}`,
+              Currency: parent.Currency || "VND",
+              Amount: 0,
+              SignDate: dayjs(),
+              FromDate: parseDateSafe(parent.StartDate || parent.FromDate) || dayjs(),
+              ToDate: parseDateSafe(parent.EndDate || parent.ToDate) || null,
+              IsVcontract: false,
+              S_Type: sTypeVal,
+              ContractCategory: sTypeVal,
+              PayTerms: parent.PayTerms || (parent as any).PaymentTerm || undefined,
+            });
+            if (typeof document !== "undefined") {
+              document.title = `Tạo Phụ lục cho HĐ: ${parent.ContractCode || queryParentId}`;
+            }
+          }
+        } catch (e) {
+          console.error("Lỗi tải HĐ gốc tạo phụ lục:", e);
+        }
+      };
+      loadParent();
     }
-  };
+  }, [queryAction, queryParentId, contractForm]);
 
+  // Xử lý lưu hợp đồng
   const handleSubmitContract = async (values: any) => {
     setSubmittingContract(true);
     try {
@@ -344,17 +371,8 @@ export default function ContractsPage() {
 
       let parentContractId: number | null = null;
       const inputParentCode = values.ParentContractCode ? String(values.ParentContractCode).trim() : "";
-      if (inputParentCode) {
-        if (values.ParentContractId && Number(values.ParentContractId) !== Number(mainContractIdVal)) {
-          parentContractId = Number(values.ParentContractId);
-        } else {
-          const matched = contracts.find(
-            (c) => c.ContractCode && c.ContractCode.toLowerCase() === inputParentCode.toLowerCase()
-          );
-          if (matched && Number(matched.ContractId) !== Number(mainContractIdVal)) {
-            parentContractId = Number(matched.ContractId);
-          }
-        }
+      if (inputParentCode && values.ParentContractId && Number(values.ParentContractId) !== Number(mainContractIdVal)) {
+        parentContractId = Number(values.ParentContractId);
       }
 
       const paytermVal =
@@ -365,6 +383,11 @@ export default function ContractsPage() {
           : undefined;
 
       const sTypeValue = values.S_Type || values.ContractCategory || "";
+      if (!sTypeValue) {
+        message.warning(t.contract.contractCategoryRequired || "Vui lòng chọn loại hợp đồng.");
+        setSubmittingContract(false);
+        return;
+      }
 
       if (editingContract) {
         const rawEditingClientId = editingContract.ClientID ?? editingContract.ClientId;
@@ -415,7 +438,9 @@ export default function ContractsPage() {
               }
             : prev
         );
-        fetchContracts(pagination.current, pagination.pageSize);
+        try {
+          localStorage.setItem("consims_contract_updated", String(Date.now()));
+        } catch (e) {}
       } else {
         const createPayload = {
           WSId: "",
@@ -439,9 +464,7 @@ export default function ContractsPage() {
         };
 
         const createRes: any = await contractsApi.updateContractInfo(createPayload, "Create_Contract");
-        fetchContracts(1, pagination.pageSize);
-
-        let newContractId = Number(
+        const newContractId = Number(
           createRes?.ContractId ||
             createRes?.Data?.ContractId ||
             createRes?.data?.ContractId ||
@@ -451,32 +474,25 @@ export default function ContractsPage() {
             createRes?.Id
         );
 
-        let createdContract: any = null;
+        message.success("Tạo mới Hợp đồng NCC thành công!");
         try {
-          const refreshedData = await contractsApi.getContracts({
-            DisplayMode: "mat_equip",
-            ClientId: "",
-            WSId: "",
-            PageNum: 1,
-            PageSize: 10,
-          });
-          const refreshedList = extractApiList<ContractItem>(refreshedData);
-          if (newContractId) {
-            createdContract = refreshedList.find((c: any) => Number(c.ContractId) === newContractId);
-          }
-          if (!createdContract && refreshedList.length > 0) {
-            createdContract = refreshedList[0];
-          }
-        } catch (err) {
-          console.error("Error fetching refreshed contract:", err);
-        }
+          localStorage.setItem("consims_contract_updated", String(Date.now()));
+        } catch (e) {}
 
-        if (createdContract) {
-          handleEditContract(createdContract);
-          message.success("Tạo mới Hợp đồng NCC thành công!");
-        } else {
-          message.success("Tạo mới Hợp đồng NCC thành công!");
-          handleCloseEditTab();
+        if (newContractId) {
+          // Chuyển URL tab này sang chế độ chi tiết của HĐ mới tạo
+          if (typeof window !== "undefined") {
+            window.history.replaceState(null, "", `/contracts?id=${newContractId}`);
+          }
+          const refreshedData = await contractsApi.getContracts(
+            { DisplayMode: "mat_equip", ContractId: newContractId },
+            { skipCache: true }
+          );
+          const refreshedList = extractApiList<ContractItem>(refreshedData);
+          const createdContract = refreshedList.find((c: any) => Number(c.ContractId) === newContractId) || refreshedList[0];
+          if (createdContract) {
+            applyContractToForm(createdContract);
+          }
         }
       }
     } catch (e: any) {
@@ -486,9 +502,28 @@ export default function ContractsPage() {
     }
   };
 
-  // ---------------------------------------------------------------
-  // Attachment Handlers
-  // ---------------------------------------------------------------
+  // Xóa hợp đồng tại danh sách
+  const handleDeleteContract = async (record: ContractItem) => {
+    try {
+      await contractsApi.updateContractInfo(
+        {
+          ContractId: String(record.ContractId),
+          ContractType: "mat_equip",
+          WSId: "",
+        },
+        "delete_contract"
+      );
+      message.success(`Đã xóa hợp đồng ${record.ContractCode || ""} thành công!`);
+      fetchContracts(pagination.current, pagination.pageSize);
+      try {
+        localStorage.setItem("consims_contract_updated", String(Date.now()));
+      } catch (e) {}
+    } catch (e: any) {
+      message.error(e.message || "Xóa hợp đồng thất bại.");
+    }
+  };
+
+  // Attachments
   const handleCustomUploadAttachment = (options: any) => {
     const { file, onSuccess } = options;
     setTimeout(() => {
@@ -525,175 +560,154 @@ export default function ContractsPage() {
     );
   };
 
-  // ---------------------------------------------------------------
-  // Tab Items
-  // ---------------------------------------------------------------
-  const tabItems = [
-    {
-      key: "list",
-      label: (
-        <Space size={6}>
-          <IconFileText size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />
-          <span>{t.contract.tabList}</span>
-        </Space>
-      ),
-      closable: false,
-      children: (
-        <ContractsTable
-          filteredContracts={filteredContracts}
-          loading={loading}
-          searchKeyword={searchKeyword}
-          setSearchKeyword={setSearchKeyword}
-          columnFilters={columnFilters}
-          setColumnFilters={setColumnFilters}
-          pagination={pagination}
-          setPagination={setPagination}
-          isFiltering={isFiltering}
-          columnSuggestions={columnSuggestions}
-          storageKey={STORAGE_KEY_MAIN}
-          onRefresh={fetchContracts}
-          onCreate={handleOpenCreateContract}
-          onEdit={handleEditContract}
-          onCreateAddendum={handleCreateAddendum}
-          onDelete={handleDeleteContract}
-        />
-      ),
-    },
-    ...(isEditTabOpen
-      ? [
-          {
-            key: "edit",
-            label: (
-              <Space size={6}>
-                <IconPencil size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />
-                <span>
-                  {editingContract
-                    ? `${t.contract.tabEdit}: ${editingContract.ContractCode || editingContract.Description || ""}`
-                    : contractForm.getFieldValue("ParentContractCode")
-                    ? `${t.contract.tabAddendum}: ${contractForm.getFieldValue("ParentContractCode")}`
-                    : t.contract.tabNew}
-                </span>
-              </Space>
-            ),
-            closable: true,
-            children: (
-              <div style={{ background: "#fff", minHeight: "calc(100vh - 110px)" }}>
-                <ContractFormDrawer
-                  open={isEditTabOpen}
-                  onClose={handleCloseEditTab}
-                  editingContract={editingContract}
-                  form={contractForm}
-                  submitting={submittingContract}
-                  selectedClientDisplay={selectedClientDisplay}
-                  onOpenClientLov={() => {
-                    setClientSearchInput("");
-                    fetchClientList("");
-                    setIsClientLovOpen(true);
-                  }}
-                  onClearClient={handleClearClient}
-                  selectedMainContractDisplay={selectedMainContractDisplay}
-                  onOpenMainContractLov={() => {
-                    setMainContractSearchInput("");
-                    fetchMainContracts("", 1, mainContractPagination.pageSize);
-                    setIsMainContractLovOpen(true);
-                  }}
-                  onClearMainContract={handleClearMainContract}
-                  attachments={attachments}
-                  selectedAttachmentKeys={selectedAttachmentKeys}
-                  setSelectedAttachmentKeys={setSelectedAttachmentKeys}
-                  onUploadAttachment={handleCustomUploadAttachment}
-                  onDeleteAttachment={handleDeleteAttachment}
-                  onBatchDeleteAttachments={handleBatchDeleteAttachments}
-                  onToggleClientDoc={handleToggleClientDoc}
-                  onFinish={handleSubmitContract}
-                />
-              </div>
-            ),
-          },
-        ]
-      : []),
-  ];
+  // ===============================================================
+  // GIAO DIỆN 1: MỞ TAB TRÌNH DUYỆT CHI TIẾT HỢP ĐỒNG (KHI CÓ ?id= HOẶC ?action=)
+  // ===============================================================
+  if (isDetailPage) {
+    if (loadingSingleContract) {
+      return (
+        <div
+          style={{
+            margin: "-16px -20px -24px -20px",
+            minHeight: "calc(100vh - 48px)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "#FFFFFF",
+          }}
+        >
+          <Spin size="large" />
+          <div style={{ marginTop: 14, color: "#008f89", fontWeight: 600, fontSize: 14 }}>
+            Đang tải thông tin chi tiết hợp đồng...
+          </div>
+        </div>
+      );
+    }
 
+    return (
+      <ErpDetailContainer>
+        <ContractFormDrawer
+          open={true}
+          onClose={() => {
+            if (typeof window !== "undefined") {
+              if (window.opener) {
+                window.close();
+              } else {
+                window.location.href = "/contracts";
+              }
+            }
+          }}
+          editingContract={editingContract}
+          form={contractForm}
+          submitting={submittingContract}
+          selectedClientDisplay={selectedClientDisplay}
+          onOpenClientLov={() => {
+            setClientSearchInput("");
+            fetchClientList("");
+            setIsClientLovOpen(true);
+          }}
+          onClearClient={handleClearClient}
+          selectedMainContractDisplay={selectedMainContractDisplay}
+          onOpenMainContractLov={() => {
+            setMainContractSearchInput("");
+            fetchMainContracts("", 1, mainContractPagination.pageSize);
+            setIsMainContractLovOpen(true);
+          }}
+          onClearMainContract={handleClearMainContract}
+          attachments={attachments}
+          selectedAttachmentKeys={selectedAttachmentKeys}
+          setSelectedAttachmentKeys={setSelectedAttachmentKeys}
+          onUploadAttachment={handleCustomUploadAttachment}
+          onDeleteAttachment={handleDeleteAttachment}
+          onBatchDeleteAttachments={handleBatchDeleteAttachments}
+          onToggleClientDoc={handleToggleClientDoc}
+          onFinish={handleSubmitContract}
+          onRefreshContracts={() => {
+            try {
+              localStorage.setItem("consims_contract_updated", String(Date.now()));
+            } catch (e) {}
+          }}
+          onUpdateEditingContract={setEditingContract}
+        />
+
+        {isClientLovOpen && (
+          <ClientLovModal
+            open={isClientLovOpen}
+            onClose={() => setIsClientLovOpen(false)}
+            clientList={clientList}
+            loadingClients={loadingClients}
+            clientSearchInput={clientSearchInput}
+            setClientSearchInput={setClientSearchInput}
+            onSearchClients={(keyword) => fetchClientList(keyword.trim())}
+            onSelectClient={handleSelectClient}
+          />
+        )}
+
+        {isMainContractLovOpen && (
+          <MainContractLovModal
+            open={isMainContractLovOpen}
+            onClose={() => setIsMainContractLovOpen(false)}
+            mainContractList={mainContractList}
+            loadingMainContracts={loadingMainContracts}
+            mainContractSearchInput={mainContractSearchInput}
+            setMainContractSearchInput={setMainContractSearchInput}
+            onSearchMainContracts={(keyword) => fetchMainContracts(keyword.trim(), 1, mainContractPagination.pageSize)}
+            onSelectMainContract={handleSelectMainContract}
+            pagination={mainContractPagination}
+            onPageChange={(page, pageSize) => fetchMainContracts(mainContractSearchInput.trim(), page, pageSize)}
+          />
+        )}
+      </ErpDetailContainer>
+    );
+  }
+
+  // ===============================================================
+  // GIAO DIỆN 2: MÀN HÌNH DANH SÁCH HỢP ĐỒNG CHÍNH (/contracts) - FULL TRÀN VIỀN
+  // ===============================================================
   return (
-    <div style={{ padding: 0, width: "100%", minHeight: "calc(100vh - 100px)", background: "#FFFFFF", borderRadius: 16, border: "1px solid #dce5e6", overflow: "hidden", boxShadow: "0 1px 3px rgba(18, 52, 67, 0.04)" }}>
-      <style>{`
-        .contracts-page-tabs .ant-tabs-nav {
-          margin-bottom: 0 !important;
-        }
-        .contracts-page-tabs .ant-tabs-tab {
-          background: #f7fbfa !important;
-          border-color: #dce5e6 !important;
-          border-radius: 8px 8px 0 0 !important;
-          color: #718894 !important;
-          font-weight: 500 !important;
-          transition: all 0.2s ease !important;
-        }
-        .contracts-page-tabs .ant-tabs-tab:hover {
-          color: #008f89 !important;
-        }
-        .contracts-page-tabs .ant-tabs-tab-active {
-          background: #FFFFFF !important;
-          border-color: #dce5e6 #dce5e6 #FFFFFF !important;
-          color: #008f89 !important;
-          font-weight: 600 !important;
-        }
-        .contracts-page-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
-          color: #008f89 !important;
-        }
-        .contracts-page-tabs .ant-tabs-tab .ant-tabs-tab-remove {
-          color: #94A3B8 !important;
-        }
-        .contracts-page-tabs .ant-tabs-tab .ant-tabs-tab-remove:hover {
-          color: #EF4444 !important;
-        }
-      `}</style>
-      <Tabs
-        className="contracts-page-tabs"
-        type="editable-card"
-        hideAdd
-        activeKey={activeTabKey}
-        onChange={setActiveTabKey}
-        onEdit={(targetKey, action) => {
-          if (action === "remove" && targetKey === "edit") {
-            handleCloseEditTab();
-          }
+    <ErpPageContainer>
+      <ContractsTable
+        filteredContracts={filteredContracts}
+        loading={loadingList}
+        searchKeyword={searchKeyword}
+        setSearchKeyword={setSearchKeyword}
+        columnFilters={columnFilters}
+        setColumnFilters={setColumnFilters}
+        pagination={pagination}
+        setPagination={setPagination}
+        isFiltering={isFiltering}
+        columnSuggestions={columnSuggestions}
+        storageKey={STORAGE_KEY_MAIN}
+        onRefresh={fetchContracts}
+        onCreate={() => {
+          window.open("/contracts?action=create", "_blank");
         }}
-        items={tabItems}
-        tabBarStyle={{
-          margin: 0,
-          background: "#FFFFFF",
-          padding: "8px 24px 0 24px",
-          borderBottom: "1px solid #dce5e6",
+        onEdit={(record) => {
+          window.open(`/contracts?id=${record.ContractId}`, "_blank");
         }}
+        onCreateAddendum={(record) => {
+          window.open(`/contracts?action=addendum&parentId=${record.ContractId}`, "_blank");
+        }}
+        onDelete={handleDeleteContract}
       />
+    </ErpPageContainer>
+  );
+}
 
-      {isClientLovOpen && (
-        <ClientLovModal
-          open={isClientLovOpen}
-          onClose={() => setIsClientLovOpen(false)}
-          clientList={clientList}
-          loadingClients={loadingClients}
-          clientSearchInput={clientSearchInput}
-          setClientSearchInput={setClientSearchInput}
-          onSearchClients={(keyword) => fetchClientList(keyword.trim())}
-          onSelectClient={handleSelectClient}
-        />
-      )}
-
-      {isMainContractLovOpen && (
-        <MainContractLovModal
-          open={isMainContractLovOpen}
-          onClose={() => setIsMainContractLovOpen(false)}
-          mainContractList={mainContractList}
-          loadingMainContracts={loadingMainContracts}
-          mainContractSearchInput={mainContractSearchInput}
-          setMainContractSearchInput={setMainContractSearchInput}
-          onSearchMainContracts={(keyword) => fetchMainContracts(keyword.trim(), 1, mainContractPagination.pageSize)}
-          onSelectMainContract={handleSelectMainContract}
-          pagination={mainContractPagination}
-          onPageChange={(page, pageSize) => fetchMainContracts(mainContractSearchInput.trim(), page, pageSize)}
-        />
-      )}
-    </div>
+export default function ContractsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div style={{ padding: 60, textAlign: "center" }}>
+          <Spin size="large" />
+          <div style={{ marginTop: 12, color: "#718894", fontSize: 13 }}>
+            Đang tải dữ liệu Hợp đồng...
+          </div>
+        </div>
+      }
+    >
+      <ContractsPageContent />
+    </Suspense>
   );
 }

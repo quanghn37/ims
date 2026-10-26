@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useMemo, useEffect, useCallback } from "react";
 import {
@@ -525,19 +525,6 @@ export default function ContractPriceListReconcileModal({
         </div>
 
         <style>{`
-          .reconcile-tree-table .ant-table-thead > tr > th {
-            background: #f7fbfa !important;
-            font-weight: 600 !important;
-            color: #475569 !important;
-            font-size: 12px !important;
-            padding: 6px 8px !important;
-            line-height: 1.3 !important;
-          }
-          .reconcile-tree-table .ant-table-tbody > tr > td {
-            font-size: 12.5px !important;
-            padding: 5px 8px !important;
-            line-height: 1.35 !important;
-          }
           .reconcile-tree-table .ant-table-cell-with-append {
             display: flex !important;
             align-items: center !important;
@@ -560,7 +547,7 @@ export default function ContractPriceListReconcileModal({
         `}</style>
 
         <Table
-          className="reconcile-tree-table"
+          className="reconcile-tree-table erp-detail-table"
           size="small"
           bordered
           loading={loadingTree}
