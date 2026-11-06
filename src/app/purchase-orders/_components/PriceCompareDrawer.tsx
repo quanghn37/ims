@@ -5,7 +5,6 @@ import {
   Modal,
   Table,
   Button,
-  Checkbox,
   Input,
   InputNumber,
   Select,
@@ -28,8 +27,8 @@ interface PriceCompareDrawerProps {
   loadingPriceCompare: boolean;
   selectedPriceCompareKeys: React.Key[];
   setSelectedPriceCompareKeys: (keys: React.Key[]) => void;
-  priceCompareStartProcess: boolean;
-  setPriceCompareStartProcess: (v: boolean) => void;
+  priceCompareStartProcess?: boolean;
+  setPriceCompareStartProcess?: (v: boolean) => void;
   submittingPriceCompare: boolean;
   onChangeQnty: (itemId: any, qnty: number) => void;
   onChangeOrgcode?: (itemId: any, orgCode: string, orgName: string) => void;
@@ -47,8 +46,6 @@ export default function PriceCompareDrawer({
   loadingPriceCompare,
   selectedPriceCompareKeys,
   setSelectedPriceCompareKeys,
-  priceCompareStartProcess,
-  setPriceCompareStartProcess,
   submittingPriceCompare,
   onChangeQnty,
   onChangeOrgcode,
@@ -202,17 +199,24 @@ export default function PriceCompareDrawer({
         render: (val: number) => Number(val || 0).toLocaleString(language === "en" ? "en-US" : "vi-VN"),
       },
       {
-        title: "Orgcode",
+        title: (
+          <span>
+            Orgcode <span style={{ color: "#ef4444" }}>*</span>
+          </span>
+        ),
         dataIndex: "Orgcode",
         key: "Orgcode",
         width: 220,
         render: (_: any, record: any) => {
-          const id = record.MaterialId ?? record.ItemId ?? record.ItemCode;
+          const id = record._rowKey ?? record.ContractSubmissionId ?? record.SourceId ?? record.MaterialId ?? record.ItemId;
+          const isSelected = selectedPriceCompareKeys.some((k) => String(k) === String(id));
+          const hasError = isSelected && !record.Orgcode;
           return (
             <Select
+              status={hasError ? "error" : undefined}
               showSearch
               allowClear
-              placeholder={language === "en" ? "Select Orgcode / WBS..." : "Chọn Orgcode / WBS..."}
+              placeholder={language === "en" ? "Select Orgcode / WBS... *" : "Chọn Orgcode / WBS... *"}
               value={record.Orgcode || undefined}
               onChange={(val) => {
                 const cleanVal = String(val || "").trim();
@@ -240,7 +244,7 @@ export default function PriceCompareDrawer({
         align: "right" as const,
         width: 130,
         render: (_: any, record: any) => {
-          const id = record.MaterialId ?? record.ItemId ?? record.ItemCode;
+          const id = record._rowKey ?? record.ContractSubmissionId ?? record.SourceId ?? record.MaterialId ?? record.ItemId;
           return (
             <InputNumber
               min={0}
@@ -264,7 +268,7 @@ export default function PriceCompareDrawer({
         },
       },
     ],
-    [budgetList, budgetOptions, existingItemIds, onChangeOrgcode, onChangeQnty, language, t]
+    [budgetList, budgetOptions, existingItemIds, onChangeOrgcode, onChangeQnty, language, t, selectedPriceCompareKeys]
   );
 
   const mergedColumns = useMemo(() => {
@@ -310,12 +314,6 @@ export default function PriceCompareDrawer({
                 ? `Selected ${selectedPriceCompareKeys.length} materials`
                 : `Đã chọn ${selectedPriceCompareKeys.length} vật tư`}
             </Text>
-            <Checkbox
-              checked={priceCompareStartProcess}
-              onChange={(e) => setPriceCompareStartProcess(e.target.checked)}
-            >
-              {language === "en" ? "Submit for Approval" : "Trình duyệt"}
-            </Checkbox>
           </Space>
           <div style={{ display: "flex", gap: 12 }}>
             <Button onClick={onClose}>{t.common.cancel}</Button>
@@ -367,7 +365,7 @@ export default function PriceCompareDrawer({
         components={{ header: { cell: ResizableTitle } }}
         dataSource={filteredItems}
         columns={mergedColumns}
-        rowKey={(r, index) => String(r.MaterialId ?? r.ItemId ?? r.ItemCode ?? `pc_item_${index}`)}
+        rowKey={(r) => String(r._rowKey ?? r.ContractSubmissionId ?? r.SourceId ?? r.MaterialId ?? r.ItemId)}
         loading={loadingPriceCompare}
         pagination={false}
         size="small"

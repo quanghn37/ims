@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from "react";
-import { Button, Input, Popover, Space, Table, Tag, Typography } from "antd";
+import { Button, Input, Popover, Space, Table } from "antd";
 import {
   IconSearch,
   IconRefresh,
@@ -15,7 +15,6 @@ import { purchaseOrderColumnFields } from "../_hooks/usePurchaseOrders";
 import ColumnFilterDropdown from "@/components/table/ColumnFilterDropdown";
 import { ApprovalBadge } from "@/components/common/ApprovalBadge";
 
-const { Text } = Typography;
 type PaginationState = { current: number; pageSize: number; total: number };
 
 interface PurchaseOrdersTableProps {
@@ -51,9 +50,8 @@ export default function PurchaseOrdersTable({
   onRefresh,
   onCreate,
   onEdit,
-  onDelete,
 }: PurchaseOrdersTableProps) {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
 
   const initialColumns = useMemo(() => [
     {
@@ -194,14 +192,47 @@ export default function PurchaseOrdersTable({
       },
     },
     {
+      title: t.table.totalAmount || (language === "en" ? "Total Amount" : "Tổng tiền"),
+      dataIndex: "TotalAmount",
+      key: "TotalAmount",
+      width: 140,
+      align: "right" as const,
+      render: (val: any, record: any) => {
+        const raw = val ?? record.TotalAmount ?? record.Amount ?? record.ContractedAmount;
+        if (raw === undefined || raw === null || raw === "") {
+          return <span style={{ color: "#94A3B8", fontSize: 13 }}>---</span>;
+        }
+        const num = Number(raw);
+        return (
+          <span style={{ color: "#123443", fontWeight: 600, fontSize: 13, whiteSpace: "nowrap" }}>
+            {num.toLocaleString(language === "en" ? "en-US" : "vi-VN")}
+          </span>
+        );
+      },
+    },
+    {
       title: t.table.status,
       dataIndex: "StatusName",
       key: "StatusName",
-      width: 120,
-      align: "center" as const,
+      width: 130,
+      align: "left" as const,
       render: (val: string, r: any) => {
-        const raw = val ?? r.Status ?? r.StatusCode ?? "";
-        return <ApprovalBadge val={raw} record={r} />;
+        const raw = val ?? r.StatusName ?? r.Status ?? r.StatusCode ?? "";
+        return <ApprovalBadge val={raw} record={r} customLabel={r.StatusName || (typeof val === "string" ? val : undefined)} />;
+      },
+    },
+    {
+      title: t.table.currentAssignee,
+      dataIndex: "CurrentAssignee",
+      key: "CurrentAssignee",
+      width: 150,
+      render: (val: string, record: any) => {
+        const assignee = val || record?.CurrentAssignee;
+        return (
+          <span style={{ color: "#334155", fontSize: 13 }}>
+            {assignee || "---"}
+          </span>
+        );
       },
     },
     {
@@ -219,7 +250,7 @@ export default function PurchaseOrdersTable({
       width: undefined,
       render: () => null,
     },
-  ], [onEdit, t]);
+  ], [onEdit, t, language]);
 
   const { columns, handleResizeColumn } = usePersistedColumnWidths(initialColumns, storageKey);
 
@@ -339,45 +370,13 @@ export default function PurchaseOrdersTable({
         boxSizing: "border-box",
       }}
     >
-      {/* STYLE OVERRIDES DÀNH CHO BẢNG DANH SÁCH ĐƠN HÀNG */}
+      {/* STYLE OVERRIDES DÀNH CHO CỘT TÌM KIẾM THEO TIÊU ĐỀ */}
       <style>{`
-        .po-main-table .ant-table {
-          font-family: inherit;
-        }
-        .po-main-table .ant-table-thead > tr > th {
-          background-color: #f7fbfa !important;
-          color: #475569 !important;
-          font-size: 13px !important;
-          font-weight: 600 !important;
-          line-height: 18px !important;
-          border-color: #dce5e6 !important;
-          padding: 10px 12px !important;
-        }
         .po-main-table .column-title-clickable {
           transition: color 0.15s ease;
         }
         .po-main-table .ant-table-thead > tr > th:hover .column-title-clickable {
           color: #008f89 !important;
-        }
-        .po-main-table .ant-table-tbody > tr > td {
-          color: #123443 !important;
-          font-size: 13px !important;
-          line-height: 18px !important;
-          border-color: #dce5e6 !important;
-          padding: 10px 12px !important;
-          height: 46px !important;
-        }
-        .po-main-table .ant-table-container {
-          border: 1px solid #dce5e6 !important;
-          border-radius: 8px !important;
-          overflow: hidden;
-        }
-        .po-main-table .ant-pagination .ant-pagination-item-active {
-          border-color: #008f89 !important;
-          background-color: #008f89 !important;
-        }
-        .po-main-table .ant-pagination .ant-pagination-item-active a {
-          color: #FFFFFF !important;
         }
       `}</style>
 
@@ -406,9 +405,6 @@ export default function PurchaseOrdersTable({
               color: "#123443",
             }}
           />
-          <span style={{ fontSize: 13, color: "#64748b" }}>
-            {t.common.total || "Tổng"}: <strong style={{ color: "#008f89" }}>{isFiltering ? filteredOrders.length : pagination.total}</strong> {t.table.records || "đơn hàng"}
-          </span>
           {isFiltering && (
             <Button
               icon={<IconCircleX size={15} strokeWidth={1.8} style={{ color: "#EF4444" }} />}
@@ -467,6 +463,7 @@ export default function PurchaseOrdersTable({
       {/* BẢNG DỮ LIỆU ĐƠN HÀNG */}
       <Table
         className="po-main-table"
+        size="small"
         tableLayout="fixed"
         components={{ header: { cell: ResizableTitle } }}
         dataSource={filteredOrders}

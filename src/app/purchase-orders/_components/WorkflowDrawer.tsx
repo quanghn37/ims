@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Drawer, Spin, Typography } from "antd";
+import { Drawer, Typography } from "antd";
 import { AuditOutlined } from "@ant-design/icons";
 import WorkflowRowDetailDrawer from "./WorkflowRowDetailDrawer";
 import { useTranslation } from "@/locales/LanguageContext";

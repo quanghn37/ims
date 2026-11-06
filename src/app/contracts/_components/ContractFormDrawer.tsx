@@ -13,7 +13,6 @@ import {
   Row,
   Col,
   Checkbox,
-  Divider,
   message,
   Popconfirm,
 } from "antd";
@@ -55,11 +54,8 @@ interface ContractFormDrawerProps {
   onOpenMainContractLov: () => void;
   onClearMainContract: () => void;
   attachments: AttachmentFile[];
-  selectedAttachmentKeys: React.Key[];
-  setSelectedAttachmentKeys: (keys: React.Key[]) => void;
   onUploadAttachment: (options: any) => void;
   onDeleteAttachment: (id: string) => void;
-  onBatchDeleteAttachments: () => void;
   onToggleClientDoc: (id: string, checked: boolean) => void;
   onFinish: (values: any) => void;
   onRefreshContracts?: () => void;
@@ -79,11 +75,8 @@ export default function ContractFormDrawer({
   onOpenMainContractLov,
   onClearMainContract,
   attachments,
-  selectedAttachmentKeys,
-  setSelectedAttachmentKeys,
   onUploadAttachment,
   onDeleteAttachment,
-  onBatchDeleteAttachments,
   onToggleClientDoc,
   onFinish,
   onRefreshContracts,
@@ -138,6 +131,11 @@ export default function ContractFormDrawer({
 
     if (!contractId) {
       message.error("Không tìm thấy thông tin mã hợp đồng để trình duyệt.");
+      return;
+    }
+
+    if (!materialItems || materialItems.length === 0) {
+      message.warning("Hợp đồng chưa có chi tiết vật tư để trình duyệt.");
       return;
     }
 
@@ -292,22 +290,35 @@ export default function ContractFormDrawer({
 
     setLoadingWorkflow(true);
     try {
+      const workType =
+        editingContract?.ContractType ??
+        form.getFieldValue("ContractType") ??
+        "mat_equip";
+
       // Gọi song song cả API trạng thái quy trình RACI và API thông tin hợp đồng mới nhất (skipCache: true)
       const [resWorkflow, updatedData]: [any, any] = await Promise.all([
-        contractsApi.getContractStatus({ ContractId: contractId }).catch((err) => {
-          console.error("Lỗi tải quy trình duyệt hợp đồng:", err);
-          return null;
-        }),
-        contractsApi.getContracts(
-          {
-            DisplayMode: "mat_equip",
+        contractsApi
+          .getContractStatus({
             ContractId: contractId,
-          },
-          { skipCache: true }
-        ).catch((err) => {
-          console.error("Lỗi tải thông tin trạng thái hợp đồng mới nhất:", err);
-          return null;
-        }),
+            WorkType: workType,
+            "@WorkType": workType,
+          })
+          .catch((err) => {
+            console.error("Lỗi tải quy trình duyệt hợp đồng:", err);
+            return null;
+          }),
+        contractsApi
+          .getContracts(
+            {
+              DisplayMode: workType,
+              ContractId: contractId,
+            },
+            { skipCache: true }
+          )
+          .catch((err) => {
+            console.error("Lỗi tải thông tin trạng thái hợp đồng mới nhất:", err);
+            return null;
+          }),
       ]);
 
       if (resWorkflow) {
@@ -490,7 +501,7 @@ export default function ContractFormDrawer({
           <Space size={8}>
             {isEditing && (
               <>
-                {!isTaskAssigned && (
+                {!isTaskAssigned && materialItems && materialItems.length > 0 && (
                   <Popconfirm
                     title={t.contract.submitApprovalConfirm}
                     onConfirm={handleSubmitApproval}
@@ -614,7 +625,7 @@ export default function ContractFormDrawer({
                 </Button>
               </Popconfirm>
             )}
-            {!(isEditing && (assignedPriceLists.length > 0 || materialItems.length > 0)) && (
+            {!(isEditing && (assignedPriceLists.length > 0 || (materialItems && materialItems.length > 0))) && (
               <Button
                 type="primary"
                 icon={<IconDeviceFloppy size={16} strokeWidth={2} />}
@@ -960,11 +971,8 @@ export default function ContractFormDrawer({
         open={isAttachmentModalOpen}
         onCancel={() => setIsAttachmentModalOpen(false)}
         attachments={attachments}
-        selectedAttachmentKeys={selectedAttachmentKeys}
-        setSelectedAttachmentKeys={setSelectedAttachmentKeys}
         onUploadAttachment={onUploadAttachment}
         onDeleteAttachment={onDeleteAttachment}
-        onBatchDeleteAttachments={onBatchDeleteAttachments}
         onToggleClientDoc={onToggleClientDoc}
       />
 

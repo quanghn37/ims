@@ -78,7 +78,6 @@ export default function ContractPriceListsSection({
   effectiveClientId,
   effectiveSubconOf,
   effectiveContractId,
-  contractDescription,
   handleReconcileItems,
   viewingPriceList,
   setViewingPriceList,
@@ -607,9 +606,9 @@ export default function ContractPriceListsSection({
                 <Tooltip
                   title={
                     !isEditing
-                      ? "Vui lòng bấm 'Lưu Hợp đồng' trước khi đối chiếu bảng giá"
+                      ? (isEn ? "Please click 'Save' before reconciling price lists" : "Vui lòng bấm 'Lưu' trước khi đối chiếu bảng giá")
                       : !effectiveClientId || !effectiveSubconOf
-                      ? "Vui lòng chọn HĐ chủ đầu tư và Đối tượng (NCC)"
+                      ? (isEn ? "Please select Client Contract and Vendor" : "Vui lòng chọn HĐ chủ đầu tư và Đối tượng (NCC)")
                       : ""
                   }
                 >
@@ -790,8 +789,8 @@ export default function ContractPriceListsSection({
               >
                 {!hasContractId
                   ? (isEn
-                      ? 'Please click "Save Contract" above before adding materials and price lists.'
-                      : 'Vui lòng bấm "Lưu Hợp đồng" ở trên trước khi chọn và đối chiếu chi tiết vật tư.')
+                      ? 'Please click "Save" above before adding materials and price lists.'
+                      : 'Vui lòng bấm "Lưu" ở trên trước khi chọn và đối chiếu chi tiết vật tư.')
                   : (t.contract.emptyMaterialNotice ||
                       (isEn
                         ? 'No material items for this contract yet. Click "Reconcile Price List" above to add materials.'

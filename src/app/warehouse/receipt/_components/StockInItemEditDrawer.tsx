@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useEffect, useMemo, useState } from "react";
 import { Drawer, Form, Button, Input, InputNumber, Select, Checkbox, Divider, message } from "antd";
@@ -41,6 +41,28 @@ export default function StockInItemEditDrawer({
   const rawEditTotal = (Number(watchedEditQnty) || 0) * (Number(watchedEditUnitPrice) || 0);
   const grandEditTotal = rawEditTotal;
 
+  const isReadOnly = useMemo(() => {
+    if (editingReceipt) {
+      const rawApprovalStatus =
+        editingReceipt.ApprovalStatus !== undefined && editingReceipt.ApprovalStatus !== null && editingReceipt.ApprovalStatus !== ""
+          ? editingReceipt.ApprovalStatus
+          : editingReceipt.StatusCode !== undefined && editingReceipt.StatusCode !== null && editingReceipt.StatusCode !== ""
+          ? editingReceipt.StatusCode
+          : editingReceipt.status;
+      if (rawApprovalStatus !== undefined && rawApprovalStatus !== null && rawApprovalStatus !== "") {
+        const isZero =
+          String(rawApprovalStatus) === "0" ||
+          Number(rawApprovalStatus) === 0 ||
+          String(rawApprovalStatus).toLowerCase() === "draft" ||
+          String(rawApprovalStatus).toLowerCase() === "đang lập" ||
+          String(rawApprovalStatus).toLowerCase() === "dang lap";
+        if (!isZero) return true;
+      }
+    }
+    if (editingItem && (editingItem as any).Editable === 0) return true;
+    return false;
+  }, [editingReceipt, editingItem]);
+
   // Reset danh sách nội bộ khi phiếu nhập khác được chọn
   const receiptKey =
     editingReceipt?.TransactionId ??
@@ -54,6 +76,7 @@ export default function StockInItemEditDrawer({
 
   useEffect(() => {
     if (!open) return;
+    if (loadingBudgetList) return;
     if (budgetList && budgetList.length > 0) return;
     if (internalBudgetList && internalBudgetList.length > 0) return;
 
@@ -83,7 +106,7 @@ export default function StockInItemEditDrawer({
           setInternalLoadingBudget(false);
         });
     }
-  }, [open, budgetList, internalBudgetList, editingItem, editingReceipt]);
+  }, [open, loadingBudgetList, budgetList, internalBudgetList, editingItem, editingReceipt]);
 
   const effectiveBudgetList = (budgetList && budgetList.length > 0) ? budgetList : internalBudgetList;
 
@@ -289,7 +312,9 @@ export default function StockInItemEditDrawer({
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <EditOutlined style={{ color: "#008f89", fontSize: 18 }} />
           <span style={{ fontSize: 16, fontWeight: 700, color: "#123443" }}>
-            {language === "en" ? "Edit Goods Receipt Item" : "Chỉnh sửa Mặt hàng trong Phiếu nhập kho"}
+            {isReadOnly
+              ? (language === "en" ? "Goods Receipt Item Details" : "Chi tiết Mặt hàng trong Phiếu nhập kho")
+              : (language === "en" ? "Edit Goods Receipt Item" : "Chỉnh sửa Mặt hàng trong Phiếu nhập kho")}
           </span>
         </div>
       }
@@ -309,29 +334,31 @@ export default function StockInItemEditDrawer({
               padding: "0 18px",
             }}
           >
-            {t.common.cancel}
+            {isReadOnly ? (language === "en" ? "Close" : "Đóng") : t.common.cancel}
           </Button>
-          <Button
-            type="primary"
-            icon={<SaveOutlined />}
-            onClick={handleSaveEditItem}
-            loading={submittingEditItem}
-            style={{
-              background: "#008f89",
-              borderColor: "#008f89",
-              height: 38,
-              borderRadius: 8,
-              fontWeight: 500,
-              padding: "0 20px",
-              boxShadow: "0 2px 6px rgba(0, 143, 137, 0.25)",
-            }}
-          >
-            {language === "en" ? "Save Changes" : "Lưu thay đổi"}
-          </Button>
+          {!isReadOnly && (
+            <Button
+              type="primary"
+              icon={<SaveOutlined />}
+              onClick={handleSaveEditItem}
+              loading={submittingEditItem}
+              style={{
+                background: "#008f89",
+                borderColor: "#008f89",
+                height: 38,
+                borderRadius: 8,
+                fontWeight: 500,
+                padding: "0 20px",
+                boxShadow: "0 2px 6px rgba(0, 143, 137, 0.25)",
+              }}
+            >
+              {language === "en" ? "Save Changes" : "Lưu thay đổi"}
+            </Button>
+          )}
         </div>
       }
     >
-      <Form form={form} layout="vertical">
+      <Form form={form} layout="vertical" disabled={isReadOnly}>
         {/* Khối Thẻ thông tin mặt hàng (Header Box) */}
         <div
           style={{
@@ -476,11 +503,9 @@ export default function StockInItemEditDrawer({
           />
         </Form.Item>
 
-        {/* Trình duyệt? */}
-        <Form.Item name="StartProcessNow" valuePropName="checked" style={{ marginBottom: 16 }}>
-          <Checkbox style={{ fontWeight: 500, color: "#334155" }}>
-            {language === "en" ? "Submit for approval?" : "Trình duyệt?"}
-          </Checkbox>
+        {/* Trình duyệt? (Ẩn theo yêu cầu UI) */}
+        <Form.Item name="StartProcessNow" valuePropName="checked" hidden>
+          <Checkbox />
         </Form.Item>
 
         {/* Khối tổng tiền (Summary Box) */}

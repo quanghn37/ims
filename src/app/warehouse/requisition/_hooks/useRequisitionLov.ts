@@ -56,18 +56,12 @@ export function useRequisitionLov(
     const contractId = record.ContractId ?? record.MainContractId;
     const contractCode = record.ContractCode || record.MainContractCode || `#${contractId}`;
     const contractName = record.ContractName || record.MainContractName || record.Description || "";
-    const contractor = record.Contractor || record.CustomerName || record.ClientName || "";
     const displayStr = contractName ? `${contractCode} - ${contractName}` : contractCode;
 
     form.setFieldsValue({
       contractCode: contractCode,
       mainContractId: contractId,
     });
-
-    if (!form.getFieldValue("targetName") && contractor) {
-      form.setFieldsValue({ targetName: contractor });
-      setSelectedClientDisplay(contractor);
-    }
 
     setSelectedMainContractDisplay(displayStr);
     setIsMainContractLovOpen(false);
@@ -135,8 +129,8 @@ export function useRequisitionLov(
 
   const handleClearClient = () => {
     form.setFieldsValue({
-      targetName: undefined,
-      clientId: undefined,
+      targetName: null,
+      clientId: null,
     });
     setSelectedClientDisplay("");
   };
@@ -152,9 +146,6 @@ export function useRequisitionLov(
     setLoadingWarehouses(true);
     try {
       const data = await warehouseApi.getWarehouseList({
-        WSId: "",
-        PageNum: 1,
-        PageSize: 50,
         Keyword: keyword,
       });
       const list = extractApiList<WarehouseItem>(data);

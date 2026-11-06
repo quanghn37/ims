@@ -9,6 +9,7 @@ import {
   IconRotate2,
 } from "@tabler/icons-react";
 import { useTranslation } from "@/locales/LanguageContext";
+import { getStatusLabel, renderStatusDotItem } from "@/config/statusConfig";
 
 const { Text } = Typography;
 
@@ -43,13 +44,30 @@ export const ColumnFilterDropdown: React.FC<FilterDropdownProps> = ({
     return () => clearTimeout(timer);
   }, [value]);
 
+  const isStatusCol = Boolean(
+    (_colKey && _colKey.toLowerCase().includes("status")) ||
+    (label && (label.toLowerCase().includes("trạng thái") || label.toLowerCase().includes("status")))
+  );
+
+  const cleanSuggestions = useMemo(() => {
+    if (!isStatusCol) return suggestions;
+    const set = new Set<string>();
+    suggestions.forEach((s) => {
+      const lbl = getStatusLabel(s, language);
+      if (lbl && isNaN(Number(lbl))) {
+        set.add(lbl);
+      }
+    });
+    return Array.from(set);
+  }, [suggestions, isStatusCol, language]);
+
   const filterInput = (tempValue || "").trim().toLowerCase();
   const displayedSuggestions = useMemo(() => {
-    if (!filterInput) return suggestions.slice(0, 10);
-    return suggestions
+    if (!filterInput) return cleanSuggestions.slice(0, 10);
+    return cleanSuggestions
       .filter((v) => v.toLowerCase().includes(filterInput))
       .slice(0, 10);
-  }, [suggestions, filterInput]);
+  }, [cleanSuggestions, filterInput]);
 
   const handleConfirm = (valToApply?: string) => {
     const val = valToApply !== undefined ? valToApply : tempValue;
@@ -189,7 +207,9 @@ export const ColumnFilterDropdown: React.FC<FilterDropdownProps> = ({
                   onClick={() => handleConfirm(sug)}
                   title={sug}
                 >
-                  <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{sug}</span>
+                  <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {isStatusCol ? renderStatusDotItem(sug, sug, language) : sug}
+                  </span>
                   {isSelected && <IconCheck size={14} strokeWidth={2.5} style={{ color: "#008f89", flexShrink: 0 }} />}
                 </div>
               );

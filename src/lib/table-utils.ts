@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { getStatusLabel } from "@/config/statusConfig";
 
 interface ResizableColumn {
   key?: React.Key;
@@ -53,9 +54,30 @@ export function usePersistedColumnWidths<T extends ResizableColumn>(initialColum
   const columns = useMemo(() => {
     return initialColumns.map((column, index) => {
       const key = String(column.key ?? column.dataIndex ?? index);
+      const isAction = key === "action" || key === "_spacer";
+
+      // Đảm bảo mọi cột dữ liệu (trừ cột thao tác / spacer) tự động có ellipsis và tooltip gốc title
+      const originalRender = (column as any).render;
+      const enhancedRender = isAction
+        ? originalRender
+        : (text: any, record: any, idx: number) => {
+            const content = originalRender ? originalRender(text, record, idx) : text;
+            if (content === null || content === undefined || content === "") return "---";
+
+            // Nếu content đã là React Element hoặc đối tượng phức tạp
+            if (typeof content === "object" && React.isValidElement(content)) {
+              return content;
+            }
+
+            const textStr = String(content);
+            return React.createElement("span", { title: textStr }, textStr);
+          };
+
       return {
+        ellipsis: isAction ? (column as any).ellipsis : true,
         ...column,
         width: columnWidths[key] ?? column.width,
+        render: enhancedRender,
       };
     });
   }, [initialColumns, columnWidths]);
@@ -88,11 +110,22 @@ export function useColumnFiltering<T extends Record<string, any>>({
     const map: Record<string, string[]> = {};
     for (const [columnKey, columnFields] of Object.entries(fields)) {
       const suggestions = new Set<string>();
+      const isStatusCol = columnKey.toLowerCase().includes("status");
+
       rows.forEach((row) => columnFields.forEach((field) => {
         const value = (row as Record<string, unknown>)[field];
         if (value !== null && value !== undefined && value !== "" && value !== "---" && value !== "01-01-1900") {
-          const suggestion = String(value).trim();
-          if (suggestion && suggestion !== "01-01-1900") suggestions.add(suggestion);
+          let suggestion = String(value).trim();
+          if (isStatusCol) {
+            // Chuẩn hóa trạng thái về nhãn hiển thị Tiếng Việt, loại bỏ hoàn toàn các mã số StatusCode (3, 4, 1, 2...)
+            suggestion = getStatusLabel(suggestion, "vi");
+          }
+          if (suggestion && suggestion !== "01-01-1900") {
+            // Không nhận các giá trị số (status code như -1, 0, 1, 2, 3...) đối với cột trạng thái
+            if (!isStatusCol || isNaN(Number(suggestion))) {
+              suggestions.add(suggestion);
+            }
+          }
         }
       }));
       map[columnKey] = Array.from(suggestions);
@@ -108,12 +141,22 @@ export function useColumnFiltering<T extends Record<string, any>>({
       }
       for (const [columnKey, columnFields] of Object.entries(fields)) {
         const filterValue = columnFilters[columnKey]?.trim().toLowerCase();
-        if (filterValue && !columnFields.some((field) => {
-          const value = (row as Record<string, unknown>)[field];
-          return value !== null && value !== undefined &&
-            !(excludePlaceholderDateFromFilters && value === "01-01-1900") &&
-            String(value).toLowerCase().includes(filterValue);
-        })) return false;
+        if (filterValue) {
+          const isStatusCol = columnKey.toLowerCase().includes("status");
+          const matched = columnFields.some((field) => {
+            const value = (row as Record<string, unknown>)[field];
+            if (value === null || value === undefined) return false;
+            if (excludePlaceholderDateFromFilters && value === "01-01-1900") return false;
+            const strVal = String(value).toLowerCase();
+            if (strVal.includes(filterValue)) return true;
+            if (isStatusCol) {
+              const label = getStatusLabel(value, "vi").toLowerCase();
+              if (label.includes(filterValue)) return true;
+            }
+            return false;
+          });
+          if (!matched) return false;
+        }
       }
       return true;
     });

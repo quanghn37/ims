@@ -23,8 +23,8 @@ import { warehouseApi } from "../api";
 import { purchaseOrdersApi } from "@/app/purchase-orders/api";
 import { extractApiList, extractTotalRows } from "@/lib/api-client";
 import { useTranslation } from "@/locales/LanguageContext";
-import { exportToExcel } from "@/lib/excel-export";
 import { ErpPageContainer } from "@/components/layout/ErpPageContainer";
+import ResizableTitle from "@/components/table/ResizableTitle";
 
 export default function InventoryPeriodReportPage() {
   const { t } = useTranslation();
@@ -61,6 +61,7 @@ export default function InventoryPeriodReportPage() {
       }
     } catch (e) {
       console.error("Lỗi khi tải danh sách kho:", e);
+      message.error("Không thể tải danh sách kho.");
     }
   }, []);
 
@@ -121,6 +122,31 @@ export default function InventoryPeriodReportPage() {
     ];
   }, [warehouses, t]);
 
+  const STORAGE_KEY = "period_report_table_widths_v1";
+
+  const [columnWidths, setColumnWidths] = useState<Record<string, number>>(() => {
+    if (typeof window === "undefined") return {};
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error(e);
+    }
+    return {};
+  });
+
+  const handleResize = useCallback((colKey: string) => (_: any, { size }: { size: { width: number } }) => {
+    setColumnWidths((prev) => {
+      const next = { ...prev, [colKey]: Math.max(size.width, 40) };
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      } catch {
+        // Best-effort: Bỏ qua nếu localStorage bị đầy hoặc chặn ở trình duyệt
+      }
+      return next;
+    });
+  }, []);
+
   // Cấu hình cột phân nhóm kinh điển cho báo cáo NXT
   const columns: ColumnsType<InventoryPeriodReportItem> = useMemo(
     () => [
@@ -139,36 +165,42 @@ export default function InventoryPeriodReportPage() {
         title: t.table.warehouse,
         dataIndex: "WarehouseName",
         key: "WarehouseName",
-        width: 220,
+        width: 200,
         render: (val: string) => <span style={{ color: "#334155", fontSize: 13 }}>{val}</span>,
       },
       {
-        title: t.periodReport.colItemName,
+        title: t.periodReport.colItemCode || "Mã vật tư",
+        dataIndex: "ItemCode",
+        key: "ItemCode",
+        width: 170,
+        render: (val: string) => (
+          <span
+            style={{
+              fontFamily: "monospace",
+              fontSize: 12.5,
+              fontWeight: 400,
+              color: "#334155",
+            }}
+          >
+            {val || "---"}
+          </span>
+        ),
+      },
+      {
+        title: t.periodReport.colItemName || "Tên vật tư",
         dataIndex: "ItemName",
         key: "ItemName",
-        width: 280,
-        render: (_: any, record: InventoryPeriodReportItem) => (
-          <div>
-            <div
-              style={{
-                fontSize: 13,
-                color: "#123443",
-                lineHeight: "18px",
-                marginBottom: 2,
-              }}
-            >
-              {record.ItemName}
-            </div>
-            <span
-              style={{
-                fontFamily: "monospace",
-                fontSize: 12,
-                color: "#475569",
-              }}
-            >
-              {record.ItemCode}
-            </span>
-          </div>
+        width: 250,
+        render: (val: string) => (
+          <span
+            style={{
+              fontSize: 13,
+              color: "#334155",
+              lineHeight: "18px",
+            }}
+          >
+            {val || "---"}
+          </span>
         ),
       },
       {
@@ -220,12 +252,7 @@ export default function InventoryPeriodReportPage() {
             width: 95,
             align: "right",
             render: (val: number) => (
-              <span
-                style={{
-                  color: val > 0 ? "#16A34A" : "#334155",
-                  fontSize: 13,
-                }}
-              >
+              <span style={{ color: "#334155", fontSize: 13 }}>
                 {Number(val || 0).toLocaleString("vi-VN")}
               </span>
             ),
@@ -237,7 +264,7 @@ export default function InventoryPeriodReportPage() {
             width: 125,
             align: "right",
             render: (val: number) => (
-              <span style={{ color: val > 0 ? "#16A34A" : "#334155", fontSize: 13 }}>
+              <span style={{ color: "#334155", fontSize: 13 }}>
                 {Number(val || 0).toLocaleString("vi-VN")}
               </span>
             ),
@@ -255,12 +282,7 @@ export default function InventoryPeriodReportPage() {
             width: 95,
             align: "right",
             render: (val: number) => (
-              <span
-                style={{
-                  color: val > 0 ? "#DC2626" : "#334155",
-                  fontSize: 13,
-                }}
-              >
+              <span style={{ color: "#334155", fontSize: 13 }}>
                 {Number(val || 0).toLocaleString("vi-VN")}
               </span>
             ),
@@ -272,7 +294,7 @@ export default function InventoryPeriodReportPage() {
             width: 125,
             align: "right",
             render: (val: number) => (
-              <span style={{ color: val > 0 ? "#DC2626" : "#334155", fontSize: 13 }}>
+              <span style={{ color: "#334155", fontSize: 13 }}>
                 {Number(val || 0).toLocaleString("vi-VN")}
               </span>
             ),
@@ -290,7 +312,7 @@ export default function InventoryPeriodReportPage() {
             width: 100,
             align: "right",
             render: (val: number) => (
-              <span style={{ color: "#123443", fontSize: 13 }}>
+              <span style={{ color: "#334155", fontSize: 13 }}>
                 {Number(val || 0).toLocaleString("vi-VN")}
               </span>
             ),
@@ -302,7 +324,7 @@ export default function InventoryPeriodReportPage() {
             width: 130,
             align: "right",
             render: (val: number) => (
-              <span style={{ color: "#008f89", fontSize: 13 }}>
+              <span style={{ color: "#334155", fontSize: 13 }}>
                 {Number(val || 0).toLocaleString("vi-VN")}
               </span>
             ),
@@ -324,6 +346,43 @@ export default function InventoryPeriodReportPage() {
     ],
     [t, pagination.current, pagination.pageSize]
   );
+
+  const makeResizableColumn = useCallback((col: any): any => {
+    if (col.children && col.children.length > 0) {
+      return {
+        ...col,
+        children: col.children.map(makeResizableColumn),
+      };
+    }
+    const colKey = String(col.key || col.dataIndex);
+    const colWidth = columnWidths[colKey] ?? col.width ?? 100;
+
+    return {
+      ...col,
+      width: colWidth,
+      onHeaderCell: (headerColumn: any) => ({
+        width: headerColumn.width || colWidth,
+        onResize: handleResize(colKey),
+      }),
+    };
+  }, [columnWidths, handleResize]);
+
+  const resizableColumns = useMemo(() => {
+    return columns.map(makeResizableColumn);
+  }, [columns, makeResizableColumn]);
+
+  const scrollX = useMemo(() => {
+    const getLeafWidths = (cols: any[]): number => {
+      return cols.reduce((sum, col) => {
+        if (col.children && col.children.length > 0) {
+          return sum + getLeafWidths(col.children);
+        }
+        const colKey = String(col.key || col.dataIndex);
+        return sum + (columnWidths[colKey] ?? col.width ?? 100);
+      }, 0);
+    };
+    return Math.max(getLeafWidths(columns), 1600);
+  }, [columns, columnWidths]);
 
   const handleSearch = () => {
     fetchPeriodReport(1, pagination.pageSize);
@@ -376,6 +435,7 @@ export default function InventoryPeriodReportPage() {
         t.periodReport.allWarehouse ||
         "Tất cả kho";
 
+      const { exportToExcel } = await import("@/lib/excel-export");
       await exportToExcel({
         fileName: `Bao_cao_NXT_${periodStr}`,
         sheetName: "NXT",
@@ -387,8 +447,9 @@ export default function InventoryPeriodReportPage() {
         ],
         columns: [
           { key: "stt", title: t.periodReport.colStt || "STT", width: 50, align: "center", dataType: "number" },
-          { key: "WarehouseName", title: t.table.warehouse || "Kho", width: 220, align: "left" },
-          { key: "ItemName", title: t.periodReport.colItemName || "Tên vật tư", width: 280, align: "left" },
+          { key: "WarehouseName", title: t.table.warehouse || "Kho", width: 200, align: "left" },
+          { key: "ItemCode", title: t.periodReport.colItemCode || "Mã vật tư", width: 170, align: "left" },
+          { key: "ItemName", title: t.periodReport.colItemName || "Tên vật tư", width: 250, align: "left" },
           { key: "UomCode", title: t.periodReport.colUnit || "ĐVT", width: 70, align: "center" },
           {
             key: "groupOpening",
@@ -527,10 +588,6 @@ export default function InventoryPeriodReportPage() {
           >
             {t.periodReport.refresh}
           </Button>
-
-          <span style={{ fontSize: 13, color: "#64748b" }}>
-            {t.common.total || "Tổng"}: <strong style={{ color: "#008f89" }}>{pagination.total}</strong> {t.table.itemsCount || "mặt hàng"}
-          </span>
         </Space>
 
         <Space size={10}>
@@ -555,12 +612,14 @@ export default function InventoryPeriodReportPage() {
         }}
       >
         <Table
+          components={{ header: { cell: ResizableTitle } }}
+          tableLayout="fixed"
           size="middle"
           loading={loading}
           dataSource={dataList}
-          columns={columns}
+          columns={resizableColumns}
           rowKey={(r) => `${r.PeriodId ?? r.Period}_${r.WarehouseId}_${r.MaterialId ?? r.ItemCode}`}
-          scroll={{ x: 1500, y: "calc(100vh - 225px)" }}
+          scroll={{ x: scrollX, y: "calc(100vh - 225px)" }}
           bordered
           pagination={{
             current: pagination.current,
@@ -588,8 +647,8 @@ export default function InventoryPeriodReportPage() {
                 {/* Cột 0: STT */}
                 <Table.Summary.Cell index={0} align="center" />
 
-                {/* Cột 1 & 2: Merged Kho (Warehouse) & Tên vật tư (ItemName) */}
-                <Table.Summary.Cell index={1} colSpan={2} align="center">
+                {/* Cột 1, 2 & 3: Merged Kho (Warehouse), Mã vật tư (ItemCode) & Tên vật tư (ItemName) */}
+                <Table.Summary.Cell index={1} colSpan={3} align="center">
                   <span
                     style={{
                       fontWeight: 700,
@@ -603,53 +662,53 @@ export default function InventoryPeriodReportPage() {
                   </span>
                 </Table.Summary.Cell>
 
-                {/* Cột 3: ĐVT */}
-                <Table.Summary.Cell index={3} align="center" />
+                {/* Cột 4: ĐVT */}
+                <Table.Summary.Cell index={4} align="center" />
 
-                {/* Cột 4: Tồn đầu kỳ - SL */}
-                <Table.Summary.Cell index={4} align="right">
+                {/* Cột 5: Tồn đầu kỳ - SL */}
+                <Table.Summary.Cell index={5} align="right">
                   <span style={{ color: "#123443" }}>{sumOpeningQty.toLocaleString("vi-VN")}</span>
                 </Table.Summary.Cell>
 
-                {/* Cột 5: Tồn đầu kỳ - Tiền */}
-                <Table.Summary.Cell index={5} align="right">
+                {/* Cột 6: Tồn đầu kỳ - Tiền */}
+                <Table.Summary.Cell index={6} align="right">
                   <span style={{ color: "#123443" }}>{sumOpeningValue.toLocaleString("vi-VN")}</span>
                 </Table.Summary.Cell>
 
-                {/* Cột 6: Nhập trong kỳ - SL */}
-                <Table.Summary.Cell index={6} align="right">
-                  <span style={{ color: "#16A34A" }}>{sumReceiptQty.toLocaleString("vi-VN")}</span>
-                </Table.Summary.Cell>
-
-                {/* Cột 7: Nhập trong kỳ - Tiền */}
+                {/* Cột 7: Nhập trong kỳ - SL */}
                 <Table.Summary.Cell index={7} align="right">
-                  <span style={{ color: "#16A34A" }}>{sumReceiptValue.toLocaleString("vi-VN")}</span>
+                  <span style={{ color: "#123443" }}>{sumReceiptQty.toLocaleString("vi-VN")}</span>
                 </Table.Summary.Cell>
 
-                {/* Cột 8: Xuất trong kỳ - SL */}
+                {/* Cột 8: Nhập trong kỳ - Tiền */}
                 <Table.Summary.Cell index={8} align="right">
-                  <span style={{ color: "#DC2626" }}>{sumIssueQty.toLocaleString("vi-VN")}</span>
+                  <span style={{ color: "#123443" }}>{sumReceiptValue.toLocaleString("vi-VN")}</span>
                 </Table.Summary.Cell>
 
-                {/* Cột 9: Xuất trong kỳ - Tiền */}
+                {/* Cột 9: Xuất trong kỳ - SL */}
                 <Table.Summary.Cell index={9} align="right">
-                  <span style={{ color: "#DC2626" }}>{sumIssueValue.toLocaleString("vi-VN")}</span>
+                  <span style={{ color: "#123443" }}>{sumIssueQty.toLocaleString("vi-VN")}</span>
                 </Table.Summary.Cell>
 
-                {/* Cột 10: Tồn cuối kỳ - SL */}
+                {/* Cột 10: Xuất trong kỳ - Tiền */}
                 <Table.Summary.Cell index={10} align="right">
+                  <span style={{ color: "#123443" }}>{sumIssueValue.toLocaleString("vi-VN")}</span>
+                </Table.Summary.Cell>
+
+                {/* Cột 11: Tồn cuối kỳ - SL */}
+                <Table.Summary.Cell index={11} align="right">
                   <span style={{ color: "#123443" }}>{sumClosingQty.toLocaleString("vi-VN")}</span>
                 </Table.Summary.Cell>
 
-                {/* Cột 11: Tồn cuối kỳ - Tiền */}
-                <Table.Summary.Cell index={11} align="right">
-                  <span style={{ color: "#008f89", fontWeight: 700 }}>
+                {/* Cột 12: Tồn cuối kỳ - Tiền */}
+                <Table.Summary.Cell index={12} align="right">
+                  <span style={{ color: "#123443", fontWeight: 700 }}>
                     {sumClosingValue.toLocaleString("vi-VN")}
                   </span>
                 </Table.Summary.Cell>
 
-                {/* Cột 12: Đơn giá bình quân */}
-                <Table.Summary.Cell index={12} align="center" />
+                {/* Cột 13: Đơn giá bình quân */}
+                <Table.Summary.Cell index={13} align="center" />
               </Table.Summary.Row>
             );
           }}

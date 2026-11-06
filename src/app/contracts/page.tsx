@@ -45,7 +45,6 @@ function ContractsPageContent() {
   // STATE CHO MÀN HÌNH DANH SÁCH (KHI Ở TAB DANH SÁCH /contracts)
   // ===============================================================
   const {
-    contracts,
     loading: loadingList,
     searchKeyword,
     setSearchKeyword,
@@ -57,7 +56,7 @@ function ContractsPageContent() {
     columnSuggestions,
     filteredContracts,
     isFiltering,
-  } = useContracts();
+  } = useContracts(!isDetailPage);
 
   // Tự động đồng bộ danh sách khi có cập nhật từ tab chi tiết khác
   useEffect(() => {
@@ -79,7 +78,6 @@ function ContractsPageContent() {
   const [submittingContract, setSubmittingContract] = useState(false);
   const [loadingSingleContract, setLoadingSingleContract] = useState(false);
   const [attachments, setAttachments] = useState<AttachmentFile[]>([]);
-  const [selectedAttachmentKeys, setSelectedAttachmentKeys] = useState<React.Key[]>([]);
 
   // LOVs
   const [clientList, setClientList] = useState<any[]>([]);
@@ -234,7 +232,6 @@ function ContractsPageContent() {
     });
 
     setAttachments([]);
-    setSelectedAttachmentKeys([]);
   }, [contractForm]);
 
   // Khi mở tab trình duyệt có queryContractId: tự động tải thông tin hợp đồng
@@ -294,7 +291,6 @@ function ContractsPageContent() {
         PayTerms: undefined,
       });
       setAttachments([]);
-      setSelectedAttachmentKeys([]);
       if (typeof document !== "undefined") {
         document.title = "Tạo Hợp đồng mới";
       }
@@ -524,9 +520,16 @@ function ContractsPageContent() {
   };
 
   // Attachments
-  const handleCustomUploadAttachment = (options: any) => {
+  const handleCustomUploadAttachment = (options: any, folder?: string) => {
     const { file, onSuccess } = options;
+    const targetFolder = folder || "project_docs";
     setTimeout(() => {
+      const sizeStr = file.size
+        ? file.size > 1024 * 1024
+          ? `${(file.size / (1024 * 1024)).toFixed(1)} MB`
+          : `${Math.round(file.size / 1024)} KB`
+        : "1.5 MB";
+      const isSigned = targetFolder === "signed_docs" || String(file.name).toLowerCase().includes("signed");
       const newFile: AttachmentFile = {
         id: `file_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
         fileName: file.name,
@@ -534,24 +537,19 @@ function ContractsPageContent() {
         uploadedBy: currentUserId,
         uploadingDate: dayjs().format("DD/MM/YYYY HH:mm"),
         isClientDoc: false,
-        hasSign: file.name.endsWith(".pdf"),
+        hasSign: isSigned,
+        folder: targetFolder,
+        fileSize: sizeStr,
       };
       setAttachments((prev) => [newFile, ...prev]);
-      onSuccess("ok");
+      onSuccess?.("ok");
       message.success(`Đã tải lên: ${file.name}`);
     }, 400);
   };
 
   const handleDeleteAttachment = (id: string) => {
     setAttachments((prev) => prev.filter((item) => item.id !== id));
-    setSelectedAttachmentKeys((prev) => prev.filter((key) => key !== id));
     message.success("Đã xóa tệp đính kèm");
-  };
-
-  const handleBatchDeleteAttachments = () => {
-    setAttachments((prev) => prev.filter((item) => !selectedAttachmentKeys.includes(item.id)));
-    setSelectedAttachmentKeys([]);
-    message.success("Đã xóa các tệp đã chọn");
   };
 
   const handleToggleClientDoc = (id: string, checked: boolean) => {
@@ -616,11 +614,8 @@ function ContractsPageContent() {
           }}
           onClearMainContract={handleClearMainContract}
           attachments={attachments}
-          selectedAttachmentKeys={selectedAttachmentKeys}
-          setSelectedAttachmentKeys={setSelectedAttachmentKeys}
           onUploadAttachment={handleCustomUploadAttachment}
           onDeleteAttachment={handleDeleteAttachment}
-          onBatchDeleteAttachments={handleBatchDeleteAttachments}
           onToggleClientDoc={handleToggleClientDoc}
           onFinish={handleSubmitContract}
           onRefreshContracts={() => {

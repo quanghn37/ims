@@ -48,7 +48,6 @@ export default function QuotationsTable({
   onRefresh,
   onCreate,
   onEdit,
-  onDelete,
 }: QuotationsTableProps) {
   const { t, language } = useTranslation();
   const [openFilterKey, setOpenFilterKey] = useState<string | null>(null);
@@ -265,45 +264,13 @@ export default function QuotationsTable({
         boxSizing: "border-box",
       }}
     >
-      {/* STYLE OVERRIDES DÀNH CHO BẢNG QUẢN LÝ BẢNG GIÁ */}
+      {/* STYLE OVERRIDES DÀNH CHO CỘT TÌM KIẾM THEO TIÊU ĐỀ */}
       <style>{`
-        .quotation-main-table .ant-table {
-          font-family: inherit;
-        }
-        .quotation-main-table .ant-table-thead > tr > th {
-          background-color: #f7fbfa !important;
-          color: #475569 !important;
-          font-size: 13px !important;
-          font-weight: 600 !important;
-          line-height: 18px !important;
-          border-color: #dce5e6 !important;
-          padding: 10px 12px !important;
-        }
         .quotation-main-table .column-title-clickable {
           transition: color 0.15s ease;
         }
         .quotation-main-table .ant-table-thead > tr > th:hover .column-title-clickable {
           color: #008f89 !important;
-        }
-        .quotation-main-table .ant-table-tbody > tr > td {
-          color: #123443 !important;
-          font-size: 13px !important;
-          line-height: 18px !important;
-          border-color: #dce5e6 !important;
-          padding: 10px 12px !important;
-          height: 46px !important;
-        }
-        .quotation-main-table .ant-table-container {
-          border: 1px solid #dce5e6 !important;
-          border-radius: 8px !important;
-          overflow: hidden;
-        }
-        .quotation-main-table .ant-pagination .ant-pagination-item-active {
-          border-color: #008f89 !important;
-          background-color: #008f89 !important;
-        }
-        .quotation-main-table .ant-pagination .ant-pagination-item-active a {
-          color: #FFFFFF !important;
         }
       `}</style>
 
@@ -332,9 +299,6 @@ export default function QuotationsTable({
               color: "#123443",
             }}
           />
-          <span style={{ fontSize: 13, color: "#64748b" }}>
-            {t.common.total || "Tổng"}: <strong style={{ color: "#008f89" }}>{isFiltering ? filteredQuotations.length : pagination.total}</strong> {t.table.records || "bảng giá"}
-          </span>
           {isFiltering && (
             <Button
               icon={<IconCircleX size={15} strokeWidth={1.8} style={{ color: "#EF4444" }} />}
@@ -392,6 +356,7 @@ export default function QuotationsTable({
       {/* BẢNG DỮ LIỆU */}
       <Table
         className="quotation-main-table"
+        size="small"
         tableLayout="fixed"
         components={{ header: { cell: ResizableTitle } }}
         dataSource={filteredQuotations}

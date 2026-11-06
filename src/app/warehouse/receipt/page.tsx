@@ -7,7 +7,6 @@ import {
   Input,
   Select,
   Space,
-  Popconfirm,
   Tabs,
   message,
 } from "antd";
@@ -18,21 +17,21 @@ import {
   IconList,
   IconScale,
 } from "@tabler/icons-react";
-import ActionIconButton from "@/components/common/ActionIconButton";
 import dayjs from "dayjs";
 import { extractApiList, extractTotalRows } from "@/lib/api-client";
 import { StockInReceipt, StockItemDetail } from "../types";
 import { warehouseApi } from "../api";
 import StockInEditTab from "./_components/StockInEditTab";
-import PendingPoReconcileTab, { PendingPoItem } from "./_components/PendingPoReconcileTab";
+import PendingPoReconcileTab from "./_components/PendingPoReconcileTab";
 import InventoryWorkflowDrawer from "./_components/InventoryWorkflowDrawer";
 import ResizableTitle from "@/components/table/ResizableTitle";
 import { usePersistedTableColumns } from "@/components/table/usePersistedTableColumns";
+import ApprovalBadge from "@/components/common/ApprovalBadge";
 import { useTranslation } from "@/locales/LanguageContext";
 import { ErpPageContainer, ErpDetailContainer } from "@/components/layout/ErpPageContainer";
 
 export default function StockInPage() {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [receipts, setReceipts] = useState<StockInReceipt[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -88,7 +87,11 @@ export default function StockInPage() {
           const description = r.Description || r.description || "";
           const totalQty = Number(r.TotalQty ?? r.totalQty ?? r.Qnty ?? 0);
           const totalAmount = Number(r.TotalAmount ?? r.totalAmount ?? r.Amount ?? 0);
-          const status = r.StatusCode || r.Status || r.status || "COMPLETED";
+
+          // Chuẩn hóa Status & StatusName theo API (Status = 0 là Đang lập)
+          const rawStatus = r.Status !== undefined && r.Status !== null ? r.Status : r.StatusCode;
+          const statusNum = rawStatus !== undefined && rawStatus !== null && !isNaN(Number(rawStatus)) ? Number(rawStatus) : 0;
+          const statusName = r.StatusName || r.ApprovalStatusName || (statusNum === 0 ? "Đang lập" : String(rawStatus ?? ""));
 
           return {
             ...r,
@@ -106,7 +109,12 @@ export default function StockInPage() {
             description,
             totalQty,
             totalAmount,
-            status,
+            status: statusNum === 0 ? "DRAFT" : (statusNum === 1 ? "COMPLETED" : (statusNum === 2 ? "PENDING" : String(statusNum))),
+            Status: statusNum,
+            StatusCode: String(statusNum),
+            StatusName: statusName,
+            ApprovalStatus: r.ApprovalStatus !== undefined && r.ApprovalStatus !== null ? r.ApprovalStatus : statusNum,
+            ApprovalStatusName: statusName,
             createdBy: r.CreatedBy || r.createdBy || "",
             createdDate: r.CreatedDate || r.createdDate || "",
             items: r.items || [],
@@ -328,6 +336,28 @@ export default function StockInPage() {
     setActiveTabKey("list");
     setEditingReceipt(null);
     setItems([]);
+  };
+
+  const handleUpdateEditingReceipt = (updated: StockInReceipt) => {
+    setEditingReceipt(updated);
+    setReceipts((prev) =>
+      prev.map((r) => {
+        const rId = r.TransactionId ?? r.Id ?? (!isNaN(Number(r.id)) ? Number(r.id) : r.id);
+        const uId = updated.TransactionId ?? updated.Id ?? (!isNaN(Number(updated.id)) ? Number(updated.id) : updated.id);
+        if (String(rId) === String(uId)) {
+          return { ...r, ...updated };
+        }
+        return r;
+      })
+    );
+    fetchReceipts(pagination.current, pagination.pageSize, searchKeyword.trim());
+    const tId =
+      updated.TransactionId ??
+      updated.Id ??
+      (!isNaN(Number(updated.id)) ? Number(updated.id) : undefined);
+    if (tId) {
+      fetchReceiptItems(tId);
+    }
   };
 
   const handleDelete = async (record: StockInReceipt) => {
@@ -581,59 +611,37 @@ export default function StockInPage() {
         render: (val, r) => val || r.description || "---",
       },
       {
+        title: t("table.status") || (language === "en" ? "Status" : "Trạng thái"),
+        dataIndex: "StatusName",
+        key: "StatusName",
+        width: 140,
+        align: "left",
+        render: (_val, record: any) => {
+          const displayLabel = record?.StatusName || record?.ApprovalStatusName;
+          const statusVal = record?.Status ?? record?.StatusCode ?? 0;
+          return (
+            <ApprovalBadge
+              val={statusVal}
+              record={record}
+              customLabel={displayLabel}
+            />
+          );
+        },
+      },
+      {
         key: "_spacer",
         title: "",
         width: undefined,
         cannotHide: true,
         render: () => null,
       },
-      {
-        title: t("common.actions"),
-        key: "action",
-        width: 90,
-        align: "center",
-        fixed: "right",
-        cannotHide: true,
-        render: (_, record) => (
-          <Space size={6}>
-            <ActionIconButton
-              action="edit"
-              size="small"
-              onClick={() => handleOpenEdit(record)}
-            />
-            <Popconfirm
-              title="Xác nhận xóa phiếu này?"
-              description="Hành động này sẽ xóa phiếu nhập kho và không thể hoàn tác."
-              okText="Xóa"
-              cancelText="Hủy"
-              okButtonProps={{
-                danger: true,
-                loading:
-                  deletingTransactionId ===
-                  (record.TransactionId ?? record.Id ?? record.id),
-              }}
-              onConfirm={() => handleDelete(record)}
-            >
-              <ActionIconButton
-                action="delete"
-                size="small"
-                loading={
-                  deletingTransactionId ===
-                  (record.TransactionId ?? record.Id ?? record.id)
-                }
-              />
-            </Popconfirm>
-          </Space>
-        ),
-      },
     ],
-    [pagination.current, pagination.pageSize, deletingTransactionId]
+    [pagination.current, pagination.pageSize, t, language]
   );
 
   const { tableColumns, scrollX } = usePersistedTableColumns({
     tableKey: "warehouse_import_receipts",
     columns: baseColumns,
-    actionColumnKey: "action",
     defaultScrollX: 1350,
   });
 
@@ -645,10 +653,13 @@ export default function StockInPage() {
           onClose={handleCloseEditTab}
           editingReceipt={editingReceipt}
           onSave={handleSaveReceipt}
+          onDeleteReceipt={handleDelete}
+          deleting={deletingTransactionId !== null}
           onFetchWorkflow={(item) => setSelectedWorkflowItem(item)}
           items={items}
           setItems={setItems}
           loadingItems={loadingItems}
+          onUpdateEditingReceipt={handleUpdateEditingReceipt}
           onRefreshItems={() => {
             const tId =
               editingReceipt?.TransactionId ??
@@ -751,10 +762,6 @@ export default function StockInPage() {
               >
                 {t("common.refresh")}
               </Button>
-
-              <span style={{ fontSize: 13, color: "#64748b", whiteSpace: "nowrap" }}>
-                {t("common.total") || "Tổng"}: <strong style={{ color: "#008f89" }}>{pagination.total || filteredReceipts.length}</strong> {t("receipt.receiptCount") || "phiếu"}
-              </span>
             </div>
           </div>
 
@@ -772,7 +779,7 @@ export default function StockInPage() {
               tableLayout="fixed"
               components={{ header: { cell: ResizableTitle } }}
               rowKey="id"
-              size="middle"
+              size="small"
               columns={tableColumns}
               dataSource={filteredReceipts}
               loading={loading}
@@ -837,38 +844,6 @@ export default function StockInPage() {
         .stockin-flat-tabs .ant-tabs-ink-bar {
           background-color: #008f89 !important;
           height: 2px !important;
-        }
-        .stockin-main-table .ant-table-thead > tr > th {
-          background: #f7fbfa !important;
-          color: #123443 !important;
-          font-size: 12px !important;
-          font-weight: 600 !important;
-          line-height: 18px !important;
-          border-color: #dce5e6 !important;
-          padding: 8px 10px !important;
-        }
-        .stockin-main-table .ant-table-tbody > tr > td {
-          color: #123443 !important;
-          font-size: 12px !important;
-          line-height: 18px !important;
-          border-color: #dce5e6 !important;
-          padding: 8px 10px !important;
-          height: 40px !important;
-        }
-        .stockin-main-table .ant-table-tbody > tr:hover > td {
-          background-color: #eef8f6 !important;
-        }
-        .stockin-main-table .ant-table-container {
-          border: 1px solid #dce5e6 !important;
-          border-radius: 8px !important;
-          overflow: hidden;
-        }
-        .stockin-main-table .ant-pagination .ant-pagination-item-active {
-          border-color: #008f89 !important;
-          background-color: #008f89 !important;
-        }
-        .stockin-main-table .ant-pagination .ant-pagination-item-active a {
-          color: #FFFFFF !important;
         }
       `}</style>
 

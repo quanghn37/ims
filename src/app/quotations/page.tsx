@@ -15,7 +15,6 @@ import { AttachmentFile, parseDateSafe } from "./_components/types";
 import QuotationsTable from "./_components/QuotationsTable";
 import { useQuotations } from "./_hooks/useQuotations";
 import { useQuotationItemsAndWorkflow } from "./_hooks/useQuotationItemsAndWorkflow";
-import { useTranslation } from "@/locales/LanguageContext";
 import { ErpPageContainer, ErpDetailContainer } from "@/components/layout/ErpPageContainer";
 
 const ContractFormDrawer = dynamic(() => import("./_components/ContractFormDrawer"), {
@@ -27,7 +26,6 @@ const ContractFormDrawer = dynamic(() => import("./_components/ContractFormDrawe
   ),
   ssr: false,
 });
-const SubmissionDetailDrawer = dynamic(() => import("./_components/SubmissionDetailDrawer"), { ssr: false });
 const ItemFormDrawer = dynamic(() => import("./_components/ItemFormDrawer"), { ssr: false });
 const ImportExcelModal = dynamic(() => import("./_components/ImportExcelModal"), { ssr: false });
 const WorkflowDrawer = dynamic(() => import("./_components/WorkflowDrawer"), { ssr: false });
@@ -35,13 +33,16 @@ const ClientLovModal = dynamic(() => import("@/components/lov/ClientLovModal"), 
 const MainContractLovModal = dynamic(() => import("@/components/lov/MainContractLovModal"), { ssr: false });
 
 function QuotationsPageContent() {
-  const { t } = useTranslation();
   const { user } = useAuth();
   const searchParams = useSearchParams();
 
   const queryContractId = searchParams.get("id") || searchParams.get("contractId");
   const queryAction = searchParams.get("action");
   const currentUserId = user?.LogIn || "";
+
+  // Chi tiết / Mở form
+  const [isEditTabOpen, setIsEditTabOpen] = useState(false);
+  const isDetailPage = Boolean(queryContractId || queryAction || isEditTabOpen);
 
   // ===============================================================
   // STATE CHO MÀN HÌNH DANH SÁCH (KHI Ở TAB DANH SÁCH /quotations)
@@ -58,11 +59,7 @@ function QuotationsPageContent() {
     columnSuggestions,
     filteredQuotations,
     isFiltering,
-  } = useQuotations();
-
-  // Chi tiết / Mở form
-  const [isEditTabOpen, setIsEditTabOpen] = useState(false);
-  const isDetailPage = Boolean(queryContractId || queryAction || isEditTabOpen);
+  } = useQuotations(!Boolean(queryContractId || queryAction));
 
   // Tự động đồng bộ danh sách khi có cập nhật từ tab chi tiết khác
   useEffect(() => {
@@ -84,11 +81,9 @@ function QuotationsPageContent() {
   const [loadingSingleContract, setLoadingSingleContract] = useState(false);
   const [editingContract, setEditingContract] = useState<ContractItem | null>(null);
   const [attachments, setAttachments] = useState<AttachmentFile[]>([]);
-  const [selectedAttachmentKeys, setSelectedAttachmentKeys] = useState<React.Key[]>([]);
 
   // Submissions state
   const [selectedContract, setSelectedContract] = useState<ContractItem | null>(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const {
     submissions,
@@ -273,19 +268,9 @@ function QuotationsPageContent() {
         ContractDate: parseDateSafe(record.Contractdate || record.ContractDate),
       });
 
-      setAttachments([
-        {
-          id: "1",
-          fileName: "TBTT_TWC_CongNhat_TranGiaMinh_Dot05.pdf",
-          fileUrl: "#",
-          uploadedBy: currentUserId,
-          uploadingDate: "14/09/2026 21:27",
-          isClientDoc: false,
-        },
-      ]);
-      setSelectedAttachmentKeys([]);
+      setAttachments([]);
     },
-    [contractForm, currentUserId]
+    [contractForm]
   );
 
   // Khi mở tab trình duyệt có queryContractId: tự động tải thông tin bảng giá
@@ -338,9 +323,8 @@ function QuotationsPageContent() {
         ToDate: dayjs().add(1, "year"),
       });
       setAttachments([]);
-      setSelectedAttachmentKeys([]);
       if (typeof document !== "undefined") {
-        document.title = "Tạo Bảng giá mới";
+        document.title = "Tạo bảng giá";
       }
     }
   }, [queryAction, contractForm, setSubmissions]);
@@ -531,14 +515,7 @@ function QuotationsPageContent() {
 
   const handleDeleteAttachment = (id: string) => {
     setAttachments((prev) => prev.filter((item) => item.id !== id));
-    setSelectedAttachmentKeys((prev) => prev.filter((key) => key !== id));
     message.success("Đã xóa tệp đính kèm");
-  };
-
-  const handleBatchDeleteAttachments = () => {
-    setAttachments((prev) => prev.filter((item) => !selectedAttachmentKeys.includes(item.id)));
-    setSelectedAttachmentKeys([]);
-    message.success("Đã xóa các tệp đã chọn");
   };
 
   const handleToggleClientDoc = (id: string, checked: boolean) => {
@@ -594,30 +571,12 @@ function QuotationsPageContent() {
           onFetchWorkflow={fetchWorkflowStatus}
           onOpenImportExcel={handleOpenImportModal}
           attachments={attachments}
-          selectedAttachmentKeys={selectedAttachmentKeys}
-          setSelectedAttachmentKeys={setSelectedAttachmentKeys}
           onUploadAttachment={handleCustomUploadAttachment}
           onDeleteAttachment={handleDeleteAttachment}
-          onBatchDeleteAttachments={handleBatchDeleteAttachments}
           onToggleClientDoc={handleToggleClientDoc}
           onFinish={handleSubmitContract}
           onDeleteContract={handleDeleteContract}
         />
-
-        {drawerOpen && (
-          <SubmissionDetailDrawer
-            open={drawerOpen}
-            onClose={() => setDrawerOpen(false)}
-            selectedContract={selectedContract}
-            submissions={submissions}
-            loadingSubmissions={loadingSubmissions}
-            onOpenAddItem={handleOpenAddItem}
-            onOpenEditItem={handleOpenEditItem}
-            onDeleteSubmission={handleDeleteSubmission}
-            onFetchWorkflow={fetchWorkflowStatus}
-            onOpenImportExcel={handleOpenImportModal}
-          />
-        )}
 
         {isItemModalOpen && (
           <ItemFormDrawer

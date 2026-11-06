@@ -26,7 +26,7 @@ export function usePriceCompare({
   const [priceCompareItems, setPriceCompareItems] = useState<any[]>([]);
   const [selectedPriceCompareKeys, setSelectedPriceCompareKeys] = useState<React.Key[]>([]);
   const [submittingPriceCompare, setSubmittingPriceCompare] = useState(false);
-  const [priceCompareStartProcess, setPriceCompareStartProcess] = useState<boolean>(true);
+  const [priceCompareStartProcess, setPriceCompareStartProcess] = useState<boolean>(false);
 
   const openPriceCompare = async () => {
     const targetOrder = editingOrder || selectedOrder;
@@ -69,7 +69,7 @@ export function usePriceCompare({
 
     setIsPriceCompareOpen(true);
     setSelectedPriceCompareKeys([]);
-    setPriceCompareStartProcess(true);
+    setPriceCompareStartProcess(false);
     setLoadingPriceCompare(true);
     try {
       const data = await purchaseOrdersApi.getItems({
@@ -80,12 +80,26 @@ export function usePriceCompare({
         PageSize: 50,
       });
       const list = extractApiList<any>(data);
+      const seenKeys = new Set<string>();
       const mapped = list.map((it, idx) => {
+        let uniqueKey = String(
+          it.ContractSubmissionId ??
+          it.SourceId ??
+          it.SubmissionId ??
+          it.Id ??
+          `${it.MaterialId ?? it.ItemId ?? "mat"}`
+        );
+        if (seenKeys.has(uniqueKey)) {
+          uniqueKey = `${uniqueKey}_${idx}`;
+        }
+        seenKeys.add(uniqueKey);
+
         const id = it.MaterialId ?? it.ItemId ?? it.ItemCode ?? `mat_${idx}`;
         return {
           ...it,
-          MaterialId: id,
-          ItemId: id,
+          _rowKey: uniqueKey,
+          MaterialId: it.MaterialId ?? it.ItemId ?? id,
+          ItemId: it.ItemId ?? it.MaterialId ?? id,
           ItemCode: it.ItemCode || "",
           ItemName: it.ItemName || it.Description || "",
           UomCode: it.UomCode || it.Unit || "",
@@ -104,20 +118,20 @@ export function usePriceCompare({
     }
   };
 
-  const handleChangePriceCompareQnty = (itemId: any, qnty: number) => {
+  const handleChangePriceCompareQnty = (rowKey: any, qnty: number) => {
     setPriceCompareItems((prev) =>
       prev.map((it) => {
-        const id = it.MaterialId ?? it.ItemId ?? it.ItemCode;
-        return String(id) === String(itemId) ? { ...it, OrderQnty: qnty } : it;
+        const key = it._rowKey ?? it.ContractSubmissionId ?? it.SourceId ?? it.MaterialId ?? it.ItemId;
+        return String(key) === String(rowKey) ? { ...it, OrderQnty: qnty } : it;
       })
     );
   };
 
-  const handleChangePriceCompareOrgcode = (itemId: any, orgCode: string, orgName: string) => {
+  const handleChangePriceCompareOrgcode = (rowKey: any, orgCode: string, orgName: string) => {
     setPriceCompareItems((prev) =>
       prev.map((it) => {
-        const id = it.MaterialId ?? it.ItemId ?? it.ItemCode;
-        return String(id) === String(itemId) ? { ...it, Orgcode: orgCode, OrgName: orgName } : it;
+        const key = it._rowKey ?? it.ContractSubmissionId ?? it.SourceId ?? it.MaterialId ?? it.ItemId;
+        return String(key) === String(rowKey) ? { ...it, Orgcode: orgCode, OrgName: orgName } : it;
       })
     );
   };
@@ -126,8 +140,8 @@ export function usePriceCompare({
     const targetOrder = editingOrder || selectedOrder;
     if (!targetOrder) return;
     const selectedRows = priceCompareItems.filter((it) => {
-      const id = String(it.MaterialId ?? it.ItemId ?? it.ItemCode);
-      return selectedPriceCompareKeys.some((k) => String(k) === id);
+      const key = String(it._rowKey ?? it.ContractSubmissionId ?? it.SourceId ?? it.MaterialId ?? it.ItemId);
+      return selectedPriceCompareKeys.some((k) => String(k) === key);
     });
     if (selectedRows.length === 0) {
       message.warning("Vui lòng chọn ít nhất 1 vật tư!");
@@ -136,6 +150,16 @@ export function usePriceCompare({
     const invalidRow = selectedRows.find((it) => !it.OrderQnty || Number(it.OrderQnty) <= 0);
     if (invalidRow) {
       message.warning(`Vui lòng nhập số lượng đặt hàng hợp lệ cho "${invalidRow.ItemName || invalidRow.Description}"!`);
+      return;
+    }
+
+    const missingOrgcodeRow = selectedRows.find(
+      (it) => !it.Orgcode || !String(it.Orgcode).trim()
+    );
+    if (missingOrgcodeRow) {
+      message.warning(
+        `Vui lòng chọn Orgcode cho vật tư "${missingOrgcodeRow.ItemName || missingOrgcodeRow.Description}"!`
+      );
       return;
     }
 
@@ -173,7 +197,7 @@ export function usePriceCompare({
           TaxRate: 0.08,
           Remarks: row.Remarks || "",
           Stage: "plan",
-          StartProcessNow: priceCompareStartProcess ? "Yes" : "No",
+          StartProcessNow: "No",
           ApplyDefinedAssignment: "Yes",
         };
         if (row.Orgcode) {

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import type { ColumnsType, ColumnType } from "antd/es/table";
 import { message } from "antd";
 import ColumnSettingsPopover, { ColumnSettingItem } from "./ColumnSettingsPopover";
@@ -22,6 +22,9 @@ export function usePersistedTableColumns<T extends Record<string, any>>({
 }: UsePersistedTableColumnsProps<T>) {
   const configStorageKey = `${tableKey}_columns_config_v1`;
   const widthsStorageKey = `${tableKey}_columns_widths_v1`;
+  // Lưu cả vào khóa gốc không có hậu tố _vX để khi nâng phiên bản cột (vd _v2 -> _v4) độ rộng người dùng đã kéo không bị mất
+  const baseTableKey = useMemo(() => tableKey.replace(/_v\d+$/, ""), [tableKey]);
+  const baseWidthsStorageKey = `${baseTableKey}_columns_widths_v1`;
 
   // Trích xuất cấu hình mặc định ban đầu từ initialColumns (loại trừ _spacer)
   const defaultConfigs: ColumnSettingItem[] = useMemo(() => {
@@ -50,47 +53,102 @@ export function usePersistedTableColumns<T extends Record<string, any>>({
       });
   }, [initialColumns, actionColumnKey]);
 
-  const [columnConfigs, setColumnConfigs] = useState<ColumnSettingItem[]>(defaultConfigs);
-  const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
+  const mergeSavedConfigs = useCallback(
+    (savedConfigs: { key: string; visible: boolean }[], defaults: ColumnSettingItem[]) => {
+      const reordered: ColumnSettingItem[] = [];
 
-  // 1. Đọc cấu hình từ localStorage khi khởi tạo
+      savedConfigs.forEach((sc) => {
+        const found = defaults.find((d) => d.key === sc.key);
+        if (found) {
+          reordered.push({
+            ...found,
+            visible: found.cannotHide ? true : Boolean(sc.visible),
+          });
+        }
+      });
+
+      // Bổ sung các cột mới nếu defaultConfigs có mà trong cache chưa có (chèn trước cột action nếu có)
+      defaults.forEach((d) => {
+        if (!reordered.some((r) => r.key === d.key)) {
+          const actionIdx = reordered.findIndex((r) => r.key === actionColumnKey);
+          if (actionIdx !== -1 && d.key !== actionColumnKey) {
+            reordered.splice(actionIdx, 0, d);
+          } else {
+            reordered.push(d);
+          }
+        }
+      });
+
+      return reordered;
+    },
+    [actionColumnKey]
+  );
+
+  const readSavedWidths = useCallback((): Record<string, number> => {
+    if (typeof window === "undefined") return {};
+    try {
+      const merged: Record<string, number> = {};
+      // Đọc từ các phiên bản cũ (_v1.._v9) và khóa gốc để kế thừa độ rộng cột đã resize
+      for (let v = 1; v <= 9; v++) {
+        const legacyStr = localStorage.getItem(`${baseTableKey}_v${v}_columns_widths_v1`);
+        if (legacyStr) {
+          Object.assign(merged, JSON.parse(legacyStr));
+        }
+      }
+      const baseStr = localStorage.getItem(baseWidthsStorageKey);
+      if (baseStr) {
+        Object.assign(merged, JSON.parse(baseStr));
+      }
+      const currentStr = localStorage.getItem(widthsStorageKey);
+      if (currentStr) {
+        Object.assign(merged, JSON.parse(currentStr));
+      }
+      return merged;
+    } catch (e) {
+      console.error(`[${tableKey}] Lỗi đọc độ rộng cột từ localStorage:`, e);
+      return {};
+    }
+  }, [baseTableKey, baseWidthsStorageKey, widthsStorageKey, tableKey]);
+
+  const [columnConfigs, setColumnConfigs] = useState<ColumnSettingItem[]>(() => {
+    if (typeof window === "undefined") return defaultConfigs;
+    try {
+      const savedConfigStr = localStorage.getItem(configStorageKey);
+      if (savedConfigStr) {
+        const savedConfigs: { key: string; visible: boolean }[] = JSON.parse(savedConfigStr);
+        return mergeSavedConfigs(savedConfigs, defaultConfigs);
+      }
+    } catch (e) {
+      console.error(`[${tableKey}] Lỗi đọc cấu hình cột khi khởi tạo:`, e);
+    }
+    return defaultConfigs;
+  });
+
+  const [columnWidths, setColumnWidths] = useState<Record<string, number>>(() => readSavedWidths());
+  const widthsRef = useRef<Record<string, number>>(columnWidths);
+
+  useEffect(() => {
+    widthsRef.current = columnWidths;
+  }, [columnWidths]);
+
+  // 1. Đồng bộ cấu hình từ localStorage khi tableKey hoặc defaultConfigs thay đổi
   useEffect(() => {
     try {
       const savedConfigStr = localStorage.getItem(configStorageKey);
       if (savedConfigStr) {
         const savedConfigs: { key: string; visible: boolean }[] = JSON.parse(savedConfigStr);
-        const reordered: ColumnSettingItem[] = [];
-
-        savedConfigs.forEach((sc) => {
-          const found = defaultConfigs.find((d) => d.key === sc.key);
-          if (found) {
-            reordered.push({
-              ...found,
-              visible: found.cannotHide ? true : Boolean(sc.visible),
-            });
-          }
-        });
-
-        // Bổ sung các cột mới nếu defaultConfigs có mà trong cache chưa có
-        defaultConfigs.forEach((d) => {
-          if (!reordered.some((r) => r.key === d.key)) {
-            reordered.push(d);
-          }
-        });
-
-        setColumnConfigs(reordered);
+        setColumnConfigs(mergeSavedConfigs(savedConfigs, defaultConfigs));
       } else {
         setColumnConfigs(defaultConfigs);
       }
 
-      const savedWidthsStr = localStorage.getItem(widthsStorageKey);
-      if (savedWidthsStr) {
-        setColumnWidths(JSON.parse(savedWidthsStr));
-      }
+      const loadedWidths = readSavedWidths();
+      widthsRef.current = loadedWidths;
+      setColumnWidths(loadedWidths);
     } catch (e) {
       console.error(`[${tableKey}] Lỗi đọc cấu hình cột từ localStorage:`, e);
     }
-  }, [configStorageKey, widthsStorageKey, defaultConfigs, tableKey]);
+  }, [configStorageKey, defaultConfigs, mergeSavedConfigs, readSavedWidths, tableKey]);
 
   // 2. Lưu cấu hình vào localStorage
   const saveColumnConfigs = useCallback(
@@ -142,15 +200,20 @@ export function usePersistedTableColumns<T extends Record<string, any>>({
 
   const handleResetColumns = useCallback(() => {
     setColumnConfigs(defaultConfigs);
+    widthsRef.current = {};
     setColumnWidths({});
     try {
       localStorage.removeItem(configStorageKey);
       localStorage.removeItem(widthsStorageKey);
+      localStorage.removeItem(baseWidthsStorageKey);
+      for (let v = 1; v <= 9; v++) {
+        localStorage.removeItem(`${baseTableKey}_v${v}_columns_widths_v1`);
+      }
       message.success("Đã khôi phục thứ tự và kích thước cột mặc định!");
     } catch (e) {
       console.error(`[${tableKey}] Lỗi reset cột:`, e);
     }
-  }, [defaultConfigs, configStorageKey, widthsStorageKey, tableKey]);
+  }, [defaultConfigs, configStorageKey, widthsStorageKey, baseWidthsStorageKey, baseTableKey, tableKey]);
 
   const handleShowAllColumns = useCallback(() => {
     const next = columnConfigs.map((c) => ({ ...c, visible: true }));
@@ -159,17 +222,20 @@ export function usePersistedTableColumns<T extends Record<string, any>>({
 
   const handleResizeColumn = useCallback(
     (columnKey: string) => (_: any, { size }: { size: { width: number } }) => {
-      setColumnWidths((prev) => {
-        const next = { ...prev, [columnKey]: Math.max(size.width, minColumnWidth) };
-        try {
-          localStorage.setItem(widthsStorageKey, JSON.stringify(next));
-        } catch (e) {
-          console.error(`[${tableKey}] Lỗi lưu độ rộng cột:`, e);
-        }
-        return next;
-      });
+      if (!size || typeof size.width !== "number" || isNaN(size.width)) return;
+      const nextWidth = Math.round(Math.max(size.width, minColumnWidth));
+      const next = { ...widthsRef.current, [columnKey]: nextWidth };
+      widthsRef.current = next;
+      try {
+        const serialized = JSON.stringify(next);
+        localStorage.setItem(widthsStorageKey, serialized);
+        localStorage.setItem(baseWidthsStorageKey, serialized);
+      } catch (e) {
+        console.error(`[${tableKey}] Lỗi lưu độ rộng cột:`, e);
+      }
+      setColumnWidths(next);
     },
-    [widthsStorageKey, minColumnWidth, tableKey]
+    [widthsStorageKey, baseWidthsStorageKey, minColumnWidth, tableKey]
   );
 
   // 3. Tạo Map định nghĩa cột gốc để tra cứu
@@ -231,10 +297,27 @@ export function usePersistedTableColumns<T extends Record<string, any>>({
           );
         }
 
+        // Tự động gán ellipsis và bọc title tooltip gốc cho tất cả các cột dữ liệu (trừ action và spacer)
+        const isSpacer = cfg.key === "_spacer";
+        const originalRender = colDef.render;
+        const enhancedRender = (isActionCol || isSpacer)
+          ? originalRender
+          : (text: any, record: any, idx: number) => {
+              const content = originalRender ? originalRender(text, record, idx) : text;
+              if (content === null || content === undefined || content === "") return "---";
+              if (typeof content === "object" && React.isValidElement(content)) {
+                return content;
+              }
+              const textStr = String(content);
+              return <span title={textStr}>{textStr}</span>;
+            };
+
         return {
+          ellipsis: isActionCol || isSpacer ? colDef.ellipsis : true,
           ...colDef,
           title: finalTitle,
           width: currentWidth,
+          render: enhancedRender,
           onHeaderCell: (column: any) => ({
             width: column.width,
             onResize: handleResizeColumn(cfg.key),

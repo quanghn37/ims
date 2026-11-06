@@ -75,7 +75,7 @@ export function useOrderLovModals(form: any) {
   }, []);
 
   const fetchPriceListRefList = useCallback(
-    async (keyword = "", clientId: any = "", contractId: any = "") => {
+    async (keyword = "", _clientId: any = "", contractId: any = "") => {
       setLoadingPriceListRef(true);
       try {
         if (contractId) {

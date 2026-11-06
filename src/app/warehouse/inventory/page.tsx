@@ -4,11 +4,9 @@ import React from "react";
 import { useInventory } from "./_hooks/useInventory";
 import InventoryTable from "./_components/InventoryTable";
 import StockCardDrawer from "./_components/StockCardDrawer";
-import { useTranslation } from "@/locales/LanguageContext";
 import { ErpPageContainer } from "@/components/layout/ErpPageContainer";
 
 export default function InventoryPage() {
-  const { t } = useTranslation();
   const {
     stockItems,
     loading,

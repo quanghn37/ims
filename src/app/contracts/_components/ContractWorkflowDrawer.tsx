@@ -26,7 +26,7 @@ export default function ContractWorkflowDrawer({
   loading,
   onRefresh,
 }: ContractWorkflowDrawerProps) {
-  const { t, language } = useTranslation();
+  const { language } = useTranslation();
 
   const [selectedWorkflowRow, setSelectedWorkflowRow] = useState<any>(null);
   const [isRowDetailOpen, setIsRowDetailOpen] = useState(false);

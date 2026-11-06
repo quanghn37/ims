@@ -1,0 +1,67 @@
+/* ==========================================================================
+   GLOBAL ERP TABLE STYLES - ÁP DỤNG ĐỒNG BỘ TOÀN DỰ ÁN
+   ========================================================================== */
+
+/* 1. Header bảng */
+.ant-table-wrapper .ant-table-thead > tr > th {
+  background-color: #f7fbfa !important;
+  color: #475569 !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  line-height: 16px !important;
+  border-color: #dce5e6 !important;
+  padding: 6px 10px !important;
+  height: 32px !important;
+}
+
+/* 2. Dòng dữ liệu & Chống nhảy dòng */
+.ant-table-wrapper .ant-table-tbody > tr > td {
+  color: #123443 !important;
+  font-size: 12.5px !important;
+  line-height: 16px !important;
+  border-color: #dce5e6 !important;
+  padding: 4px 10px !important;
+  height: 32px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* Khống chế mọi phần tử con trong ô (span, a, p, Typography) không xuống dòng */
+.ant-table-wrapper .ant-table-tbody > tr > td * {
+  white-space: nowrap !important;
+}
+
+.ant-table-wrapper .ant-table-tbody > tr > td .ant-typography {
+  font-size: 12.5px !important;
+  line-height: 16px !important;
+  margin-bottom: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  display: inline-block !important;
+  max-width: 100% !important;
+  vertical-align: middle !important;
+}
+
+/* Hover dòng */
+.ant-table-wrapper .ant-table-tbody > tr:hover > td {
+  background-color: #eef8f6 !important;
+}
+
+/* Container bo viền bảng */
+.ant-table-wrapper .ant-table-container {
+  border: 1px solid #dce5e6 !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+}
+
+/* Phân trang đồng bộ màu chủ đạo #008f89 */
+.ant-table-wrapper .ant-pagination .ant-pagination-item-active {
+  border-color: #008f89 !important;
+  background-color: #008f89 !important;
+}
+
+.ant-table-wrapper .ant-pagination .ant-pagination-item-active a {
+  color: #ffffff !important;
+}

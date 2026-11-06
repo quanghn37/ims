@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import {
@@ -58,7 +58,6 @@ export default function ItemFormDrawer({
   availableItems,
   loadingItems,
   onSearchItem,
-  onFetchItems,
   rawItemTotal,
   taxItemTotal,
   grandItemTotal,

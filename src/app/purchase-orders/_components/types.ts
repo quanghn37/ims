@@ -11,6 +11,8 @@ export interface AttachmentFile {
   uploadingDate: string;
   isClientDoc: boolean;
   hasSign?: boolean;
+  folder?: "project_docs" | "signing_docs" | "signed_docs" | string;
+  fileSize?: string;
 }
 
 export function parseDateSafe(dateStr?: string) {

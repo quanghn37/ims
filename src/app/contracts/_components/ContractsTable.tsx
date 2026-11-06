@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from "react";
-import { Button, Input, Popover, Space, Table, Tag, Tooltip, Typography } from "antd";
+import { Button, Input, Popover, Space, Table, Tooltip, Typography } from "antd";
 import {
   IconCircleX,
   IconPlus,
@@ -39,7 +39,7 @@ interface ContractsTableProps {
   onDelete?: (record: ContractItem) => void;
 }
 
-export default function ContractsTable({ filteredContracts, loading, searchKeyword, setSearchKeyword, columnFilters, setColumnFilters, pagination, setPagination, isFiltering, columnSuggestions, storageKey, onRefresh, onCreate, onEdit, onCreateAddendum, onDelete }: ContractsTableProps) {
+export default function ContractsTable({ filteredContracts, loading, searchKeyword, setSearchKeyword, columnFilters, setColumnFilters, pagination, setPagination, isFiltering, columnSuggestions, storageKey, onRefresh, onCreate, onEdit, onCreateAddendum }: ContractsTableProps) {
   const { t } = useTranslation();
   const initialMainColumns = useMemo(
     () => [
@@ -91,25 +91,33 @@ export default function ContractsTable({ filteredContracts, loading, searchKeywo
         dataIndex: "MainCode",
         key: "MainCode",
         width: 220,
-        render: (val: string, r: any) => <Text>{val || r.MainContractCode || r.MainContractName || "---"}</Text>,
+        ellipsis: true,
+        render: (val: string, r: any) => {
+          const text = val || r.MainContractCode || r.MainContractName || "---";
+          return <span title={text}>{text}</span>;
+        },
       },
       {
         title: t.contract.vendor,
         dataIndex: "Venname",
         key: "Venname",
         width: 220,
-        render: (_: any, record: any) => (
-          <Text>{record.Venname || record.ClientName || record.CompanyName || record.VendorName || "---"}</Text>
-        ),
+        ellipsis: true,
+        render: (_: any, record: any) => {
+          const text = record.Venname || record.ClientName || record.CompanyName || record.VendorName || "---";
+          return <span title={text}>{text}</span>;
+        },
       },
       {
         title: t.contract.description,
         dataIndex: "Description",
         key: "Description",
         width: 260,
-        render: (val: string, r: any) => (
-          <Text>{val || r.Remarks || r.ContractName || "Hợp đồng cung cấp vật tư & thiết bị"}</Text>
-        ),
+        ellipsis: true,
+        render: (val: string, r: any) => {
+          const text = val || r.Remarks || r.ContractName || "Hợp đồng cung cấp vật tư & thiết bị";
+          return <span title={text}>{text}</span>;
+        },
       },
       {
         title: t.contract.signDate,
@@ -157,10 +165,10 @@ export default function ContractsTable({ filteredContracts, loading, searchKeywo
         dataIndex: "StatusName",
         key: "StatusName",
         width: 120,
-        align: "center" as const,
+        align: "left" as const,
         render: (val: string, r: any) => {
-          const raw = val ?? r.Status ?? r.StatusCode ?? "";
-          return <ApprovalBadge val={raw} record={r} />;
+          const raw = val ?? r.StatusCode ?? "";
+          return <ApprovalBadge val={raw} record={r} customLabel={r.StatusName || (typeof val === "string" ? val : undefined)} />;
         },
       },
       {
@@ -359,45 +367,13 @@ export default function ContractsTable({ filteredContracts, loading, searchKeywo
         boxSizing: "border-box",
       }}
     >
-      {/* STYLE OVERRIDES DÀNH CHO BẢNG QUẢN LÝ HỢP ĐỒNG NCC */}
+      {/* STYLE OVERRIDES DÀNH CHO CỘT TÌM KIẾM THEO TIÊU ĐỀ */}
       <style>{`
-        .contract-main-table .ant-table {
-          font-family: inherit;
-        }
-        .contract-main-table .ant-table-thead > tr > th {
-          background-color: #f7fbfa !important;
-          color: #475569 !important;
-          font-size: 13px !important;
-          font-weight: 600 !important;
-          line-height: 18px !important;
-          border-color: #dce5e6 !important;
-          padding: 10px 12px !important;
-        }
         .contract-main-table .column-title-clickable {
           transition: color 0.15s ease;
         }
         .contract-main-table .ant-table-thead > tr > th:hover .column-title-clickable {
           color: #008f89 !important;
-        }
-        .contract-main-table .ant-table-tbody > tr > td {
-          color: #123443 !important;
-          font-size: 13px !important;
-          line-height: 18px !important;
-          border-color: #dce5e6 !important;
-          padding: 10px 12px !important;
-          height: 46px !important;
-        }
-        .contract-main-table .ant-table-container {
-          border: 1px solid #dce5e6 !important;
-          border-radius: 8px !important;
-          overflow: hidden;
-        }
-        .contract-main-table .ant-pagination .ant-pagination-item-active {
-          border-color: #008f89 !important;
-          background-color: #008f89 !important;
-        }
-        .contract-main-table .ant-pagination .ant-pagination-item-active a {
-          color: #FFFFFF !important;
         }
       `}</style>
 
@@ -426,9 +402,6 @@ export default function ContractsTable({ filteredContracts, loading, searchKeywo
               color: "#123443",
             }}
           />
-          <span style={{ fontSize: 13, color: "#64748b" }}>
-            {t.common.total || "Tổng"}: <strong style={{ color: "#008f89" }}>{isFiltering ? filteredContracts.length : pagination.total}</strong> {t.table.records || "hợp đồng"}
-          </span>
           {isFiltering && (
             <Button
               icon={<IconCircleX size={15} strokeWidth={1.8} style={{ color: "#EF4444" }} />}
@@ -486,6 +459,7 @@ export default function ContractsTable({ filteredContracts, loading, searchKeywo
 
       <Table
         className="contract-main-table"
+        size="small"
         tableLayout="fixed"
         components={{ header: { cell: ResizableTitle } }}
         dataSource={filteredContracts}
@@ -496,40 +470,6 @@ export default function ContractsTable({ filteredContracts, loading, searchKeywo
         onRow={(record) => ({
           onDoubleClick: () => onEdit(record),
         })}
-        summary={(pageData) => {
-          let totalAmount = 0;
-          pageData.forEach((item: any) => { totalAmount += Number(item.ContractedAmount ?? item.Amount ?? 0); });
-          return (
-            <Table.Summary.Row style={{ background: "#eef8f6" }}>
-              {mergedColumns.map((col: any, index: number) => {
-                const key = String(col.key || col.dataIndex || index);
-                if (key === "_spacer") {
-                  return <Table.Summary.Cell key="_spacer" index={index} />;
-                }
-                const isAmount = key === "ContractedAmount";
-                const isFirst = index === 0;
-                return (
-                  <Table.Summary.Cell
-                    key={key}
-                    index={index}
-                    align={isAmount ? "right" : col.align}
-                  >
-                    {isFirst && (
-                      <span style={{ fontWeight: 600, color: "#123443", fontSize: 13 }}>
-                        {t.common.total}:
-                      </span>
-                    )}
-                    {isAmount && (
-                      <span style={{ fontWeight: 700, color: "#008f89", fontSize: 14 }}>
-                        {totalAmount.toLocaleString("vi-VN")}
-                      </span>
-                    )}
-                  </Table.Summary.Cell>
-                );
-              })}
-            </Table.Summary.Row>
-          );
-        }}
         pagination={{
           current: pagination.current,
           pageSize: pagination.pageSize,

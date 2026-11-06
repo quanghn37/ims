@@ -8,7 +8,6 @@ import {
   Popconfirm,
   Space,
   Typography,
-  Tag,
 } from "antd";
 import {
   IconSettings,
@@ -453,7 +452,7 @@ export default function QuotationItemsSection({
     >
 
       <Table
-        className="erp-detail-table quotation-detail-table"
+        className="erp-detail-table"
         tableLayout="fixed"
         components={{
           header: {

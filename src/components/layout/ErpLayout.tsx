@@ -1,13 +1,14 @@
 "use client";
 
 import React, { useState, useEffect, useTransition } from "react";
-import { Layout, Menu, Button, Avatar, Dropdown, Space, Typography, Tag, Spin } from "antd";
+import { Layout, Menu, Button, Avatar, Dropdown, Space, Typography, Spin } from "antd";
 import type { MenuProps } from "antd";
 import {
   IconFileText,
   IconFileCheck,
   IconShoppingCart,
   IconBuildingWarehouse,
+  IconReceipt2,
   IconBuildingCommunity,
   IconLogout,
   IconUser,
@@ -61,7 +62,8 @@ export const ErpLayout: React.FC<ErpLayoutProps> = ({ children }) => {
 
   const { t, language, setLanguage } = useTranslation();
 
-  if (pathname === "/login") {
+  const isPrintPage = pathname.includes("/print");
+  if (pathname === "/login" || isPrintPage) {
     return <>{children}</>;
   }
 
@@ -128,6 +130,11 @@ export const ErpLayout: React.FC<ErpLayoutProps> = ({ children }) => {
           label: <Link href="/warehouse/period-report" prefetch={false}>{t("menu.periodReport")}</Link>,
         },
       ],
+    },
+    {
+      key: "/invoices",
+      icon: <IconReceipt2 size={18} strokeWidth={1.8} />,
+      label: <Link href="/invoices" prefetch={false}>{t("menu.invoices")}</Link>,
     },
   ];
 
@@ -267,6 +274,7 @@ export const ErpLayout: React.FC<ErpLayoutProps> = ({ children }) => {
               {activePath.startsWith("/warehouse/issue") && t("pageTitles.issue")}
               {activePath.startsWith("/warehouse/inventory") && t("pageTitles.inventory")}
               {activePath.startsWith("/warehouse/period-report") && t("pageTitles.periodReport")}
+              {activePath.startsWith("/invoices") && t("pageTitles.invoices")}
             </Text>
             {isNavigating && <Spin size="small" />}
           </Space>

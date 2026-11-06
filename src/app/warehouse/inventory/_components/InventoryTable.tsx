@@ -78,6 +78,15 @@ export default function InventoryTable({
       ),
     },
     {
+      title: t.table.warehouse,
+      dataIndex: "WarehouseName",
+      key: "WarehouseName",
+      width: 250,
+      render: (val: string) => (
+        <span style={{ color: "#334155", fontSize: 13 }}>{val}</span>
+      ),
+    },
+    {
       title: t.table.itemCode,
       dataIndex: "ItemCode",
       key: "ItemCode",
@@ -88,8 +97,8 @@ export default function InventoryTable({
           style={{
             fontFamily: "monospace",
             fontSize: 12,
-            fontWeight: 600,
-            color: "#008f89",
+            fontWeight: 400,
+            color: "#334155",
             cursor: "pointer",
           }}
           title={t.inventory.stockCardTooltip}
@@ -104,7 +113,7 @@ export default function InventoryTable({
       key: "ItemName",
       width: 280,
       render: (val: string) => (
-        <span style={{ fontSize: 13, color: "#123443", lineHeight: "18px" }}>
+        <span style={{ fontSize: 13, color: "#334155", lineHeight: "18px" }}>
           {val}
         </span>
       ),
@@ -116,15 +125,6 @@ export default function InventoryTable({
       width: 75,
       align: "center" as const,
       render: (val: string) => (
-        <span style={{ color: "#475569", fontSize: 13 }}>{val}</span>
-      ),
-    },
-    {
-      title: t.table.warehouse,
-      dataIndex: "WarehouseName",
-      key: "WarehouseName",
-      width: 250,
-      render: (val: string) => (
         <span style={{ color: "#334155", fontSize: 13 }}>{val}</span>
       ),
     },
@@ -135,7 +135,7 @@ export default function InventoryTable({
       width: 110,
       align: "right" as const,
       render: (val: number) => (
-        <span style={{ fontSize: 13, color: val === 0 ? "#DC2626" : "#123443" }}>
+        <span style={{ fontSize: 13, color: "#334155" }}>
           {Number(val || 0).toLocaleString("vi-VN")}
         </span>
       ),
@@ -147,7 +147,7 @@ export default function InventoryTable({
       width: 105,
       align: "right" as const,
       render: (val: number) => (
-        <span style={{ color: "#718894", fontSize: 13 }}>
+        <span style={{ color: "#334155", fontSize: 13 }}>
           {Number(val || 0).toLocaleString("vi-VN")}
         </span>
       ),
@@ -159,7 +159,7 @@ export default function InventoryTable({
       width: 115,
       align: "right" as const,
       render: (val: number) => (
-        <span style={{ fontSize: 13, color: "#16A34A" }}>
+        <span style={{ fontSize: 13, color: "#334155" }}>
           {Number(val || 0).toLocaleString("vi-VN")}
         </span>
       ),
@@ -183,7 +183,7 @@ export default function InventoryTable({
       width: 155,
       align: "right" as const,
       render: (val: number) => (
-        <span style={{ color: "#008f89", fontSize: 13 }}>
+        <span style={{ color: "#334155", fontSize: 13 }}>
           {Number(val || 0).toLocaleString("vi-VN")}
         </span>
       ),
@@ -195,7 +195,7 @@ export default function InventoryTable({
       width: 120,
       align: "center" as const,
       render: (val: string | null) => (
-        <span style={{ color: "#718894", fontSize: 13 }}>
+        <span style={{ color: "#334155", fontSize: 13 }}>
           {val ? dayjs(val).format("DD/MM/YYYY") : "---"}
         </span>
       ),
@@ -225,7 +225,7 @@ export default function InventoryTable({
     },
   ], [pagination.current, pagination.pageSize, onOpenStockCard, t]);
 
-  const { columns, handleResizeColumn } = usePersistedColumnWidths(initialColumns, "inventory_table_widths_v1");
+  const { columns, handleResizeColumn } = usePersistedColumnWidths(initialColumns, "inventory_table_widths_v2");
 
   const mergedColumns = useMemo(() => columns.map((column, index) => {
     const key = column.key || column.dataIndex;
@@ -307,10 +307,6 @@ export default function InventoryTable({
           >
             {t.common.search}
           </Button>
-
-          <span style={{ fontSize: 13, color: "#64748b" }}>
-            {t.common.total || "Tổng"}: <strong style={{ color: "#008f89" }}>{pagination.total}</strong> {t.table.itemsCount || "mặt hàng"}
-          </span>
         </Space>
 
         <Space size={10}>
@@ -366,25 +362,41 @@ export default function InventoryTable({
             const pageAvailableQty = pageData.reduce((acc, it) => acc + (Number(it.AvailableQty) || 0), 0);
             const pageTotalValue = pageData.reduce((acc, it) => acc + (Number(it.TotalCost) || 0), 0);
 
+            const onHandIndex = mergedColumns.findIndex(
+              (col: any) => (col.key || col.dataIndex) === "OnHandQty"
+            );
+            const colSpanBeforeQty = onHandIndex > 0 ? onHandIndex : 1;
+            const remainingColumns = mergedColumns.slice(colSpanBeforeQty);
+
             return (
               <Table.Summary.Row style={{ background: "#eef8f6" }}>
-                {mergedColumns.map((col: any, index: number) => {
+                {/* Gộp các cột trước SL Tồn kho thành 1 ô hiển thị TỔNG CỘNG */}
+                <Table.Summary.Cell index={0} colSpan={colSpanBeforeQty} align="center">
+                  <span
+                    style={{
+                      fontWeight: 700,
+                      color: "#123443",
+                      fontSize: 13,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px",
+                    }}
+                  >
+                    {t.table.total ? t.table.total.replace(/:$/, "") : "TỔNG CỘNG"}
+                  </span>
+                </Table.Summary.Cell>
+
+                {/* Các cột số liệu từ SL Tồn kho trở đi */}
+                {remainingColumns.map((col: any, idx: number) => {
+                  const index = colSpanBeforeQty + idx;
                   const key = String(col.key || col.dataIndex || index);
+                  const fixedProps = col.fixed ? { fixed: col.fixed } : {};
+
                   if (key === "_spacer") {
-                    return <Table.Summary.Cell key="_spacer" index={index} />;
-                  }
-                  if (key === "WarehouseName" || (key === "ItemName" && !mergedColumns.some((c: any) => (c.key || c.dataIndex) === "WarehouseName"))) {
-                    return (
-                      <Table.Summary.Cell key={key} index={index} align="right">
-                        <span style={{ fontWeight: 600, color: "#123443", fontSize: 13 }}>
-                          {t.table.total}
-                        </span>
-                      </Table.Summary.Cell>
-                    );
+                    return <Table.Summary.Cell key="_spacer" index={index} {...fixedProps} />;
                   }
                   if (key === "OnHandQty") {
                     return (
-                      <Table.Summary.Cell key={key} index={index} align="right">
+                      <Table.Summary.Cell key={key} index={index} align="right" {...fixedProps}>
                         <span style={{ fontWeight: 700, color: "#123443", fontSize: 13 }}>
                           {pageTotalQty.toLocaleString("vi-VN")}
                         </span>
@@ -393,15 +405,15 @@ export default function InventoryTable({
                   }
                   if (key === "ReservedQty") {
                     return (
-                      <Table.Summary.Cell key={key} index={index} align="right">
-                        <span>-</span>
+                      <Table.Summary.Cell key={key} index={index} align="right" {...fixedProps}>
+                        <span style={{ color: "#123443" }}>-</span>
                       </Table.Summary.Cell>
                     );
                   }
                   if (key === "AvailableQty") {
                     return (
-                      <Table.Summary.Cell key={key} index={index} align="right">
-                        <span style={{ fontWeight: 700, color: "#16A34A", fontSize: 13 }}>
+                      <Table.Summary.Cell key={key} index={index} align="right" {...fixedProps}>
+                        <span style={{ fontWeight: 700, color: "#123443", fontSize: 13 }}>
                           {pageAvailableQty.toLocaleString("vi-VN")}
                         </span>
                       </Table.Summary.Cell>
@@ -409,21 +421,21 @@ export default function InventoryTable({
                   }
                   if (key === "AvgUnitCost") {
                     return (
-                      <Table.Summary.Cell key={key} index={index} align="right">
-                        <span>-</span>
+                      <Table.Summary.Cell key={key} index={index} align="right" {...fixedProps}>
+                        <span style={{ color: "#123443" }}>-</span>
                       </Table.Summary.Cell>
                     );
                   }
                   if (key === "TotalCost") {
                     return (
-                      <Table.Summary.Cell key={key} index={index} align="right">
-                        <span style={{ fontWeight: 700, color: "#008f89", fontSize: 13 }}>
+                      <Table.Summary.Cell key={key} index={index} align="right" {...fixedProps}>
+                        <span style={{ fontWeight: 700, color: "#123443", fontSize: 13 }}>
                           {pageTotalValue.toLocaleString("vi-VN")}
                         </span>
                       </Table.Summary.Cell>
                     );
                   }
-                  return <Table.Summary.Cell key={key} index={index} />;
+                  return <Table.Summary.Cell key={key} index={index} {...fixedProps} />;
                 })}
               </Table.Summary.Row>
             );

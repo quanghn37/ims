@@ -20,7 +20,7 @@ const getQuotationSearchValues = (quotation: ContractItem) => [
   quotation.MainContractCode, quotation.MainContractName, quotation.CreatedBy,
 ];
 
-export function useQuotations() {
+export function useQuotations(enabled = true) {
   const [quotations, setQuotations] = useState<ContractItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -49,7 +49,11 @@ export function useQuotations() {
     }
   };
 
-  useEffect(() => { fetchQuotations(1, 100); }, []);
+  useEffect(() => {
+    if (enabled) {
+      fetchQuotations(1, 100);
+    }
+  }, [enabled]);
 
   useEffect(() => {
     setPagination((previous) => previous.current !== 1 ? { ...previous, current: 1 } : previous);

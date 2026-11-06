@@ -172,7 +172,7 @@ export function useOrderSubmissionItem({
       UnitPrice: 0,
       Unit: "Cái",
       Remarks: "",
-      StartProcessNow: true,
+      StartProcessNow: false,
     });
     const currentOrder = selectedOrder || editingOrder;
     const targetSubconOf =
@@ -255,10 +255,7 @@ export function useOrderSubmissionItem({
         UnitPrice: Number(record.UnitPrice || 0),
         TaxRate: Number(record.TaxRate ?? 0.08),
         Remarks: record.Remarks || record.Description || "",
-        StartProcessNow:
-          record.StartProcessNow === "Yes" ||
-          record.StartProcessNow === true ||
-          true,
+        StartProcessNow: false,
       });
       const currentOrder = selectedOrder || editingOrder;
       const targetSubconOf =
@@ -336,7 +333,7 @@ export function useOrderSubmissionItem({
           Qnty: Number(values.Qnty || 1),
           TaxRate: Number(values.TaxRate ?? 0.08),
           Remarks: values.Remarks || "",
-          StartProcessNow: values.StartProcessNow ? "Yes" : "No",
+          StartProcessNow: "No",
           ApplyDefinedAssignment: "Yes",
           Stage: "plan",
         };

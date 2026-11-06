@@ -18,7 +18,6 @@ import { useOrderLovModals } from "./_hooks/useOrderLovModals";
 import { usePriceCompare } from "./_hooks/usePriceCompare";
 import { useOrderWorkflow } from "./_hooks/useOrderWorkflow";
 import { useOrderSubmissionItem } from "./_hooks/useOrderSubmissionItem";
-import { useTranslation } from "@/locales/LanguageContext";
 import { ErpPageContainer, ErpDetailContainer } from "@/components/layout/ErpPageContainer";
 
 // Dynamic imports for heavy drawers/modals to optimize initial JS bundle
@@ -37,7 +36,6 @@ const ImportExcelModal = dynamic(() => import("./_components/ImportExcelModal"),
 const WorkflowDrawer = dynamic(() => import("./_components/WorkflowDrawer"), { ssr: false });
 
 function PurchaseOrdersPageContent() {
-  const { t } = useTranslation();
   const { user } = useAuth();
   const searchParams = useSearchParams();
 
@@ -63,7 +61,7 @@ function PurchaseOrdersPageContent() {
     setPagination,
     fetchOrders,
     filteredOrders,
-  } = usePurchaseOrders();
+  } = usePurchaseOrders(!isDetailPage);
 
   // Tự động đồng bộ danh sách khi có cập nhật từ tab chi tiết khác
   useEffect(() => {
@@ -82,10 +80,10 @@ function PurchaseOrdersPageContent() {
   // ===============================================================
   const [orderForm] = Form.useForm();
   const [submittingOrder, setSubmittingOrder] = useState(false);
+  const [deletingOrder, setDeletingOrder] = useState(false);
   const [loadingSingleOrder, setLoadingSingleOrder] = useState(false);
   const [editingOrder, setEditingOrder] = useState<ContractItem | null>(null);
   const [attachments, setAttachments] = useState<AttachmentFile[]>([]);
-  const [selectedAttachmentKeys, setSelectedAttachmentKeys] = useState<React.Key[]>([]);
 
   // LOV Modals Hook
   const lov = useOrderLovModals(orderForm);
@@ -399,15 +397,36 @@ function PurchaseOrdersPageContent() {
       });
     }
 
-    setAttachments([{ id: "1", fileName: "PO_Attachment_Doc_01.pdf", fileUrl: "#", uploadedBy: currentUserId, uploadingDate: "14/09/2026 21:27", isClientDoc: false, hasSign: true }]);
-    setSelectedAttachmentKeys([]);
+    setAttachments([]);
     setOrderDrawerItems([]);
     setDeletedDrawerItemIds([]);
 
     fetchOrderDrawerItems(record.ContractId);
-  }, [currentUserId, fetchOrderDrawerItems, fetchPriceListRefList, orderForm, setClientList, setContractRefList, setPriceListRefList, setSelectedClientDisplay, setSelectedContractDisplay, setSelectedPriceListDisplay, setSelectedWarehouseDisplay]);
+  }, [fetchOrderDrawerItems, fetchPriceListRefList, orderForm, setClientList, setContractRefList, setPriceListRefList, setSelectedClientDisplay, setSelectedContractDisplay, setSelectedPriceListDisplay, setSelectedWarehouseDisplay]);
 
   // Load đơn hàng khi mở tab trình duyệt có id
+  const handleRefreshSingleOrder = useCallback(async () => {
+    const targetId = editingOrder?.ContractId || queryOrderId;
+    if (!targetId) return;
+    try {
+      const data = await purchaseOrdersApi.getPurchaseOrders({
+        DisplayMode: "purchase_order",
+        ClientId: "",
+        WSId: "",
+        PageNum: 1,
+        PageSize: 10,
+        ContractId: targetId,
+      });
+      const list = extractApiList<ContractItem>(data);
+      const found = list.find((c) => String(c.ContractId) === String(targetId)) || list[0];
+      if (found) {
+        applyOrderToForm(found);
+      }
+    } catch (e) {
+      console.error("Lỗi làm mới đơn hàng:", e);
+    }
+  }, [editingOrder?.ContractId, queryOrderId, applyOrderToForm]);
+
   useEffect(() => {
     if (!queryOrderId) return;
     const loadSingleOrder = async () => {
@@ -462,13 +481,12 @@ function PurchaseOrdersPageContent() {
       setSelectedPriceListDisplay("");
       setSelectedWarehouseDisplay("");
       setAttachments([]);
-      setSelectedAttachmentKeys([]);
       setContractRefList([]);
       setPriceListRefList([]);
       setOrderDrawerItems([]);
       setDeletedDrawerItemIds([]);
       if (typeof document !== "undefined") {
-        document.title = "Tạo Đơn Hàng Mới";
+        document.title = "Tạo đơn hàng";
       }
     }
   }, [queryAction, orderForm, setContractRefList, setPriceListRefList, setSelectedClientDisplay, setSelectedContractDisplay, setSelectedPriceListDisplay, setSelectedWarehouseDisplay]);
@@ -744,15 +762,9 @@ function PurchaseOrdersPageContent() {
 
   const handleDeleteContract = async (contractId: any) => {
     try {
-      await purchaseOrdersApi.updateContractInfo(
-        {
-          ContractId: String(contractId),
-          ContractType: "purchase_order",
-          WSId: "",
-        },
-        "delete_contract"
-      );
-      message.success("Đã xóa đơn hàng thành công!");
+      setDeletingOrder(true);
+      const res: any = await purchaseOrdersApi.deletePurchaseOrder(contractId);
+      message.success(res?.Message || "Đã xóa đơn hàng thành công!");
       try {
         localStorage.setItem("consims_po_updated", String(Date.now()));
       } catch (e) {}
@@ -764,10 +776,15 @@ function PurchaseOrdersPageContent() {
             window.location.href = "/purchase-orders";
           }
         }
+      } else {
+        handleCloseDetail();
       }
       fetchOrders(pagination.current, pagination.pageSize);
     } catch (e: any) {
-      message.error(e.message || "Xóa đơn hàng thất bại.");
+      console.error("Lỗi xóa đơn hàng:", e);
+      message.error(e?.message || "Xóa đơn hàng thất bại.");
+    } finally {
+      setDeletingOrder(false);
     }
   };
 
@@ -791,14 +808,7 @@ function PurchaseOrdersPageContent() {
 
   const handleDeleteAttachment = (id: string) => {
     setAttachments((prev) => prev.filter((item) => item.id !== id));
-    setSelectedAttachmentKeys((prev) => prev.filter((key) => key !== id));
     message.success("Đã xóa tệp đính kèm");
-  };
-
-  const handleBatchDeleteAttachments = () => {
-    setAttachments((prev) => prev.filter((item) => !selectedAttachmentKeys.includes(item.id)));
-    setSelectedAttachmentKeys([]);
-    message.success("Đã xóa các tệp đã chọn");
   };
 
   const handleToggleClientDoc = (id: string, checked: boolean) => {
@@ -912,17 +922,16 @@ function PurchaseOrdersPageContent() {
           onDeleteItem={handleDeleteDrawerItem}
           onEditItem={handleOpenEditItem}
           attachments={attachments}
-          selectedAttachmentKeys={selectedAttachmentKeys}
-          setSelectedAttachmentKeys={setSelectedAttachmentKeys}
           onUploadAttachment={handleCustomUploadAttachment}
           onDeleteAttachment={handleDeleteAttachment}
-          onBatchDeleteAttachments={handleBatchDeleteAttachments}
           onToggleClientDoc={handleToggleClientDoc}
           onFinish={handleSubmitOrder}
           onOpenPriceCompare={openPriceCompare}
           onFetchWorkflow={fetchWorkflowStatus}
           onRefreshItems={handleRefreshDrawerItems}
           onDeleteOrder={handleDeleteContract}
+          deleting={deletingOrder}
+          onRefreshOrder={handleRefreshSingleOrder}
         />
 
         {isItemModalOpen && (

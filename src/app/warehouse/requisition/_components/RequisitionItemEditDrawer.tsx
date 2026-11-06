@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useEffect, useState, useMemo } from "react";
 import { Drawer, Form, Button, Select, InputNumber, Input, Checkbox, message } from "antd";
@@ -45,6 +45,7 @@ export default function RequisitionItemEditDrawer({
   // Tải danh mục Orgcode theo Hợp đồng / SubconOf khi mở drawer (chỉ gọi nếu chưa có dữ liệu từ props hoặc internal state)
   useEffect(() => {
     if (!open) return;
+    if (loadingOrgCodes) return;
     if (orgCodeOptions && orgCodeOptions.length > 0) return;
     if (internalBudgetList && internalBudgetList.length > 0) return;
 
@@ -73,7 +74,7 @@ export default function RequisitionItemEditDrawer({
           setLoadingInternalBudgets(false);
         });
     }
-  }, [open, subconOf, contractId, editingItem, orgCodeOptions, internalBudgetList]);
+  }, [open, loadingOrgCodes, subconOf, contractId, editingItem, orgCodeOptions, internalBudgetList]);
 
   // Options Orgcode chuẩn hóa theo định dạng "Mã - Tên" (vd: "2.1.1 - Công tác giao thầu...")
   const effectiveOptions = useMemo(() => {
@@ -402,15 +403,13 @@ export default function RequisitionItemEditDrawer({
           />
         </Form.Item>
 
-        {/* Trình duyệt? */}
+        {/* Trình duyệt? (Ẩn theo yêu cầu UI) */}
         <Form.Item
           name="startProcessNow"
           valuePropName="checked"
-          style={{ marginBottom: 16 }}
+          hidden
         >
-          <Checkbox style={{ fontWeight: 500, color: "#334155" }}>
-            {language === "en" ? "Submit for approval?" : "Trình duyệt?"}
-          </Checkbox>
+          <Checkbox />
         </Form.Item>
       </Form>
     </Drawer>

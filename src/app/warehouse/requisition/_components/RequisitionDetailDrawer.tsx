@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import {
@@ -6,7 +6,6 @@ import {
   Table,
   Button,
   Space,
-  Tag,
   Typography,
   Row,
   Col,
@@ -25,6 +24,7 @@ import {
 import dayjs from "dayjs";
 import { MaterialRequisition, MaterialRequisitionItem } from "../../types";
 import { useTranslation } from "@/locales/LanguageContext";
+import ApprovalBadge from "@/components/common/ApprovalBadge";
 
 const { Text, Title } = Typography;
 
@@ -238,9 +238,18 @@ export default function RequisitionDetailDrawer({
             <Col span={6}>
               <div style={{ fontSize: 12, color: "#718894" }}>{language === "en" ? "Status:" : "Trạng thái:"}</div>
               <div style={{ marginTop: 2 }}>
-                <Tag color={requisition.status === "APPROVED" ? "success" : requisition.status === "PENDING" ? "warning" : "default"}>
-                  {requisition.status}
-                </Tag>
+                <ApprovalBadge
+                  val={
+                    requisition.ApprovalStatusName ||
+                    requisition.StatusName ||
+                    requisition.ApprovalStatus ||
+                    requisition.StatusCode ||
+                    requisition.status ||
+                    ""
+                  }
+                  record={requisition}
+                  customLabel={requisition.ApprovalStatusName || requisition.StatusName}
+                />
               </div>
             </Col>
 

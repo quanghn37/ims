@@ -1,4 +1,5 @@
 import React from "react";
+import "./erp-table.css";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
 import { AuthProvider } from "@/lib/auth-context";
 import { LanguageProvider } from "@/locales/LanguageContext";

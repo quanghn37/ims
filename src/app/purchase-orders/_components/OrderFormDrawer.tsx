@@ -8,18 +8,19 @@ import {
   DatePicker,
   Input,
   InputNumber,
-  Divider,
   Space,
   Typography,
   Row,
   Col,
   Popconfirm,
+  message,
 } from "antd";
 import {
   IconDeviceFloppy,
   IconPaperclip,
   IconX,
   IconTrash,
+  IconSend,
 } from "@tabler/icons-react";
 import { CaretDownOutlined } from "@ant-design/icons";
 import { AttachmentFile } from "./types";
@@ -27,6 +28,7 @@ import OrderAttachmentsModal from "./OrderAttachmentsModal";
 import OrderDetailItemsSection from "./OrderDetailItemsSection";
 import { useTranslation } from "@/locales/LanguageContext";
 import { ApprovalBadge } from "@/components/common/ApprovalBadge";
+import { purchaseOrdersApi } from "../api";
 
 const { Text } = Typography;
 
@@ -62,17 +64,16 @@ interface OrderFormDrawerProps {
   onEditItem?: (record: any) => void;
   // Attachments
   attachments: AttachmentFile[];
-  selectedAttachmentKeys: React.Key[];
-  setSelectedAttachmentKeys: (keys: React.Key[]) => void;
   onUploadAttachment: (options: any) => void;
   onDeleteAttachment: (id: string) => void;
-  onBatchDeleteAttachments: () => void;
   onToggleClientDoc: (id: string, checked: boolean) => void;
   onFinish: (values: any) => void;
   onOpenPriceCompare?: () => void;
   onFetchWorkflow?: (submissionId: any, item?: any) => void;
   onRefreshItems?: () => void;
   onDeleteOrder?: (contractId: any) => void;
+  deleting?: boolean;
+  onRefreshOrder?: () => Promise<void> | void;
 }
 
 export default function OrderFormDrawer({
@@ -81,6 +82,7 @@ export default function OrderFormDrawer({
   editingOrder,
   form,
   submitting,
+  deleting,
   selectedClientDisplay,
   onOpenContractLov,
   selectedContractDisplay,
@@ -94,30 +96,99 @@ export default function OrderFormDrawer({
   onDeleteItem,
   onEditItem,
   attachments,
-  selectedAttachmentKeys,
   onUploadAttachment,
   onDeleteAttachment,
-  onBatchDeleteAttachments,
   onToggleClientDoc,
   onFinish,
   onOpenPriceCompare,
   onFetchWorkflow,
   onRefreshItems,
   onDeleteOrder,
+  onRefreshOrder,
 }: OrderFormDrawerProps) {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [isAttachmentModalOpen, setIsAttachmentModalOpen] = useState(false);
   const hasOrderHeader = Boolean(
     editingOrder && (editingOrder.ContractId || editingOrder.ContractCode)
   );
   const isEditing = Boolean(editingOrder && (editingOrder.ContractId || editingOrder.ContractCode));
-  const isDraft =
-    editingOrder?.StatusCode === 0 ||
-    editingOrder?.StatusCode === "0" ||
-    editingOrder?.Status === 0 ||
-    editingOrder?.Status === "0" ||
-    editingOrder?.StatusCode === "DRAFT" ||
-    editingOrder?.StatusCode === "Draft";
+
+  const rawStatus =
+    editingOrder?.StatusCode ??
+    editingOrder?.Status ??
+    editingOrder?.status ??
+    (editingOrder?.ContractId ? null : 0);
+
+  const isStatusZero =
+    rawStatus === 0 ||
+    rawStatus === "0" ||
+    String(rawStatus).toLowerCase() === "draft" ||
+    String(rawStatus).toLowerCase() === "đang lập" ||
+    String(rawStatus).toLowerCase() === "dang lap";
+
+  const isStatusCodeZero = isStatusZero;
+  const isDraft = isStatusZero;
+
+  const [submittingApproval, setSubmittingApproval] = useState(false);
+
+  const handleSubmitApproval = async () => {
+    const rawContractId =
+      editingOrder?.ContractId ??
+      editingOrder?.ContractID ??
+      editingOrder?.Id ??
+      editingOrder?.ID;
+
+    const contractId =
+      rawContractId && !isNaN(Number(rawContractId))
+        ? Number(rawContractId)
+        : rawContractId;
+
+    if (!contractId) {
+      message.error("Không tìm thấy mã đơn hàng để trình duyệt.");
+      return;
+    }
+
+    if (!items || items.length === 0) {
+      message.warning("Đơn hàng chưa có chi tiết vật tư để trình duyệt.");
+      return;
+    }
+
+    try {
+      setSubmittingApproval(true);
+      const res: any = await purchaseOrdersApi.submitOrderApproval({
+        ContractId: Number(contractId),
+      });
+
+      message.success(
+        res?.Message || res?.message || "Trình duyệt đơn hàng thành công!"
+      );
+
+      // Cập nhật trạng thái hiển thị
+      if (editingOrder) {
+        editingOrder.StatusCode = 2;
+        editingOrder.StatusName = "Chờ duyệt";
+        editingOrder.Status = "Chờ duyệt";
+        editingOrder.TaskAssign = "Y";
+      }
+
+      // Thông báo cho các tab khác đồng bộ dữ liệu
+      try {
+        localStorage.setItem("consims_po_updated", String(Date.now()));
+      } catch (e) {}
+
+      if (onRefreshItems) {
+        onRefreshItems();
+      }
+      if (onRefreshOrder) {
+        await onRefreshOrder();
+      }
+    } catch (err: any) {
+      console.error("Lỗi trình duyệt đơn hàng:", err);
+      message.error(err?.message || "Trình duyệt đơn hàng thất bại.");
+    } finally {
+      setSubmittingApproval(false);
+    }
+  };
 
   const watchedOrderClientId = Form.useWatch("ClientId", form);
   const watchedOrderParentId = Form.useWatch("ParentId", form);
@@ -193,6 +264,38 @@ export default function OrderFormDrawer({
         </div>
 
         <Space size={8}>
+          {/* Nút Trình duyệt đơn hàng: chỉ hiển thị khi có chi tiết (items.length > 0) và StatusCode = 0 */}
+          {hasOrderHeader && items && items.length > 0 && isStatusCodeZero && editingOrder?.ContractId && (
+            <Popconfirm
+              title="Xác nhận trình duyệt đơn hàng này?"
+              description="Sau khi trình duyệt, đơn hàng sẽ chuyển sang trạng thái Chờ duyệt."
+              onConfirm={handleSubmitApproval}
+              okText="Trình duyệt"
+              cancelText="Hủy"
+              okButtonProps={{ loading: submittingApproval }}
+            >
+              <Button
+                type="primary"
+                icon={<IconSend size={15} strokeWidth={1.8} />}
+                loading={submittingApproval}
+                style={{
+                  background: "#008f89",
+                  borderColor: "#008f89",
+                  height: 32,
+                  fontSize: 13,
+                  fontWeight: 500,
+                  borderRadius: 6,
+                  color: "#FFFFFF",
+                  boxShadow: "0 2px 4px rgba(0, 143, 137, 0.2)",
+                  display: "inline-flex",
+                  alignItems: "center",
+                }}
+              >
+                {t.contract?.submitApproval || (language === "en" ? "Submit for Approval" : "Trình duyệt")}
+              </Button>
+            </Popconfirm>
+          )}
+
           {hasOrderHeader && (
             <Button
               icon={<IconPaperclip size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />}
@@ -235,10 +338,11 @@ export default function OrderFormDrawer({
               onConfirm={() => onDeleteOrder(editingOrder.ContractId)}
               okText={t.common.delete}
               cancelText={t.common.cancel}
-              okButtonProps={{ danger: true }}
+              okButtonProps={{ danger: true, loading: deleting }}
             >
               <Button
                 danger
+                loading={deleting}
                 icon={<IconTrash size={15} strokeWidth={1.8} />}
                 style={{
                   height: 32,
@@ -274,7 +378,7 @@ export default function OrderFormDrawer({
           >
             {t.common.close}
           </Button>
-          {!(hasOrderHeader && items.length > 0) && (
+          {!(hasOrderHeader && items && items.length > 0) && (
             <Button
               type="primary"
               icon={<IconDeviceFloppy size={16} strokeWidth={2} />}
@@ -538,6 +642,7 @@ export default function OrderFormDrawer({
         onOpenPriceCompare={onOpenPriceCompare}
         onFetchWorkflow={onFetchWorkflow}
         onRefreshItems={onRefreshItems}
+        isStatusZero={isStatusZero}
       />
 
       {/* POPUP MODAL TỆP ĐÍNH KÈM */}
@@ -545,9 +650,7 @@ export default function OrderFormDrawer({
         open={isAttachmentModalOpen}
         onClose={() => setIsAttachmentModalOpen(false)}
         attachments={attachments}
-        selectedAttachmentKeys={selectedAttachmentKeys}
         onUploadAttachment={onUploadAttachment}
-        onBatchDeleteAttachments={onBatchDeleteAttachments}
         onDeleteAttachment={onDeleteAttachment}
         onToggleClientDoc={onToggleClientDoc}
       />

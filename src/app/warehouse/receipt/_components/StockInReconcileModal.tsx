@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Modal, Table, Button, Space, Typography, Tag, Checkbox, Input, InputNumber, message } from "antd";
@@ -24,8 +24,6 @@ export default function StockInReconcileModal({
   open,
   onClose,
   contractId,
-  budgetList,
-  loadingBudgetList,
   transactionId,
   poCode,
   onSuccess,

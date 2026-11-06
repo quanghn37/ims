@@ -12,19 +12,18 @@ import {
   Typography,
   Row,
   Col,
-  Tag,
   Popconfirm,
   message,
-  Divider,
   Tooltip,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
-  IconSettings,
   IconDeviceFloppy,
   IconPlus,
   IconRefresh,
   IconCircleX,
+  IconTrash,
+  IconSend,
 } from "@tabler/icons-react";
 import ActionIconButton from "@/components/common/ActionIconButton";
 import dayjs from "dayjs";
@@ -40,7 +39,8 @@ import RequisitionLovModals from "./RequisitionLovModals";
 import RequisitionPendingDrawer from "./RequisitionPendingDrawer";
 import RequisitionItemEditDrawer from "./RequisitionItemEditDrawer";
 import InventoryWorkflowDrawer from "../../receipt/_components/InventoryWorkflowDrawer";
-import { renderApprovalBadge } from "@/components/common/ApprovalBadge";
+import ApprovalBadge, { renderApprovalBadge } from "@/components/common/ApprovalBadge";
+import { isTransactionApprovedOrRejected } from "../../_components/UnconfirmTransactionButton";
 import { useTranslation } from "@/locales/LanguageContext";
 import ResizableTitle from "@/components/table/ResizableTitle";
 import { usePersistedTableColumns } from "@/components/table/usePersistedTableColumns";
@@ -53,6 +53,8 @@ interface RequisitionEditTabProps {
   onClose: () => void;
   editingRequisition: MaterialRequisition | null;
   onSave: (data: MaterialRequisition, isNewlyCreated?: boolean) => void | Promise<void>;
+  onDelete?: (record: MaterialRequisition) => void | Promise<void>;
+  onUpdateEditingRequisition?: (record: MaterialRequisition) => void;
 }
 
 export default function RequisitionEditTab({
@@ -60,6 +62,8 @@ export default function RequisitionEditTab({
   onClose,
   editingRequisition,
   onSave,
+  onDelete,
+  onUpdateEditingRequisition,
 }: RequisitionEditTabProps) {
   const { t, language } = useTranslation();
   const [form] = Form.useForm();
@@ -245,10 +249,15 @@ export default function RequisitionEditTab({
         (editingRequisition as any).contractCode ||
         editingRequisition.projectName ||
         "";
-      const initialTargetName =
+      const rawTarget =
         (editingRequisition as any).targetName ||
         editingRequisition.contractorName ||
         "";
+      const initialTargetName = rawTarget && rawTarget !== "---" ? rawTarget : null;
+      const initialClientId =
+        (editingRequisition as any).clientId ??
+        (editingRequisition as any).ClientId ??
+        null;
       const initialWhName =
         editingRequisition.warehouseName ||
         (editingRequisition.warehouseId ? `Kho #${editingRequisition.warehouseId}` : "");
@@ -263,7 +272,7 @@ export default function RequisitionEditTab({
             ? "Project"
             : (editingRequisition as any).issueType,
         targetName: initialTargetName,
-        clientId: (editingRequisition as any).clientId ?? (editingRequisition as any).ClientId ?? undefined,
+        clientId: initialClientId,
         warehouseId: editingRequisition.warehouseId || undefined,
         warehouseName: initialWhName,
         requisitionDate: editingRequisition.requisitionDate
@@ -273,7 +282,7 @@ export default function RequisitionEditTab({
         description: editingRequisition.description || "",
       });
       lov.setSelectedMainContractDisplay(initialContractCode);
-      lov.setSelectedClientDisplay(initialTargetName);
+      lov.setSelectedClientDisplay(initialTargetName || "");
       lov.setSelectedWarehouseDisplay(initialWhName);
 
       // Map danh sách items có sẵn
@@ -299,8 +308,8 @@ export default function RequisitionEditTab({
         contractCode: "",
         mainContractId: undefined,
         issueType: "Project",
-        targetName: "",
-        clientId: undefined,
+        targetName: null,
+        clientId: null,
         warehouseId: undefined,
         warehouseName: "",
         requisitionDate: now,
@@ -339,6 +348,13 @@ export default function RequisitionEditTab({
           ? Number(values.warehouseId)
           : values.warehouseId;
 
+        const resolvedClientId =
+          values.clientId !== undefined &&
+          values.clientId !== null &&
+          String(values.clientId).trim() !== ""
+            ? values.clientId
+            : null;
+
         const res = await warehouseApi.upsertInventoryRequest(
           {
             WSId: "",
@@ -346,7 +362,7 @@ export default function RequisitionEditTab({
             SubconOf: subconOf,
             WarehouseId: warehouseId,
             ReceiptFrom: "",
-            ClientId: String(values.clientId ?? ""),
+            ClientId: resolvedClientId,
             DocDate: docDate,
             Description: (values.description || "").trim(),
           },
@@ -374,9 +390,12 @@ export default function RequisitionEditTab({
           created.ReceiverName ||
           lov.selectedClientDisplay ||
           values.targetName ||
-          "---";
+          null;
 
         form.setFieldsValue({ requisitionCode: docCode });
+
+        const savedStatus = created.Status ?? 0;
+        const savedStatusName = created.StatusName || created.ApprovalStatusName || "Đang lập";
 
         const savedData: MaterialRequisition = {
           id: String(transId || `req_${Date.now()}`),
@@ -386,11 +405,16 @@ export default function RequisitionEditTab({
           priority: "NORMAL",
           projectName: projName,
           workPackage: "",
-          contractorName: receiverName,
+          contractorName: receiverName || "---",
           requesterName: String(created.CreatedBy || "r@gmail.com"),
           warehouseId: String(created.WarehouseId ?? warehouseId),
           warehouseName: whName,
-          status: "PENDING",
+          status: "DRAFT",
+          Status: savedStatus,
+          StatusCode: String(savedStatus),
+          StatusName: savedStatusName,
+          ApprovalStatus: savedStatus,
+          ApprovalStatusName: savedStatusName,
           description: created.Description || values.description || "",
           totalRequestedQty: 0,
           totalApprovedQty: 0,
@@ -410,11 +434,11 @@ export default function RequisitionEditTab({
           SubconOf: created.SubconOf ?? subconOf,
           ProjectCode: projCode,
           ProjectName: projName,
-          ClientId: created.ClientId ?? values.clientId,
+          ClientId: created.ClientId ?? resolvedClientId,
           ReceiverName: receiverName,
           contractCode: projCode,
           targetName: receiverName,
-          clientId: created.ClientId ?? values.clientId,
+          clientId: created.ClientId ?? resolvedClientId,
           mainContractId: created.SubconOf ?? subconOf,
         } as any;
 
@@ -584,12 +608,30 @@ export default function RequisitionEditTab({
     }
   };
 
-  // Cập nhật số lượng yêu cầu trực tiếp trong bảng
-  const handleQuantityChange = (itemId: string, val: number) => {
-    setItems((prev) =>
-      prev.map((it) => (it.id === itemId ? { ...it, requestedQty: val } : it))
-    );
-  };
+  // --- Xử lý Trình duyệt phiếu yêu cầu xuất ---
+  const [submittingApproval, setSubmittingApproval] = useState(false);
+  const isEditing = Boolean(editingRequisition);
+
+  // Xác định trạng thái "Đang lập" dựa vào Status = 0 để hiển thị nút Trình duyệt / Thêm mới / Chỉnh sửa
+  const isApprovalStatusZero = useMemo(() => {
+    const rawStatus =
+      editingRequisition?.Status ??
+      (editingRequisition as any)?.StatusCode ??
+      (editingRequisition as any)?.status ??
+      editingRequisition?.ApprovalStatus;
+
+    if (rawStatus !== undefined && rawStatus !== null && !isNaN(Number(rawStatus))) {
+      return Number(rawStatus) === 0;
+    }
+
+    const name = String(
+      editingRequisition?.StatusName ||
+      editingRequisition?.ApprovalStatusName ||
+      ""
+    ).toLowerCase().trim();
+
+    return name.includes("đang lập") || name.includes("draft");
+  }, [editingRequisition]);
 
   // Định nghĩa cột cho bảng vật tư chi tiết
   const columns: ColumnsType<MaterialRequisitionItem> = useMemo(
@@ -732,8 +774,8 @@ export default function RequisitionEditTab({
         title: t.table.status,
         dataIndex: "StatusCode",
         key: "StatusCode",
-        width: 95,
-        align: "center",
+        width: 110,
+        align: "left",
         render: (val: any, record: any) => {
           const subId = record.SubmissionId ?? record.LocalId;
           const statusText = val || record.status || "---";
@@ -763,37 +805,49 @@ export default function RequisitionEditTab({
         },
       },
       {
-        title: <IconSettings size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />,
+        title: "",
         key: "action",
         width: 70,
         align: "center",
         fixed: "right" as const,
         cannotHide: true,
-        render: (_: any, record: MaterialRequisitionItem) => (
-          <Space size={6}>
-            <ActionIconButton
-              action="edit"
-              size="small"
-              onClick={() => handleOpenEditItem(record)}
-            />
-            <Popconfirm
-              title={t.common.deleteConfirmTitle}
-              description={t.common.deleteConfirmDesc}
-              onConfirm={() => handleDeleteItem(record)}
-              okText={t.common.delete}
-              cancelText={t.common.cancel}
-              okButtonProps={{ danger: true }}
-            >
+        render: (_: any, record: MaterialRequisitionItem) => {
+          if (isEditing && !isApprovalStatusZero) {
+            return (
               <ActionIconButton
-                action="delete"
+                action="view"
                 size="small"
+                onClick={() => handleOpenEditItem({ ...record, Editable: 0 } as any)}
               />
-            </Popconfirm>
-          </Space>
-        ),
+            );
+          }
+
+          return (
+            <Space size={6}>
+              <ActionIconButton
+                action="edit"
+                size="small"
+                onClick={() => handleOpenEditItem(record)}
+              />
+              <Popconfirm
+                title={t.common.deleteConfirmTitle}
+                description={t.common.deleteConfirmDesc}
+                onConfirm={() => handleDeleteItem(record)}
+                okText={t.common.delete}
+                cancelText={t.common.cancel}
+                okButtonProps={{ danger: true }}
+              >
+                <ActionIconButton
+                  action="delete"
+                  size="small"
+                />
+              </Popconfirm>
+            </Space>
+          );
+        },
       },
     ],
-    [approvedBudgetList, t]
+    [approvedBudgetList, t, isEditing, isApprovalStatusZero]
   );
 
   const { tableColumns, scrollX } = usePersistedTableColumns({
@@ -821,6 +875,66 @@ export default function RequisitionEditTab({
     }
   };
 
+  const handleSubmitApproval = async () => {
+    const rawId =
+      getEditingTransId() ??
+      (editingRequisition as any)?.TransactionId ??
+      (editingRequisition as any)?.transactionId ??
+      (editingRequisition as any)?.Id ??
+      (!isNaN(Number(editingRequisition?.id)) ? Number(editingRequisition?.id) : undefined);
+
+    if (!rawId) {
+      message.error("Không tìm thấy mã phiếu để trình duyệt.");
+      return;
+    }
+
+    if (!items || items.length === 0) {
+      message.warning("Phiếu yêu cầu chưa có chi tiết vật tư để trình duyệt.");
+      return;
+    }
+
+    try {
+      setSubmittingApproval(true);
+      const res: any = await warehouseApi.submitInventoryApproval({
+        TransactionId: Number(rawId),
+      });
+
+      if (res?.Success === false) {
+        message.error(res?.Message || "Trình duyệt phiếu yêu cầu thất bại!");
+        return;
+      }
+
+      message.success(
+        res?.Message || "Trình duyệt phiếu yêu cầu thành công! Trạng thái chuyển sang Chờ duyệt."
+      );
+
+      const approvalStatus = res?.Data?.ApprovalStatus ?? 2;
+      const approvalStatusName = res?.Data?.ApprovalStatusName ?? "Chờ duyệt";
+      const statusName = res?.Data?.StatusName ?? "Chờ duyệt";
+
+      const updatedRequisition: MaterialRequisition = {
+        ...editingRequisition!,
+        Status: approvalStatus,
+        StatusCode: String(approvalStatus),
+        StatusName: statusName,
+        ApprovalStatus: approvalStatus,
+        ApprovalStatusName: approvalStatusName,
+        status: "PENDING",
+      };
+
+      if (onUpdateEditingRequisition) {
+        onUpdateEditingRequisition(updatedRequisition);
+      }
+
+      fetchSubmissions(Number(rawId));
+    } catch (err: any) {
+      console.error("Lỗi trình duyệt phiếu yêu cầu:", err);
+      message.error(err?.message || "Trình duyệt phiếu yêu cầu thất bại!");
+    } finally {
+      setSubmittingApproval(false);
+    }
+  };
+
   return (
     <div style={{ padding: "10px 18px", minHeight: "calc(100vh - 110px)", background: "#fff" }}>
       <Form form={form} layout="vertical" onFinish={handleSubmit}>
@@ -842,29 +956,93 @@ export default function RequisitionEditTab({
           </Text>
 
           <Space size={8}>
+            {/* Nút Trình duyệt: chỉ hiển thị khi có phiếu và trạng thái là Đang lập / Draft */}
+            {isEditing && isApprovalStatusZero && (
+              <Popconfirm
+                title="Xác nhận trình duyệt phiếu yêu cầu xuất này?"
+                description="Sau khi trình duyệt, phiếu yêu cầu sẽ chuyển sang trạng thái Chờ duyệt."
+                onConfirm={handleSubmitApproval}
+                okText="Trình duyệt"
+                cancelText={t.common.cancel || "Hủy"}
+                okButtonProps={{ loading: submittingApproval }}
+              >
+                <Button
+                  type="primary"
+                  icon={<IconSend size={15} strokeWidth={1.8} />}
+                  loading={submittingApproval}
+                  style={{
+                    background: "#008f89",
+                    borderColor: "#008f89",
+                    height: 32,
+                    fontSize: 13,
+                    fontWeight: 500,
+                    borderRadius: 6,
+                    color: "#FFFFFF",
+                    boxShadow: "0 2px 4px rgba(0, 143, 137, 0.2)",
+                    display: "inline-flex",
+                    alignItems: "center",
+                  }}
+                >
+                  Trình duyệt
+                </Button>
+              </Popconfirm>
+            )}
+
+            {editingRequisition && onDelete && !isTransactionApprovedOrRejected(editingRequisition) && (
+              <Popconfirm
+                title={t.common.deleteConfirmTitle || "Xác nhận xóa phiếu này?"}
+                description={t.common.deleteConfirmDesc || "Hành động này sẽ xóa phiếu yêu cầu và không thể hoàn tác."}
+                onConfirm={() => onDelete(editingRequisition)}
+                okText={t.common.delete || "Xóa"}
+                cancelText={t.common.cancel || "Hủy"}
+                okButtonProps={{ danger: true }}
+              >
+                <Button
+                  danger
+                  icon={<IconTrash size={15} strokeWidth={1.8} />}
+                  style={{
+                    height: 32,
+                    padding: "0 14px",
+                    borderRadius: 6,
+                    background: "#FEE2E2",
+                    borderColor: "#FECACA",
+                    color: "#DC2626",
+                    fontSize: 13,
+                    fontWeight: 500,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  {t.common.delete || "Xóa"}
+                </Button>
+              </Popconfirm>
+            )}
             <Button
               onClick={onClose}
               style={{ height: 32, borderRadius: 6, borderColor: "#dce5e6", fontSize: 13 }}
             >
               {t.common.close}
             </Button>
-            <Button
-              type="primary"
-              icon={<IconDeviceFloppy size={16} strokeWidth={2} />}
-              htmlType="submit"
-              loading={submitting}
-              style={{
-                background: "#008f89",
-                borderColor: "#008f89",
-                height: 32,
-                borderRadius: 6,
-                fontWeight: 500,
-                fontSize: 13,
-                boxShadow: "0 2px 4px rgba(0, 143, 137, 0.2)",
-              }}
-            >
-              {editingRequisition ? t.common.update : t.common.save}
-            </Button>
+            {!isTransactionApprovedOrRejected(editingRequisition) && (
+              <Button
+                type="primary"
+                icon={<IconDeviceFloppy size={16} strokeWidth={2} />}
+                htmlType="submit"
+                loading={submitting}
+                style={{
+                  background: "#008f89",
+                  borderColor: "#008f89",
+                  height: 32,
+                  borderRadius: 6,
+                  fontWeight: 500,
+                  fontSize: 13,
+                  boxShadow: "0 2px 4px rgba(0, 143, 137, 0.2)",
+                }}
+              >
+                {editingRequisition ? t.common.update : t.common.save}
+              </Button>
+            )}
           </Space>
         </div>
 
@@ -939,12 +1117,11 @@ export default function RequisitionEditTab({
             {/* Cột 3: Tên đối tượng (Map API get-client-list) */}
             <Col span={6} className="erp-info-cell">
               <span className="erp-info-label">
-                {t.requisition.targetName} <span style={{ color: "#ff4d4f" }}>*</span>
+                {t.requisition.targetName}
               </span>
               <Form.Item
                 name="targetName"
                 style={{ display: "none" }}
-                rules={[{ required: true, message: t.requisition.reqTarget }]}
               >
                 <Input />
               </Form.Item>
@@ -1081,19 +1258,21 @@ export default function RequisitionEditTab({
               </Form.Item>
             </Col>
 
-            {/* Cột 4: Trạng thái phiếu */}
+            {/* Cột 4: Trạng thái */}
             <Col span={4} className="erp-info-cell">
               <span className="erp-info-label">
-                {t.requisition.docStatus}
+                {t.table.status}
               </span>
-              <div className="erp-info-value" style={{ fontWeight: 400 }}>
-                {editingRequisition?.status === "APPROVED"
-                  ? t.status.approved
-                  : editingRequisition?.status === "REJECTED"
-                  ? t.status.rejected
-                  : editingRequisition?.status === "COMPLETED"
-                  ? t.status.completed
-                  : t.status.pending}
+              <div style={{ display: "flex", alignItems: "center", height: 24, paddingLeft: 8 }}>
+                <ApprovalBadge
+                  val={editingRequisition?.Status ?? editingRequisition?.StatusCode ?? 0}
+                  record={editingRequisition}
+                  customLabel={
+                    editingRequisition?.StatusName ||
+                    editingRequisition?.ApprovalStatusName ||
+                    ((editingRequisition?.Status ?? 0) === 0 ? "Đang lập" : undefined)
+                  }
+                />
               </div>
             </Col>
           </Row>
@@ -1107,23 +1286,7 @@ export default function RequisitionEditTab({
               <Button
                 icon={<IconRefresh size={15} strokeWidth={1.8} />}
                 loading={loadingItems}
-                onClick={() => {
-                  const transId = getEditingTransId();
-                  if (transId) {
-                    fetchSubmissions(transId).then((res) => {
-                      if (res && res.length > 0) {
-                        message.success(t.requisition.itemRefreshed);
-                      } else {
-                        message.info(t.requisition.emptyItemsInReq);
-                      }
-                    });
-                  } else if (editingRequisition?.items) {
-                    setItems(editingRequisition.items);
-                    message.success(t.requisition.itemRefreshed);
-                  } else {
-                    message.info(t.requisition.emptyItems);
-                  }
-                }}
+                onClick={handleRefreshItems}
                 style={{
                   height: 32,
                   borderRadius: 6,
@@ -1133,27 +1296,30 @@ export default function RequisitionEditTab({
               >
                 {t.common.refresh}
               </Button>
-              <Button
-                type="primary"
-                icon={<IconPlus size={16} strokeWidth={2} />}
-                onClick={handleOpenAddItem}
-                style={{
-                  background: "#008f89",
-                  borderColor: "#008f89",
-                  height: 32,
-                  borderRadius: 6,
-                  fontWeight: 500,
-                  fontSize: 13,
-                  boxShadow: "0 2px 4px rgba(0, 143, 137, 0.2)",
-                }}
-              >
-                {t.common.addNew}
-              </Button>
+              {(!isEditing || isApprovalStatusZero) && (
+                <Button
+                  type="primary"
+                  icon={<IconPlus size={16} strokeWidth={2} />}
+                  onClick={handleOpenAddItem}
+                  style={{
+                    background: "#008f89",
+                    borderColor: "#008f89",
+                    height: 32,
+                    borderRadius: 6,
+                    fontWeight: 500,
+                    fontSize: 13,
+                    boxShadow: "0 2px 4px rgba(0, 143, 137, 0.2)",
+                  }}
+                >
+                  {t.common.addNew}
+                </Button>
+              )}
             </Space>
           }
         >
           <Table
             className="erp-detail-table"
+            tableLayout="fixed"
             components={{ header: { cell: ResizableTitle } }}
             rowKey="id"
             size="middle"
@@ -1165,24 +1331,40 @@ export default function RequisitionEditTab({
             summary={() => {
               const totalReq = items.reduce((sum, it) => sum + Number(it.requestedQty || 0), 0);
               const totalApp = items.reduce((sum, it) => sum + Number(it.approvedQty || 0), 0);
+              const reqQtyIndex = tableColumns.findIndex(
+                (col: any) => (col.key || col.dataIndex) === "requestedQty"
+              );
+              const colSpanBeforeQty = reqQtyIndex > 0 ? reqQtyIndex : 1;
+              const remainingColumns = tableColumns.slice(colSpanBeforeQty);
+
               return (
                 <Table.Summary fixed>
                   <Table.Summary.Row style={{ background: "#eef8f6", fontWeight: "bold" }}>
-                    {tableColumns.map((col: any, idx: number) => {
-                      const key = String(col.key || col.dataIndex || idx);
-                      if (key === "unit" || (key === "itemName" && !tableColumns.some((c: any) => (c.key || c.dataIndex) === "unit"))) {
-                        return (
-                          <Table.Summary.Cell key={key} index={idx} align="right">
-                            <Text strong style={{ color: "#008f89", fontSize: 12 }}>
-                              {t.table.total}
-                            </Text>
-                          </Table.Summary.Cell>
-                        );
-                      }
+                    {/* Gộp các cột trước SL Yêu cầu thành 1 ô hiển thị TỔNG CỘNG */}
+                    <Table.Summary.Cell index={0} colSpan={colSpanBeforeQty} align="center">
+                      <span
+                        style={{
+                          fontWeight: 700,
+                          color: "#123443",
+                          fontSize: 13,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.5px",
+                        }}
+                      >
+                        {t.table.total ? t.table.total.replace(/:$/, "") : "TỔNG CỘNG"}
+                      </span>
+                    </Table.Summary.Cell>
+
+                    {/* Các cột số liệu từ SL Yêu cầu trở đi */}
+                    {remainingColumns.map((col: any, idx: number) => {
+                      const index = colSpanBeforeQty + idx;
+                      const key = String(col.key || col.dataIndex || index);
+                      const fixedProps = col.fixed ? { fixed: col.fixed } : {};
+
                       if (key === "requestedQty") {
                         return (
-                          <Table.Summary.Cell key={key} index={idx} align="right">
-                            <Text strong style={{ color: "#123443", fontSize: 12 }}>
+                          <Table.Summary.Cell key={key} index={index} align="right" {...fixedProps}>
+                            <Text strong style={{ color: "#123443", fontSize: 13 }}>
                               {totalReq.toLocaleString("vi-VN")}
                             </Text>
                           </Table.Summary.Cell>
@@ -1190,14 +1372,14 @@ export default function RequisitionEditTab({
                       }
                       if (key === "approvedQty") {
                         return (
-                          <Table.Summary.Cell key={key} index={idx} align="right">
-                            <Text strong style={{ color: totalApp > 0 ? "#059669" : "#94A3B8", fontSize: 12 }}>
+                          <Table.Summary.Cell key={key} index={index} align="right" {...fixedProps}>
+                            <Text strong style={{ color: totalApp > 0 ? "#123443" : "#94A3B8", fontSize: 13 }}>
                               {totalApp > 0 ? totalApp.toLocaleString("vi-VN") : "---"}
                             </Text>
                           </Table.Summary.Cell>
                         );
                       }
-                      return <Table.Summary.Cell key={key} index={idx} />;
+                      return <Table.Summary.Cell key={key} index={index} {...fixedProps} />;
                     })}
                   </Table.Summary.Row>
                 </Table.Summary>

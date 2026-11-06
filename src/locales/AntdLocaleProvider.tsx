@@ -132,16 +132,10 @@ export const AntdLocaleProvider: React.FC<AntdLocaleProviderProps> = ({ children
 
         /* 1.1. Chuẩn Bảng Chi Tiết Vật Tư Dùng Chung Toàn Dự Án (ERP Detail Table - Compact Auto-fit, In Đậm Tiêu Đề Cột) */
         .erp-detail-table .ant-table,
-        .erp-detail-table .ant-table table,
-        .po-order-table .ant-table,
-        .po-order-table .ant-table table,
-        .quotation-detail-table .ant-table,
-        .quotation-detail-table .ant-table table {
+        .erp-detail-table .ant-table table {
           font-family: inherit;
         }
-        .erp-detail-table .ant-table-thead > tr > th,
-        .po-order-table .ant-table-thead > tr > th,
-        .quotation-detail-table .ant-table-thead > tr > th {
+        .erp-detail-table .ant-table-thead > tr > th {
           background-color: #f7fbfa !important;
           color: #1e293b !important;
           font-size: 12px !important;
@@ -150,9 +144,7 @@ export const AntdLocaleProvider: React.FC<AntdLocaleProviderProps> = ({ children
           border-color: #dce5e6 !important;
           padding: 6px 8px !important;
         }
-        .erp-detail-table .ant-table-tbody > tr > td,
-        .po-order-table .ant-table-tbody > tr > td,
-        .quotation-detail-table .ant-table-tbody > tr > td {
+        .erp-detail-table .ant-table-tbody > tr > td {
           color: #123443 !important;
           font-size: 12.5px !important;
           line-height: 1.35 !important;
@@ -160,44 +152,30 @@ export const AntdLocaleProvider: React.FC<AntdLocaleProviderProps> = ({ children
           padding: 5px 8px !important;
           height: auto !important;
         }
-        .erp-detail-table .ant-table-tbody > tr:hover > td,
-        .po-order-table .ant-table-tbody > tr:hover > td,
-        .quotation-detail-table .ant-table-tbody > tr:hover > td {
+        .erp-detail-table .ant-table-tbody > tr:hover > td {
           background-color: #f8fafc !important;
         }
-        .erp-detail-table .ant-table-container,
-        .po-order-table .ant-table-container,
-        .quotation-detail-table .ant-table-container {
+        .erp-detail-table .ant-table-container {
           border: 1px solid #dce5e6 !important;
           border-radius: 6px !important;
           overflow: hidden;
         }
-        .erp-detail-table .ant-table-summary .ant-table-cell,
-        .po-order-table .ant-table-summary .ant-table-cell,
-        .quotation-detail-table .ant-table-summary .ant-table-cell {
+        .erp-detail-table .ant-table-summary .ant-table-cell {
           padding: 5px 8px !important;
           font-size: 12.5px !important;
           line-height: 1.35 !important;
           border-color: #dce5e6 !important;
         }
-        .erp-detail-table .ant-table-thead > tr > th.ant-table-cell-fix-right,
-        .po-order-table .ant-table-thead > tr > th.ant-table-cell-fix-right,
-        .quotation-detail-table .ant-table-thead > tr > th.ant-table-cell-fix-right {
+        .erp-detail-table .ant-table-thead > tr > th.ant-table-cell-fix-right {
           background: #f7fbfa !important;
         }
-        .erp-detail-table .ant-table-tbody > tr > td.ant-table-cell-fix-right,
-        .po-order-table .ant-table-tbody > tr > td.ant-table-cell-fix-right,
-        .quotation-detail-table .ant-table-tbody > tr > td.ant-table-cell-fix-right {
+        .erp-detail-table .ant-table-tbody > tr > td.ant-table-cell-fix-right {
           background: #ffffff;
         }
-        .erp-detail-table .ant-table-tbody > tr:hover > td.ant-table-cell-fix-right,
-        .po-order-table .ant-table-tbody > tr:hover > td.ant-table-cell-fix-right,
-        .quotation-detail-table .ant-table-tbody > tr:hover > td.ant-table-cell-fix-right {
+        .erp-detail-table .ant-table-tbody > tr:hover > td.ant-table-cell-fix-right {
           background: #f1f5f9;
         }
-        .erp-detail-table .ant-table-summary .ant-table-cell-fix-right,
-        .po-order-table .ant-table-summary .ant-table-cell-fix-right,
-        .quotation-detail-table .ant-table-summary .ant-table-cell-fix-right {
+        .erp-detail-table .ant-table-summary .ant-table-cell-fix-right {
           background: #f7fbfa !important;
         }
 

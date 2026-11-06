@@ -82,7 +82,6 @@ export default function PendingPoReconcileTab({
   const [creatingReceipt, setCreatingReceipt] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [selectedWarehouseFilter, setSelectedWarehouseFilter] = useState<string | number>("ALL");
-  const [startProcessNow, setStartProcessNow] = useState(true); // Checkbox Trình duyệt (mặc định Yes)
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 20,
@@ -326,7 +325,7 @@ export default function PendingPoReconcileTab({
     try {
       const res = await warehouseApi.createInventoryReceiptFromPoItems({
         ContractId: contractId,
-        StartProcessNow: startProcessNow ? "Yes" : "No",
+        StartProcessNow: "No",
         WSId: "",
         Items: payloadItems,
       });
@@ -705,10 +704,6 @@ export default function PendingPoReconcileTab({
             {t.common?.refresh || (isEn ? "Refresh" : "Làm mới")}
           </Button>
 
-          <span style={{ fontSize: 13, color: "#64748b" }}>
-            {t.common?.total || "Tổng"}: <strong style={{ color: "#008f89" }}>{pagination.total}</strong> {isEn ? "order items" : "dòng vật tư chờ nhập"}
-          </span>
-
           {selectedRowKeys.length > 0 && (
             <Tag
               style={{
@@ -730,14 +725,6 @@ export default function PendingPoReconcileTab({
 
         {/* Cụm thao tác đưa sang sát mép bên phải */}
         <Space size={10} align="center">
-          <Checkbox
-            checked={startProcessNow}
-            onChange={(e) => setStartProcessNow(e.target.checked)}
-            style={{ fontWeight: 500, color: "#123443", fontSize: 13 }}
-          >
-            {t.receipt?.submitForApproval || (isEn ? "Submit for approval" : "Trình duyệt")}
-          </Checkbox>
-
           {/* Nút Tạo Phiếu Nhập gọi POST api/create-inventory-receipt */}
           <Button
             type="primary"

@@ -50,11 +50,8 @@ interface ContractFormDrawerProps {
   onFetchWorkflow?: (submissionId: any) => void;
   onOpenImportExcel?: () => void;
   attachments: AttachmentFile[];
-  selectedAttachmentKeys: React.Key[];
-  setSelectedAttachmentKeys: (keys: React.Key[]) => void;
   onUploadAttachment: (options: any) => void;
   onDeleteAttachment: (id: string) => void;
-  onBatchDeleteAttachments: () => void;
   onToggleClientDoc: (id: string, checked: boolean) => void;
   onFinish: (values: any) => void;
   onDeleteContract?: (contractId: any) => void;
@@ -79,22 +76,13 @@ export default function ContractFormDrawer({
   onDeleteSubmission,
   onOpenImportExcel,
   attachments,
-  selectedAttachmentKeys,
   onUploadAttachment,
   onDeleteAttachment,
-  onBatchDeleteAttachments,
   onToggleClientDoc,
   onFinish,
   onDeleteContract,
 }: ContractFormDrawerProps) {
   const isEditing = Boolean(editingContract);
-  const isDraft =
-    editingContract?.StatusCode === 0 ||
-    editingContract?.StatusCode === "0" ||
-    editingContract?.Status === 0 ||
-    editingContract?.Status === "0" ||
-    editingContract?.StatusCode === "DRAFT" ||
-    editingContract?.StatusCode === "Draft";
   const isReadOnly = Boolean(
     editingContract && (editingContract.Editable === 0 || editingContract.Editable === "0")
   );
@@ -102,6 +90,17 @@ export default function ContractFormDrawer({
   const { t } = useTranslation();
 
   const [isAttachmentModalOpen, setIsAttachmentModalOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!editingContract?.ContractId || !onDeleteContract) return;
+    setDeleting(true);
+    try {
+      await onDeleteContract(editingContract.ContractId);
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   useEffect(() => {
     if (open) {
@@ -220,18 +219,19 @@ export default function ContractFormDrawer({
             ) : null}
           </Button>
 
-          {/* Chỉ hiển thị button Xóa khi bảng giá có StatusCode === 0 (Bản nháp) và đã có ContractId */}
-          {isEditing && isDraft && onDeleteContract && editingContract?.ContractId && (
+          {/* Hiển thị button Xóa khi bảng giá đã được lưu (có ContractId) */}
+          {isEditing && onDeleteContract && editingContract?.ContractId && (
             <Popconfirm
               title={t.quotation.deleteQuotation}
               description={t.common.confirmDelete}
-              onConfirm={() => onDeleteContract(editingContract.ContractId)}
+              onConfirm={handleDelete}
               okText={t.common.delete}
               cancelText={t.common.cancel}
-              okButtonProps={{ danger: true }}
+              okButtonProps={{ danger: true, loading: deleting }}
             >
               <Button
                 danger
+                loading={deleting}
                 icon={<IconTrash size={15} strokeWidth={1.8} />}
                 style={{
                   height: 32,
@@ -524,10 +524,8 @@ export default function ContractFormDrawer({
         onClose={() => setIsAttachmentModalOpen(false)}
         isReadOnly={isReadOnly}
         attachments={attachments}
-        selectedAttachmentKeys={selectedAttachmentKeys}
         onUploadAttachment={onUploadAttachment}
         onDeleteAttachment={onDeleteAttachment}
-        onBatchDeleteAttachments={onBatchDeleteAttachments}
         onToggleClientDoc={onToggleClientDoc}
       />
     </div>

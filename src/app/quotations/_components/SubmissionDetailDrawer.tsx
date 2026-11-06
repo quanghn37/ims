@@ -74,7 +74,6 @@ export default function SubmissionDetailDrawer({
   onOpenAddItem,
   onOpenEditItem,
   onDeleteSubmission,
-  onFetchWorkflow,
   onOpenImportExcel,
 }: SubmissionDetailDrawerProps) {
   const { t, language } = useTranslation();

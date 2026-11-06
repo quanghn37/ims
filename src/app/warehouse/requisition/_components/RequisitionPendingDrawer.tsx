@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
@@ -10,12 +10,10 @@ import {
   Select,
   Space,
   Tag,
-  Checkbox,
   message,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
-  InboxOutlined,
   CloseOutlined,
   SearchOutlined,
   ReloadOutlined,
@@ -51,7 +49,6 @@ export default function RequisitionPendingDrawer({
   const [loadingPending, setLoadingPending] = useState(false);
   const [pendingKeyword, setPendingKeyword] = useState("");
   const [selectedPendingKeys, setSelectedPendingKeys] = useState<React.Key[]>([]);
-  const [pendingStartProcessNow, setPendingStartProcessNow] = useState<boolean>(true);
   const [pendingPagination, setPendingPagination] = useState({
     current: 1,
     pageSize: 50,
@@ -115,7 +112,7 @@ export default function RequisitionPendingDrawer({
 
   // Fetch danh sách vật tư tồn kho từ API api/get-pending-forrequest
   const fetchPendingItems = useCallback(
-    async (keyword = "", page = 1, pageSize = 50, defaultOrgCode = "HM01-MONG") => {
+    async (keyword = "", page = 1, pageSize = 50) => {
       if (!warehouseId) {
         message.warning("Vui lòng chọn Kho xuất trước khi thêm vật tư!");
         return;
@@ -137,6 +134,8 @@ export default function RequisitionPendingDrawer({
         const mapped = list.map((item: any, idx: number) => {
           const key = String(item.MaterialId ?? item.ItemCode ?? idx);
           const avail = Number(item.AvailableQty ?? 0);
+          const apiOrgCode = item.Orgcode || item.OrgCode || item.orgCode || "";
+          const apiOrgName = item.OrgName || item.orgName || "";
           return {
             ...item,
             _key: key,
@@ -149,8 +148,9 @@ export default function RequisitionPendingDrawer({
             AvailableQty: avail,
             AvgUnitCost: Number(item.AvgUnitCost ?? 0),
             suggestedQty: avail > 0 ? (avail >= 1 ? 1 : avail) : 1,
-            orgCode: item.Orgcode || item.orgCode || defaultOrgCode,
-            OrgName: item.OrgName || item.orgName || "",
+            orgCode: apiOrgCode,
+            Orgcode: apiOrgCode,
+            OrgName: apiOrgName,
           };
         });
 
@@ -175,25 +175,10 @@ export default function RequisitionPendingDrawer({
     if (open) {
       setPendingKeyword("");
       setSelectedPendingKeys([]);
-      setPendingStartProcessNow(true);
 
-      // Tải Orgcode theo SubconOf nếu có
+      // Tải Orgcode theo SubconOf nếu có (để nạp options cho dropdown)
       if (subconOf) {
-        fetchApprovedBudgets(subconOf).then((budgetList) => {
-          if (budgetList && budgetList.length > 0) {
-            const firstOrg = budgetList[0].OrgCode || budgetList[0].orgCode;
-            const firstOrgName = budgetList[0].Description || budgetList[0].description || "";
-            if (firstOrg) {
-              setPendingItems((prev) =>
-                prev.map((it) =>
-                  !it.orgCode || it.orgCode === "HM01-MONG"
-                    ? { ...it, orgCode: firstOrg, OrgName: it.OrgName || firstOrgName }
-                    : it
-                )
-              );
-            }
-          }
-        });
+        fetchApprovedBudgets(subconOf);
       }
 
       fetchPendingItems("", 1, 50);
@@ -239,10 +224,16 @@ export default function RequisitionPendingDrawer({
       return;
     }
 
-    const defaultFirstOrg =
-      approvedBudgetList.length > 0
-        ? approvedBudgetList[0].OrgCode || approvedBudgetList[0].orgCode || "HM01-MONG"
-        : "HM01-MONG";
+    // Kiểm tra bắt buộc có Orgcode cho các dòng vật tư đã chọn
+    const missingOrg = selected.find((it) => !it.orgCode || !String(it.orgCode).trim());
+    if (missingOrg) {
+      message.warning(
+        language === "en"
+          ? `Please select Orgcode for material "${missingOrg.ItemName || missingOrg.ItemCode}"!`
+          : `Vui lòng chọn Orgcode cho vật tư "${missingOrg.ItemName || missingOrg.ItemCode}"!`
+      );
+      return;
+    }
 
     setSubmittingConfirm(true);
     try {
@@ -250,13 +241,10 @@ export default function RequisitionPendingDrawer({
 
       for (let idx = 0; idx < selected.length; idx++) {
         const p = selected[idx];
-        const chosenOrg =
-          p.orgCode && p.orgCode !== "HM01-MONG"
-            ? p.orgCode
-            : (p.Orgcode || approvedBudgetList[0]?.OrgCode || approvedBudgetList[0]?.orgCode || p.orgCode || defaultFirstOrg);
+        const chosenOrg = String(p.orgCode || p.Orgcode || p.OrgCode || "").trim();
 
         const matchedBudget = approvedBudgetList.find(
-          (b) => String(b.OrgCode || b.orgCode || b.ItemId) === String(chosenOrg)
+          (b) => String(b.OrgCode || b.orgCode || b.ItemId) === chosenOrg
         );
         const orgName =
           matchedBudget?.Description ||
@@ -272,10 +260,10 @@ export default function RequisitionPendingDrawer({
             WSId: "",
             TransactionId: Number(transactionId),
             WorkType: "Inventory_request",
-            StartProcessNow: pendingStartProcessNow ? "Yes" : "No",
+            StartProcessNow: "No",
             MaterialId: Number(p.MaterialId),
             SubmissionName: p.ItemName || p.SubmissionName || "",
-            Orgcode: String(chosenOrg || ""),
+            Orgcode: chosenOrg,
             OrgName: String(orgName || ""),
             Qnty: Number(p.suggestedQty || 1),
             Remarks: p.Remarks || p.remarks || (language === "en" ? "Issue Batch 1" : "Cấp đợt 1"),
@@ -306,9 +294,9 @@ export default function RequisitionPendingDrawer({
           orgCode: apiItem.Orgcode || chosenOrg,
           Orgcode: apiItem.Orgcode || chosenOrg,
           OrgName: apiItem.OrgName || orgName,
-          status: pendingStartProcessNow ? "APPROVED" : "PENDING",
-          startProcessNow: pendingStartProcessNow,
-          StartProcessNow: pendingStartProcessNow ? "Yes" : "No",
+          status: "PENDING",
+          startProcessNow: false,
+          StartProcessNow: "No",
           unitPrice: Number(apiItem.UnitPrice ?? p.AvgUnitCost ?? 0),
           avgUnitCost: Number(apiItem.UnitPrice ?? p.AvgUnitCost ?? 0),
         } as any);
@@ -334,8 +322,11 @@ export default function RequisitionPendingDrawer({
         key: "stt",
         width: 50,
         align: "center",
-        render: (_: any, __: any, index: number) =>
-          (pendingPagination.current - 1) * pendingPagination.pageSize + index + 1,
+        render: (_: any, __: any, index: number) => (
+          <span style={{ color: "#334155", fontSize: 13 }}>
+            {(pendingPagination.current - 1) * pendingPagination.pageSize + index + 1}
+          </span>
+        ),
       },
       {
         title: language === "en" ? "Item Code" : "Mã vật tư",
@@ -343,7 +334,7 @@ export default function RequisitionPendingDrawer({
         key: "ItemCode",
         width: 170,
         render: (val: string) => (
-          <span style={{ fontFamily: "monospace", fontWeight: 600, color: "#475569" }}>
+          <span style={{ fontFamily: "monospace", fontWeight: 400, color: "#334155" }}>
             {val || "---"}
           </span>
         ),
@@ -354,7 +345,7 @@ export default function RequisitionPendingDrawer({
         key: "ItemName",
         width: 260,
         render: (val: string) => (
-          <span style={{ fontWeight: 600, color: "#123443" }}>{val || "---"}</span>
+          <span style={{ fontWeight: 400, color: "#334155" }}>{val || "---"}</span>
         ),
       },
       {
@@ -363,7 +354,9 @@ export default function RequisitionPendingDrawer({
         key: "UomCode",
         width: 70,
         align: "center",
-        render: (val: string) => val || "---",
+        render: (val: string) => (
+          <span style={{ color: "#334155" }}>{val || "---"}</span>
+        ),
       },
       {
         title: language === "en" ? "On Hand" : "Tồn kho",
@@ -372,7 +365,7 @@ export default function RequisitionPendingDrawer({
         width: 90,
         align: "right",
         render: (val: number) => (
-          <span style={{ fontWeight: 500, color: "#123443" }}>
+          <span style={{ fontWeight: 400, color: "#334155" }}>
             {Number(val || 0).toLocaleString(language === "en" ? "en-US" : "vi-VN")}
           </span>
         ),
@@ -384,7 +377,7 @@ export default function RequisitionPendingDrawer({
         width: 80,
         align: "right",
         render: (val: number) => (
-          <span style={{ color: "#718894" }}>
+          <span style={{ color: "#334155" }}>
             {Number(val || 0).toLocaleString(language === "en" ? "en-US" : "vi-VN")}
           </span>
         ),
@@ -396,30 +389,35 @@ export default function RequisitionPendingDrawer({
         width: 95,
         align: "right",
         render: (val: number) => (
-          <span style={{ fontWeight: 700, color: "#059669" }}>
+          <span style={{ fontWeight: 400, color: "#334155" }}>
             {Number(val || 0).toLocaleString(language === "en" ? "en-US" : "vi-VN")}
           </span>
         ),
       },
       {
-        title: "Orgcode",
+        title: (
+          <span>
+            {language === "en" ? "Orgcode" : "Orgcode"}{" "}
+            <span style={{ color: "#ff4d4f" }}>*</span>
+          </span>
+        ),
         dataIndex: "orgCode",
         key: "orgCode",
-        width: 170,
+        width: 190,
         render: (val: string, record: any) => {
-          const currentVal =
-            val && val !== "HM01-MONG"
-              ? val
-              : (approvedBudgetList[0]?.OrgCode ?? val ?? "HM01-MONG");
+          const isSelected = selectedPendingKeys.includes(record._key);
+          const hasError = isSelected && (!val || !String(val).trim());
           return (
             <Select
               size="small"
-              value={currentVal}
+              value={val ? String(val) : undefined}
               style={{ width: "100%" }}
               showSearch
+              allowClear
+              status={hasError ? "error" : undefined}
               optionFilterProp="label"
               loading={loadingApprovedBudget}
-              onChange={(v) => handlePendingOrgChange(record._key, v)}
+              onChange={(v) => handlePendingOrgChange(record._key, v || "")}
               options={orgCodeOptions}
               popupMatchSelectWidth={false}
               placeholder={language === "en" ? "Select Orgcode..." : "Chọn Orgcode..."}
@@ -440,7 +438,7 @@ export default function RequisitionPendingDrawer({
             max={record.AvailableQty > 0 ? record.AvailableQty : undefined}
             value={val}
             onChange={(v) => handlePendingQtyChange(record._key, v)}
-            style={{ width: "100%", fontWeight: 600 }}
+            style={{ width: "100%", fontWeight: 400 }}
             formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
             parser={(v) => Number(v?.replace(/,/g, "") || 0) as any}
           />
@@ -469,12 +467,8 @@ export default function RequisitionPendingDrawer({
       closable={true}
       closeIcon={<CloseOutlined style={{ fontSize: 16, color: "#718894" }} />}
       title={
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <InboxOutlined style={{ color: "#008f89", fontSize: 18 }} />
-          <span style={{ fontSize: 16, fontWeight: 700, color: "#008f89" }}>
-            {language === "en" ? "Add Materials from Warehouse" : "Thêm vật tư từ kho xuất"}
-          </span>
-          {warehouseName && (
+        warehouseName ? (
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <Tag
               style={{
                 background: "#dce5e6",
@@ -488,8 +482,8 @@ export default function RequisitionPendingDrawer({
             >
               {warehouseName}
             </Tag>
-          )}
-        </div>
+          </div>
+        ) : null
       }
       footer={
         <div
@@ -506,13 +500,6 @@ export default function RequisitionPendingDrawer({
               {language === "en" ? "Selected " : "Đã chọn "}
               <strong style={{ color: "#008f89" }}>{selectedPendingKeys.length}</strong> {language === "en" ? "materials" : "vật tư"}
             </span>
-            <Checkbox
-              checked={pendingStartProcessNow}
-              onChange={(e) => setPendingStartProcessNow(e.target.checked)}
-              style={{ fontWeight: 500, color: "#334155" }}
-            >
-              {language === "en" ? "Submit for Approval" : "Trình duyệt"}
-            </Checkbox>
           </Space>
 
           <Space size={8}>

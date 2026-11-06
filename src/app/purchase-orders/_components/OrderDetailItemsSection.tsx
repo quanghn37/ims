@@ -8,7 +8,6 @@ import {
   Popconfirm,
   Space,
   Typography,
-  Tag,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
@@ -34,6 +33,7 @@ interface OrderDetailItemsSectionProps {
   onOpenPriceCompare?: () => void;
   onFetchWorkflow?: (submissionId: any, item?: any) => void;
   onRefreshItems?: () => void;
+  isStatusZero?: boolean;
 }
 
 const extractOrgInfo = (val: any, record: any) => {
@@ -87,6 +87,7 @@ export default function OrderDetailItemsSection({
   onOpenPriceCompare,
   onFetchWorkflow,
   onRefreshItems,
+  isStatusZero = true,
 }: OrderDetailItemsSectionProps) {
   const { t, language } = useTranslation();
 
@@ -403,17 +404,9 @@ export default function OrderDetailItemsSection({
         dataIndex: "StatusCode",
         key: "StatusCode",
         width: 120,
-        align: "center",
+        align: "left",
         render: (val, record) => {
           const subId = record.SubmissionId || record.LocalId;
-          const rawStatus =
-            val !== undefined && val !== null && val !== ""
-              ? String(val).trim()
-              : record?.StatusCode || "";
-          const isNotStarted =
-            !rawStatus ||
-            rawStatus.toLowerCase().includes("not-started") ||
-            rawStatus === "0";
           return (
             <Tooltip
               title={
@@ -446,6 +439,16 @@ export default function OrderDetailItemsSection({
         align: "center",
         fixed: "right" as const,
         render: (_, record) => {
+          if (!isStatusZero) {
+            return (
+              <ActionIconButton
+                action="view"
+                size="small"
+                onClick={() => onEditItem && onEditItem({ ...record, Editable: 0 })}
+              />
+            );
+          }
+
           return (
             <Space size={6}>
               <ActionIconButton
@@ -470,7 +473,7 @@ export default function OrderDetailItemsSection({
         },
       },
     ],
-    [onEditItem, onFetchWorkflow, t]
+    [onEditItem, onFetchWorkflow, t, isStatusZero]
   );
 
   const mergedItemColumns = useMemo(() => {
@@ -538,7 +541,7 @@ export default function OrderDetailItemsSection({
                 {t.common.refresh}
               </Button>
             )}
-            {onOpenPriceCompare && (
+            {onOpenPriceCompare && isStatusZero && (
               <Button
                 icon={<IconScale size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />}
                 style={{
@@ -562,7 +565,7 @@ export default function OrderDetailItemsSection({
     >
 
       <Table
-        className="erp-detail-table po-order-table"
+        className="erp-detail-table"
         rowKey={(r, index) =>
           r.id ?? r.SubmissionId ?? r.LocalId ?? `order_form_item_${index}`
         }

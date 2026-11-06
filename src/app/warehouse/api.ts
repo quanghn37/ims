@@ -117,6 +117,35 @@ export const warehouseApi = {
     [key: string]: any;
   }) => postFeatureData<T>("api/update-inventorytransaction-info", params),
 
+  submitInventoryApproval: <T = any>(params: {
+    TransactionId: number | string;
+    LogIn?: string;
+    WSId?: string;
+    SessionId?: string;
+    Language?: string;
+    [key: string]: any;
+  }) =>
+    postFeatureData<T>("api/submit-inventory-approval", {
+      WSId: "",
+      Language: "vi",
+      ...params,
+      TransactionId: !isNaN(Number(params.TransactionId)) ? Number(params.TransactionId) : params.TransactionId,
+    }),
+
+  unconfirmInventoryApproval: <T = any>(params: {
+    TransactionId: number | string;
+    LogIn?: string;
+    WSId?: string;
+    SessionId?: string;
+    Language?: string;
+    [key: string]: any;
+  }) =>
+    postFeatureData<T>("api/upsert-unpostinventory-transaction", {
+      WSId: "",
+      ...params,
+      TransactionId: !isNaN(Number(params.TransactionId)) ? Number(params.TransactionId) : params.TransactionId,
+    }),
+
   upsertInventoryRequest: <T = any>(
     params: {
       WSId?: string;
@@ -124,7 +153,7 @@ export const warehouseApi = {
       SubconOf: number | string;
       WarehouseId: number | string;
       ReceiptFrom?: string;
-      ClientId: string | number;
+      ClientId?: string | number | null;
       DocDate: string;
       Description: string;
       [key: string]: any;
@@ -387,7 +416,7 @@ export const warehouseApi = {
       {
         WSId: "",
         PageNum: 1,
-        PageSize: 50,
+        PageSize: 100,
         Keyword: "",
         ...params,
       },

@@ -8,15 +8,7 @@ dayjs.extend(customParseFormat);
 
 export type { UpsertMatequipSubmissionParams };
 
-export interface AttachmentFile {
-  id: string;
-  fileName: string;
-  fileUrl: string;
-  uploadedBy: string;
-  uploadingDate: string;
-  isClientDoc: boolean;
-  hasSign?: boolean;
-}
+export type { AttachmentFile } from "@/components/common/ErpAttachmentsModal";
 
 export interface PriceListItem {
   id: string | number;

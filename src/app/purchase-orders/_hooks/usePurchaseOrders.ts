@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { message } from "antd";
 import { extractApiList, extractTotalRows } from "@/lib/api-client";
 import { useColumnFiltering } from "@/lib/table-utils";
+import { getStatusLabel } from "@/config/statusConfig";
 import { purchaseOrdersApi } from "../api";
 import { ContractItem } from "@/types";
 
@@ -14,7 +15,9 @@ export const purchaseOrderColumnFields: Record<string, string[]> = {
   ParentId: ["ParentContractCode", "ParentCode", "SubconCode", "ContractRefCode", "ParentId"],
   SourceId: ["SourceContractCode", "SourceCode", "QuotationCode", "SourceId"],
   WarehouseName: ["WarehouseName", "WarehouseId"],
-  StatusName: ["StatusName", "Status", "StatusCode"],
+  TotalAmount: ["TotalAmount", "Amount", "ContractedAmount"],
+  StatusName: ["StatusName"],
+  CurrentAssignee: ["CurrentAssignee", "Assignee"],
   CreatedBy: ["CreatedBy", "Createdby"],
 };
 
@@ -28,12 +31,15 @@ const getOrderSearchValues = (order: any) => [
   order.ParentCode,
   order.SourceContractCode,
   order.WarehouseName,
+  order.TotalAmount,
+  order.Amount,
   order.StatusName,
-  order.Status,
+  getStatusLabel(order.StatusCode, "vi"),
+  order.CurrentAssignee,
   order.CreatedBy,
 ];
 
-export function usePurchaseOrders() {
+export function usePurchaseOrders(enabled = true) {
   const [orders, setOrders] = useState<ContractItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -62,7 +68,14 @@ export function usePurchaseOrders() {
         PageNum: page,
         PageSize: pageSize,
       });
-      const list = extractApiList<ContractItem>(data);
+      const list = extractApiList<ContractItem>(data).map((item: any) => {
+        const rawStatus = item.StatusName || item.ApprovalStatusName || item.StatusCode;
+        const normalizedStatusName = getStatusLabel(rawStatus, "vi");
+        return {
+          ...item,
+          StatusName: item.StatusName && isNaN(Number(item.StatusName)) ? item.StatusName : normalizedStatusName,
+        };
+      });
       setOrders(list);
       setPagination({ current: page, pageSize, total: extractTotalRows(data, list.length) });
     } catch (e: any) {
@@ -73,8 +86,10 @@ export function usePurchaseOrders() {
   };
 
   useEffect(() => {
-    fetchOrders();
-  }, []);
+    if (enabled) {
+      fetchOrders();
+    }
+  }, [enabled]);
 
   return {
     orders,

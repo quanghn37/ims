@@ -1,24 +1,20 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import {
   Table,
   Button,
   Input,
   Select,
-  Tag,
   Space,
-  Popconfirm,
   message,
 } from "antd";
 import type { ColumnType } from "antd/es/table";
 import {
-  IconUpload,
   IconPlus,
   IconSearch,
   IconRefresh,
 } from "@tabler/icons-react";
-import ActionIconButton from "@/components/common/ActionIconButton";
 import dayjs from "dayjs";
 import { StockOutIssue, MOCK_WAREHOUSES } from "../types";
 import StockOutEditTab from "./_components/StockOutEditTab";
@@ -26,209 +22,126 @@ import ResizableTitle from "@/components/table/ResizableTitle";
 import { usePersistedTableColumns } from "@/components/table/usePersistedTableColumns";
 import { useTranslation } from "@/locales/LanguageContext";
 import { ErpPageContainer, ErpDetailContainer } from "@/components/layout/ErpPageContainer";
-
-const INITIAL_STOCK_OUT_DATA: StockOutIssue[] = [
-  {
-    id: "iss_1",
-    issueCode: "PXK-2026-09/001",
-    issueDate: "2026-09-23",
-    issueType: "CONSTRUCTION",
-    projectName: "Dự án Khu đô thị Vinhomes Grand Park - Phân khu 2",
-    workPackage: "Tòa S10.03 - Thi công sàn tầng 3",
-    contractorName: "Đội bê tông cốt thép - Đội trưởng Tuấn",
-    warehouseId: "WH02",
-    warehouseName: "Kho Dự án Vinhomes Grand Park",
-    requisitionNo: "MR-2026-09/101",
-    receiver: "Kỹ sư giám sát Nguyễn Văn Thắng",
-    issuer: "Nguyễn Văn Thao (Thủ kho)",
-    description: "Xuất 3 tấn thép D16 và 80 cây ống nhựa D90 phục vụ đổ bê tông sàn",
-    status: "COMPLETED",
-    totalQty: 3080,
-    totalAmount: 58700000,
-    createdBy: "tienph01",
-    createdDate: "2026-09-23 08:30",
-    items: [
-      {
-        id: "oit_1",
-        itemCode: "VT-THEP-D16",
-        itemName: "Thép vằn D16 CB400-V Hòa Phát",
-        unit: "Kg",
-        stockQty: 18500,
-        orderQty: 3000,
-        actualQty: 3000,
-        unitPrice: 15700,
-        totalPrice: 47100000,
-        binLocation: "Bãi thép số 2",
-        note: "Xuất sàn tầng 3",
-      },
-      {
-        id: "oit_2",
-        itemCode: "VT-ONG-UPVC90",
-        itemName: "Ống nhựa uPVC D90 C2 Bình Minh",
-        unit: "Cây",
-        stockQty: 600,
-        orderQty: 80,
-        actualQty: 80,
-        unitPrice: 145000,
-        totalPrice: 11600000,
-        binLocation: "Giá ống tầng 1",
-        note: "Trục đứng D90",
-      },
-    ],
-  },
-  {
-    id: "iss_2",
-    issueCode: "PXK-2026-09/002",
-    issueDate: "2026-09-22",
-    issueType: "TRANSFER",
-    projectName: "Dự án Sân bay Quốc tế Long Thành",
-    workPackage: "Gói thầu 5.10 - Nhà ga hành khách",
-    contractorName: "Ban điều hành dự án Long Thành",
-    warehouseId: "WH01",
-    warehouseName: "Kho Tổng Central - TP.HCM",
-    requisitionNo: "TRANSFER-LT-09/02",
-    receiver: "Hoàng Đức Thịnh (Thủ kho Long Thành)",
-    issuer: "Lê Văn Hùng (Thủ kho chính)",
-    description: "Điều chuyển 500 bao xi măng Hà Tiên PCB40 hỗ trợ công trường Long Thành",
-    status: "COMPLETED",
-    totalQty: 500,
-    totalAmount: 44000000,
-    createdBy: "tienph01",
-    createdDate: "2026-09-22 10:15",
-    items: [
-      {
-        id: "oit_3",
-        itemCode: "VT-XM-PC40",
-        itemName: "Xi măng Hà Tiên PCB40 đóng bao 50kg",
-        unit: "Bao",
-        stockQty: 1200,
-        orderQty: 500,
-        actualQty: 500,
-        unitPrice: 88000,
-        totalPrice: 44000000,
-        binLocation: "Kho A",
-        note: "Xe 51C-881.23",
-      },
-    ],
-  },
-  {
-    id: "iss_3",
-    issueCode: "PXK-2026-09/003",
-    issueDate: "2026-09-23",
-    issueType: "CONSTRUCTION",
-    projectName: "Khu Đô Thị Starlake Tây Hồ Tây - Hà Nội",
-    workPackage: "Hạng mục M&E Điện nhẹ tòa tháp đôi",
-    contractorName: "Nhà thầu cơ điện REE M&E",
-    warehouseId: "WH05",
-    warehouseName: "Kho Miền Bắc - KĐT Starlake Tây Hồ",
-    requisitionNo: "MR-SL-26.09/44",
-    receiver: "Kỹ sư Phạm Quốc Việt",
-    issuer: "Trần Anh Khoa (Thủ kho)",
-    description: "Xuất aptomat khối MCCB 3P 50A và cáp điện lắp đặt tủ phân phối tầng hầm",
-    status: "PENDING",
-    totalQty: 220,
-    totalAmount: 49800000,
-    createdBy: "quanghn",
-    createdDate: "2026-09-23 13:45",
-    items: [
-      {
-        id: "oit_4",
-        itemCode: "VT-MCB-3P50A",
-        itemName: "Aptomat khối MCCB 3P 50A 25kA Schneider",
-        unit: "Cái",
-        stockQty: 45,
-        orderQty: 20,
-        actualQty: 20,
-        unitPrice: 890000,
-        totalPrice: 17800000,
-        binLocation: "Tủ thiết bị M&E",
-        note: "Nguyên tem bảo hành",
-      },
-      {
-        id: "oit_5",
-        itemCode: "VT-CAP-CXV4X16",
-        itemName: "Cáp điện lực hạ thế Cadivi CXV 4x16 mm2",
-        unit: "Mét",
-        stockQty: 850,
-        orderQty: 200,
-        actualQty: 200,
-        unitPrice: 160000,
-        totalPrice: 32000000,
-        binLocation: "Kệ cáp",
-        note: "Cắt đoạn 50m",
-      },
-    ],
-  },
-  {
-    id: "iss_4",
-    issueCode: "PXK-2026-09/004",
-    issueDate: "2026-09-23",
-    issueType: "CONSTRUCTION",
-    projectName: "Dự án Khu đô thị Vinhomes Grand Park",
-    workPackage: "Hoàn thiện mặt ngoài Shophouse",
-    contractorName: "Đội sơn bả - Minh Phát",
-    warehouseId: "WH02",
-    warehouseName: "Kho Dự án Vinhomes Grand Park",
-    requisitionNo: "MR-SON-09/11",
-    receiver: "Đội trưởng Nguyễn Minh",
-    issuer: "Nguyễn Văn Thao (Thủ kho)",
-    description: "Xuất sơn lót chống kiềm ngoài trời Dulux sơn mặt ngoài Shophouse D2",
-    status: "DRAFT",
-    totalQty: 15,
-    totalAmount: 27750000,
-    createdBy: "quanghn",
-    createdDate: "2026-09-23 14:20",
-    items: [
-      {
-        id: "oit_6",
-        itemCode: "VT-SON-DULUX-WT",
-        itemName: "Sơn lót chống kiềm ngoài trời Dulux Weathershield 18L",
-        unit: "Thùng",
-        stockQty: 80,
-        orderQty: 15,
-        actualQty: 15,
-        unitPrice: 1850000,
-        totalPrice: 27750000,
-        binLocation: "Khu vực hóa chất",
-        note: "Đợt 1",
-      },
-    ],
-  },
-];
+import { warehouseApi } from "../api";
+import { extractApiList } from "@/lib/api-client";
+import ApprovalBadge from "@/components/common/ApprovalBadge";
 
 export default function StockOutPage() {
-  const { t } = useTranslation();
-  const [issues, setIssues] = useState<StockOutIssue[]>(INITIAL_STOCK_OUT_DATA);
+  const { t, language } = useTranslation();
+  const [issues, setIssues] = useState<StockOutIssue[]>([]);
+  const [warehouseList, setWarehouseList] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [selectedWarehouseFilter, setSelectedWarehouseFilter] = useState<string>("ALL");
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>("ALL");
 
-  // Tab state: "list" vs "edit"
-  const [activeTabKey, setActiveTabKey] = useState<string>("list");
   const [isEditTabOpen, setIsEditTabOpen] = useState(false);
   const [editingIssue, setEditingIssue] = useState<StockOutIssue | null>(null);
+
+  const fetchIssues = useCallback(async (keyword = "") => {
+    setLoading(true);
+    try {
+      const data = await warehouseApi.getInventoryTransactions({
+        DisplayMode: "Issue",
+        WSId: "",
+        Keyword: keyword,
+        PageNum: 1,
+        PageSize: 50,
+      });
+      const list = extractApiList<any>(data);
+      if (list && list.length > 0) {
+        const mapped: StockOutIssue[] = list.map((r: any, index: number) => {
+          const transactionId = r.TransactionId ?? r.Id;
+          const id = String(transactionId ?? r.DocCode ?? `iss_${index}`);
+          const docCode = r.DocCode || r.issueCode || "";
+          const docDate = r.DocDate || r.issueDate || "";
+          const warehouseId = r.WarehouseId !== undefined && r.WarehouseId !== null ? String(r.WarehouseId) : "";
+          const warehouseName = r.WarehouseName || (warehouseId ? `Kho #${warehouseId}` : "---");
+          const mainCode = r.MainCode || r.mainCode || r.ContractCode || "";
+          const projectName = r.ProjectName || r.projectName || r.ContractCode || mainCode || "---";
+
+          // Chuẩn hóa Status & StatusName theo API (Status = 0 là Đang lập)
+          const rawStatus = r.Status !== undefined && r.Status !== null ? r.Status : r.StatusCode;
+          const statusNum = rawStatus !== undefined && rawStatus !== null && !isNaN(Number(rawStatus)) ? Number(rawStatus) : 0;
+          const statusName = r.StatusName || r.ApprovalStatusName || (statusNum === 0 ? "Đang lập" : String(rawStatus ?? ""));
+
+          return {
+            ...r,
+            id,
+            issueCode: docCode,
+            issueDate: docDate,
+            issueType: r.SubType || r.issueType || "CONSTRUCTION",
+            projectName,
+            workPackage: r.WorkPackage || r.workPackage || "",
+            contractorName: r.ReceiverName || r.ClientName || r.contractorName || "",
+            warehouseId,
+            warehouseName,
+            requisitionNo: r.ReferenceNo || r.requisitionNo || "",
+            receiver: r.Receiver || r.receiver || "",
+            issuer: r.CreatedBy || r.issuer || "",
+            description: r.Description || r.description || "",
+            // Chuẩn hóa Status & StatusName theo API (Status = 0 là Đang lập)
+            status: statusNum === 0 ? "DRAFT" : (statusNum === 1 ? "COMPLETED" : (statusNum === 2 ? "PENDING" : String(statusNum))),
+            Status: statusNum,
+            StatusCode: String(statusNum),
+            StatusName: statusName,
+            ApprovalStatus: r.ApprovalStatus !== undefined && r.ApprovalStatus !== null ? r.ApprovalStatus : statusNum,
+            ApprovalStatusName: statusName,
+            totalQty: Number(r.TotalQty ?? r.Qnty ?? 0),
+            totalAmount: Number(r.TotalAmount ?? r.Amount ?? 0),
+            items: r.items || [],
+            createdBy: r.CreatedBy || "",
+            createdDate: r.CreatedDate || docDate,
+            TransactionId: transactionId,
+            DocCode: docCode,
+            DocDate: docDate,
+            MainCode: mainCode,
+            mainContractId: r.SubconOf ?? r.subconOf,
+            SubconOf: r.SubconOf ?? r.subconOf,
+          };
+        });
+        setIssues(mapped);
+      }
+    } catch (e) {
+      console.error("Lỗi tải danh sách xuất kho:", e);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchIssues();
+    warehouseApi
+      .getWarehouseList()
+      .then((res) => {
+        const list = extractApiList<any>(res);
+        if (list && list.length > 0) {
+          setWarehouseList(list);
+        }
+      })
+      .catch(() => {});
+  }, [fetchIssues]);
 
   const handleOpenCreate = () => {
     setEditingIssue(null);
     setIsEditTabOpen(true);
-    setActiveTabKey("edit");
   };
 
   const handleOpenEdit = (record: StockOutIssue) => {
     setEditingIssue(record);
     setIsEditTabOpen(true);
-    setActiveTabKey("edit");
   };
 
   const handleCloseEditTab = () => {
     setIsEditTabOpen(false);
     setEditingIssue(null);
-    setActiveTabKey("list");
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = (issueOrId: StockOutIssue | string) => {
+    const id = typeof issueOrId === "object" ? issueOrId.id : issueOrId;
     setIssues((prev) => prev.filter((i) => i.id !== id));
     message.success("Đã xóa phiếu xuất kho thành công!");
+    handleCloseEditTab();
   };
 
   const handleSaveIssue = (saved: StockOutIssue) => {
@@ -244,16 +157,23 @@ export default function StockOutPage() {
 
   const warehouseOptions = useMemo(() => {
     const map = new Map<string, string>();
+    warehouseList.forEach((w: any) => {
+      const id = String(w.WarehouseId ?? w.Id ?? w.id ?? "");
+      const name = w.WarehouseName || w.Name || w.name || "";
+      if (id && name) {
+        map.set(id, name);
+      }
+    });
     issues.forEach((i) => {
       if (i.warehouseId && i.warehouseName) {
-        map.set(i.warehouseId, i.warehouseName);
+        map.set(String(i.warehouseId), i.warehouseName);
       }
     });
-    MOCK_WAREHOUSES.forEach((w) => {
-      if (!map.has(w.id)) {
+    if (map.size === 0) {
+      MOCK_WAREHOUSES.forEach((w) => {
         map.set(w.id, w.name);
-      }
-    });
+      });
+    }
     return [
       { value: "ALL", label: t.issue.allWarehouse },
       ...Array.from(map.entries()).map(([id, name]) => ({
@@ -261,13 +181,14 @@ export default function StockOutPage() {
         label: name,
       })),
     ];
-  }, [issues, t]);
+  }, [warehouseList, issues, t]);
 
   const filteredIssues = useMemo(() => {
     return issues.filter((i) => {
       const matchKeyword =
         !searchKeyword.trim() ||
         i.issueCode.toLowerCase().includes(searchKeyword.toLowerCase()) ||
+        (i.MainCode && i.MainCode.toLowerCase().includes(searchKeyword.toLowerCase())) ||
         i.projectName.toLowerCase().includes(searchKeyword.toLowerCase()) ||
         (i.requisitionNo && i.requisitionNo.toLowerCase().includes(searchKeyword.toLowerCase())) ||
         i.description.toLowerCase().includes(searchKeyword.toLowerCase());
@@ -305,47 +226,57 @@ export default function StockOutPage() {
         width: 55,
         align: "center",
         cannotHide: true,
-        render: (_, __, index) => index + 1,
+        render: (_, __, index) => (
+          <span style={{ color: "#334155", fontWeight: 400, fontSize: 13 }}>
+            {index + 1}
+          </span>
+        ),
       },
       {
         title: t.table.warehouse,
         dataIndex: "warehouseName",
         key: "warehouseName",
-        width: 230,
-        render: (val, r) => val || (r.warehouseId ? `Kho #${r.warehouseId}` : "---"),
+        width: 240,
+        render: (val, r) => (
+          <span style={{ color: "#334155", fontWeight: 400, fontSize: 13 }}>
+            {val || (r.warehouseId ? `Kho #${r.warehouseId}` : "---")}
+          </span>
+        ),
       },
       {
-        title: t.issue.projectReceiver,
-        dataIndex: "projectName",
-        key: "projectName",
-        width: 260,
-        render: (val, r) => (
-          <div>
-            <div style={{ color: "#123443", fontWeight: 500, fontSize: 13 }}>{val}</div>
-            {r.workPackage && (
-              <div style={{ fontSize: 12, color: "#718894" }}>
-                Gói thầu: {r.workPackage}
-              </div>
-            )}
-          </div>
-        ),
+        title: t.issue.projectReceiver || (language === "en" ? "Client Contract" : "Hợp đồng CĐT"),
+        dataIndex: "MainCode",
+        key: "MainCode",
+        width: 200,
+        render: (val, r: any) => {
+          const displayVal = val || r.MainCode || r.mainCode || r.ContractCode || "---";
+          return (
+            <span style={{ color: "#334155", fontWeight: 400, fontSize: 13 }}>
+              {displayVal}
+            </span>
+          );
+        },
       },
       {
         title: t.issue.mrCode,
         dataIndex: "requisitionNo",
         key: "requisitionNo",
-        width: 140,
-        render: (val) => val || "---",
+        width: 150,
+        render: (val) => (
+          <span style={{ color: "#334155", fontWeight: 400, fontSize: 13 }}>
+            {val || "---"}
+          </span>
+        ),
       },
       {
         title: t.issue.type,
         dataIndex: "issueType",
         key: "issueType",
-        width: 120,
+        width: 130,
         render: (val) => {
           const typeStr = renderType(val);
           return (
-            <span style={{ color: "#334155", fontWeight: 500, fontSize: 13 }}>
+            <span style={{ color: "#334155", fontWeight: 400, fontSize: 13 }}>
               {typeStr}
             </span>
           );
@@ -371,29 +302,9 @@ export default function StockOutPage() {
         key: "issueDate",
         width: 110,
         align: "center",
-        render: (val) => (val ? dayjs(val).format("DD/MM/YYYY") : "---"),
-      },
-      {
-        title: t.table.qty,
-        dataIndex: "totalQty",
-        key: "totalQty",
-        width: 100,
-        align: "right",
         render: (val) => (
-          <span style={{ fontWeight: 600, color: "#123443", fontSize: 13 }}>
-            {Number(val || 0).toLocaleString("vi-VN")}
-          </span>
-        ),
-      },
-      {
-        title: t.table.amount,
-        dataIndex: "totalAmount",
-        key: "totalAmount",
-        width: 140,
-        align: "right",
-        render: (val) => (
-          <span style={{ fontWeight: 600, color: "#123443", fontSize: 13 }}>
-            {Number(val || 0).toLocaleString("vi-VN")}
+          <span style={{ color: "#334155", fontWeight: 400, fontSize: 13 }}>
+            {val ? dayjs(val).format("DD/MM/YYYY") : "---"}
           </span>
         ),
       },
@@ -403,7 +314,29 @@ export default function StockOutPage() {
         key: "description",
         width: 250,
         ellipsis: true,
-        render: (val) => val || "---",
+        render: (val) => (
+          <span style={{ color: "#334155", fontWeight: 400, fontSize: 13 }}>
+            {val || "---"}
+          </span>
+        ),
+      },
+      {
+        title: t.table.status || (language === "en" ? "Status" : "Trạng thái"),
+        dataIndex: "StatusName",
+        key: "StatusName",
+        width: 140,
+        align: "left" as const,
+        render: (_val: any, record: any) => {
+          const displayLabel = record?.StatusName || record?.ApprovalStatusName;
+          const statusVal = record?.Status ?? record?.StatusCode ?? 0;
+          return (
+            <ApprovalBadge
+              val={statusVal}
+              record={record}
+              customLabel={displayLabel}
+            />
+          );
+        },
       },
       {
         key: "_spacer",
@@ -412,45 +345,14 @@ export default function StockOutPage() {
         cannotHide: true,
         render: () => null,
       },
-      {
-        title: t.common.actions,
-        key: "action",
-        width: 90,
-        align: "center",
-        fixed: "right",
-        cannotHide: true,
-        render: (_, record) => (
-          <Space size={6}>
-            <ActionIconButton
-              action="edit"
-              size="small"
-              onClick={() => handleOpenEdit(record)}
-            />
-            <Popconfirm
-              title={t.common.deleteConfirmTitle}
-              description={t.common.deleteConfirmDesc}
-              okText={t.common.delete}
-              cancelText={t.common.cancel}
-              okButtonProps={{ danger: true }}
-              onConfirm={() => handleDelete(record.id)}
-            >
-              <ActionIconButton
-                action="delete"
-                size="small"
-              />
-            </Popconfirm>
-          </Space>
-        ),
-      },
     ],
-    [t]
+    [t, language]
   );
 
   const { tableColumns, scrollX } = usePersistedTableColumns({
-    tableKey: "warehouse_issue_receipts",
+    tableKey: "warehouse_issue_receipts_v3",
     columns: baseColumns,
-    actionColumnKey: "action",
-    defaultScrollX: 1350,
+    defaultScrollX: 1200,
   });
 
   if (isEditTabOpen) {
@@ -461,6 +363,8 @@ export default function StockOutPage() {
           onClose={handleCloseEditTab}
           editingIssue={editingIssue}
           onSave={handleSaveIssue}
+          onDelete={handleDelete}
+          onUpdateEditingIssue={setEditingIssue}
         />
       </ErpDetailContainer>
     );
@@ -468,42 +372,6 @@ export default function StockOutPage() {
 
   return (
     <ErpPageContainer>
-      {/* Scoped CSS for stockout table */}
-      <style jsx global>{`
-        .stockin-main-table .ant-table-thead > tr > th {
-          background: #f7fbfa !important;
-          color: #123443 !important;
-          font-size: 13px !important;
-          font-weight: 600 !important;
-          line-height: 18px !important;
-          border-color: #dce5e6 !important;
-          padding: 10px 12px !important;
-        }
-        .stockin-main-table .ant-table-tbody > tr > td {
-          color: #123443 !important;
-          font-size: 13px !important;
-          line-height: 18px !important;
-          border-color: #dce5e6 !important;
-          padding: 10px 12px !important;
-          height: 46px !important;
-        }
-        .stockin-main-table .ant-table-tbody > tr:hover > td {
-          background-color: #eef8f6 !important;
-        }
-        .stockin-main-table .ant-table-container {
-          border: 1px solid #dce5e6 !important;
-          border-radius: 8px !important;
-          overflow: hidden;
-        }
-        .stockin-main-table .ant-pagination .ant-pagination-item-active {
-          border-color: #008f89 !important;
-          background-color: #008f89 !important;
-        }
-        .stockin-main-table .ant-pagination .ant-pagination-item-active a {
-          color: #FFFFFF !important;
-        }
-      `}</style>
-
       {/* Toolbar Header */}
       <div
         style={{
@@ -542,10 +410,6 @@ export default function StockOutPage() {
             style={{ width: 240, height: 36, borderRadius: 8, fontSize: 13.5 }}
             prefix={<IconSearch size={16} strokeWidth={1.8} style={{ color: "#94A3B8" }} />}
           />
-
-          <span style={{ fontSize: 13, color: "#64748b", whiteSpace: "nowrap" }}>
-            {t.common.total || "Tổng"}: <strong style={{ color: "#008f89" }}>{filteredIssues.length}</strong> {t.table.receiptsCount || "phiếu"}
-          </span>
         </div>
 
         <Space size={10} style={{ flexShrink: 0 }}>
@@ -555,6 +419,7 @@ export default function StockOutPage() {
               setSearchKeyword("");
               setSelectedWarehouseFilter("ALL");
               setSelectedStatusFilter("ALL");
+              fetchIssues("");
             }}
             style={{ height: 36, borderRadius: 8, borderColor: "#dce5e6", color: "#334155", fontSize: 13.5, fontWeight: 500 }}
           >
@@ -583,11 +448,12 @@ export default function StockOutPage() {
 
       {/* Main Table */}
       <Table
+        loading={loading}
         className="stockin-main-table"
         tableLayout="fixed"
         components={{ header: { cell: ResizableTitle } }}
         rowKey="id"
-        size="middle"
+        size="small"
         columns={tableColumns}
         dataSource={filteredIssues}
         onRow={(record) => ({

@@ -520,6 +520,9 @@ export async function erpPost<T = any>(
       handleSessionError(errMsg);
       throw new Error(errMsg);
     }
+    if (data === "" || data === null || data === undefined) {
+      return ({ Success: "true", message: "OK" } as unknown) as T;
+    }
     return data as T;
   } finally {
     clearErpCache();
@@ -564,6 +567,9 @@ export async function erpPostForm<T = any>(endpoint: string, formData: FormData)
     const data = response.data;
     if (data?.Success === "false" || data?.success === false) {
       throw new Error(data?.Message || data?.message || "Tải lên thất bại");
+    }
+    if (data === "" || data === null || data === undefined) {
+      return ({ Success: "true", message: "OK" } as unknown) as T;
     }
     return data as T;
   } finally {

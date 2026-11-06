@@ -36,12 +36,16 @@ export const contractsApi = {
       WSId: "",
       ...params,
     }),
-  getContractStatus: <T = any>(params: { ContractId: number | string; PageNum?: number; PageSize?: number; [key: string]: any }) =>
-    getFeatureData<T>("api/get-contract-status", {
+  getContractStatus: <T = any>(params: { ContractId: number | string; PageNum?: number; PageSize?: number; WorkType?: string; [key: string]: any }) => {
+    const workType = params.WorkType || params["@WorkType"] || "mat_equip";
+    return getFeatureData<T>("api/get-contract-status", {
       PageNum: 1,
       PageSize: 20,
+      WorkType: workType,
+      "@WorkType": workType,
       ...params,
-    }),
+    });
+  },
   getProcessingStatuses: <T = any>(params: BaseApiParams) =>
     getFeatureData<T>("api/get-processing-status-list", params),
   updateSubmissionReview: <T = any>(params: UpdateSubmissionReviewParams | any, mode = "update_detail_all_work_type") =>

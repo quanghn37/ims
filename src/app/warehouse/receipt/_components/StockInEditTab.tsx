@@ -8,13 +8,11 @@ import {
   DatePicker,
   Input,
   Table,
-  Divider,
   Space,
   Typography,
   Row,
   Col,
   Tooltip,
-  Tag,
   Popconfirm,
   message,
 } from "antd";
@@ -23,6 +21,8 @@ import {
   IconDeviceFloppy,
   IconRefresh,
   IconScale,
+  IconTrash,
+  IconSend,
 } from "@tabler/icons-react";
 import ActionIconButton from "@/components/common/ActionIconButton";
 import dayjs from "dayjs";
@@ -35,7 +35,8 @@ import { warehouseApi } from "../../api";
 import ResizableTitle from "@/components/table/ResizableTitle";
 import { usePersistedTableColumns } from "@/components/table/usePersistedTableColumns";
 import ErpDetailCard from "@/components/common/ErpDetailCard";
-import { renderApprovalBadge } from "@/components/common/ApprovalBadge";
+import ApprovalBadge, { renderApprovalBadge } from "@/components/common/ApprovalBadge";
+import UnconfirmTransactionButton, { isTransactionApprovedOrRejected } from "../../_components/UnconfirmTransactionButton";
 import StockInReconcileModal from "./StockInReconcileModal";
 import StockInItemEditDrawer from "./StockInItemEditDrawer";
 import { extractApiList } from "@/lib/api-client";
@@ -48,11 +49,14 @@ interface StockInEditTabProps {
   onClose: () => void;
   editingReceipt: StockInReceipt | null;
   onSave: (data: StockInReceipt) => void | Promise<void>;
+  onDeleteReceipt?: (record: StockInReceipt) => void | Promise<void>;
+  deleting?: boolean;
   onFetchWorkflow?: (item: StockItemDetail) => void;
   items: StockItemDetail[];
   setItems: React.Dispatch<React.SetStateAction<StockItemDetail[]>>;
   loadingItems: boolean;
   onRefreshItems?: () => void;
+  onUpdateEditingReceipt?: (updated: StockInReceipt) => void;
 }
 
 export default function StockInEditTab({
@@ -60,17 +64,154 @@ export default function StockInEditTab({
   onClose,
   editingReceipt,
   onSave,
+  onDeleteReceipt,
+  deleting,
   onFetchWorkflow,
   items,
   setItems,
   loadingItems,
   onRefreshItems,
+  onUpdateEditingReceipt,
 }: StockInEditTabProps) {
   const { t, language } = useTranslation();
   const [form] = Form.useForm();
   const isEditing = Boolean(editingReceipt);
   const [submitting, setSubmitting] = useState(false);
+  const [submittingApproval, setSubmittingApproval] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const isApprovalStatusZero = useMemo(() => {
+    if (!editingReceipt) return true;
+
+    const rawStatus =
+      editingReceipt.Status !== undefined && editingReceipt.Status !== null && editingReceipt.Status !== ""
+        ? editingReceipt.Status
+        : editingReceipt.StatusCode !== undefined && editingReceipt.StatusCode !== null && editingReceipt.StatusCode !== ""
+        ? editingReceipt.StatusCode
+        : editingReceipt.ApprovalStatus !== undefined && editingReceipt.ApprovalStatus !== null && editingReceipt.ApprovalStatus !== ""
+        ? editingReceipt.ApprovalStatus
+        : editingReceipt.status;
+
+    if (rawStatus !== undefined && rawStatus !== null && !isNaN(Number(rawStatus))) {
+      return Number(rawStatus) === 0;
+    }
+
+    const str = String(
+      editingReceipt.StatusName ||
+      editingReceipt.ApprovalStatusName ||
+      ""
+    ).trim().toLowerCase();
+
+    return str === "draft" || str === "đang lập" || str === "dang lap";
+  }, [editingReceipt]);
+
+  const handleSubmitApproval = async () => {
+    const rawId =
+      editingReceipt?.TransactionId ??
+      editingReceipt?.Id ??
+      (!isNaN(Number(editingReceipt?.id)) ? Number(editingReceipt?.id) : undefined);
+
+    if (!rawId) {
+      message.error("Không tìm thấy TransactionId để trình duyệt phiếu nhập.");
+      return;
+    }
+
+    if (!items || items.length === 0) {
+      message.warning("Phiếu nhập kho chưa có chi tiết vật tư để trình duyệt.");
+      return;
+    }
+
+    try {
+      setSubmittingApproval(true);
+      const res: any = await warehouseApi.submitInventoryApproval({
+        TransactionId: Number(rawId),
+      });
+
+      if (res?.Success === false) {
+        message.error(res?.Message || "Trình duyệt phiếu nhập kho thất bại!");
+        return;
+      }
+
+      message.success(
+        res?.Message || "Trình duyệt phiếu kho thành công! Trạng thái chuyển sang Chờ duyệt."
+      );
+
+      const approvalStatus = res?.Data?.ApprovalStatus ?? 2;
+      const approvalStatusName = res?.Data?.ApprovalStatusName ?? "Chờ duyệt";
+      const status = res?.Data?.Status ?? editingReceipt?.status ?? 0;
+      const statusName = res?.Data?.StatusName ?? editingReceipt?.StatusName ?? "Chưa ghi sổ";
+
+      const updatedReceipt: StockInReceipt = {
+        ...editingReceipt!,
+        ApprovalStatus: approvalStatus,
+        ApprovalStatusName: approvalStatusName,
+        Status: status,
+        StatusName: statusName,
+        StatusCode: String(status),
+      };
+
+      if (onUpdateEditingReceipt) {
+        onUpdateEditingReceipt(updatedReceipt);
+      }
+    } catch (err: any) {
+      console.error("Lỗi trình duyệt phiếu nhập kho:", err);
+      message.error(err?.message || "Trình duyệt phiếu kho thất bại!");
+    } finally {
+      setSubmittingApproval(false);
+    }
+  };
+
+  const [unconfirming, setUnconfirming] = useState(false);
+
+  const handleUnconfirm = async () => {
+    const rawId =
+      editingReceipt?.TransactionId ??
+      editingReceipt?.Id ??
+      (!isNaN(Number(editingReceipt?.id)) ? Number(editingReceipt?.id) : undefined);
+
+    if (!rawId) {
+      message.error("Không tìm thấy TransactionId để gỡ xác nhận phiếu nhập.");
+      return;
+    }
+
+    try {
+      setUnconfirming(true);
+      const res: any = await warehouseApi.unconfirmInventoryApproval({
+        TransactionId: Number(rawId),
+      });
+
+      if (res?.Success === false || String(res?.Success).toLowerCase() === "false") {
+        message.error(res?.Message || "Gỡ xác nhận phiếu nhập kho thất bại!");
+        return;
+      }
+
+      message.success(
+        res?.Message || "Đã gỡ xác nhận phiếu nhập kho! Trạng thái chuyển về Đang lập."
+      );
+
+      const updatedReceipt: StockInReceipt = {
+        ...editingReceipt!,
+        ApprovalStatus: 0,
+        ApprovalStatusName: "Đang lập",
+        Status: 0,
+        StatusName: "Đang lập",
+        StatusCode: "0",
+        status: "DRAFT",
+      };
+
+      if (onUpdateEditingReceipt) {
+        onUpdateEditingReceipt(updatedReceipt);
+      }
+      if (onRefreshItems) {
+        onRefreshItems();
+      }
+    } catch (err: any) {
+      console.error("Lỗi gỡ xác nhận phiếu nhập kho:", err);
+      message.error(err?.message || "Gỡ xác nhận phiếu nhập kho thất bại!");
+    } finally {
+      setUnconfirming(false);
+    }
+  };
 
   // --- Modal Đối chiếu đơn hàng PO ---
   const [isReconcileModalOpen, setIsReconcileModalOpen] = useState(false);
@@ -78,13 +219,6 @@ export default function StockInEditTab({
   // --- Drawer Chỉnh sửa dòng vật tư nhập kho ---
   const [editingItem, setEditingItem] = useState<StockItemDetail | null>(null);
   const [isItemModalOpen, setIsItemModalOpen] = useState(false);
-
-  // Kiểm tra nếu phiếu nhập đã có danh mục chi tiết vật tư (details)
-  const hasDetails = Boolean(
-    (items && items.length > 0) ||
-    (editingReceipt?.items && editingReceipt.items.length > 0) ||
-    (isEditing && loadingItems)
-  );
 
   // Nếu phiếu nhập đã có chi tiết thì xám thông tin header
   const isHeaderDisabled = Boolean(
@@ -509,8 +643,8 @@ export default function StockInEditTab({
         title: t("table.status"),
         dataIndex: "StatusCode",
         key: "StatusCode",
-        width: 90,
-        align: "center",
+        width: 110,
+        align: "left",
         render: (val, record) => {
           const subId = record.SubmissionId ?? record.LocalId;
           return (
@@ -539,6 +673,16 @@ export default function StockInEditTab({
         align: "center",
         cannotHide: true,
         render: (_, record) => {
+          if (!isApprovalStatusZero) {
+            return (
+              <ActionIconButton
+                action="view"
+                size="small"
+                onClick={() => handleOpenEditItem({ ...record, Editable: 0 })}
+              />
+            );
+          }
+
           return (
             <Space size={6}>
               <ActionIconButton
@@ -564,7 +708,7 @@ export default function StockInEditTab({
         },
       },
     ],
-    [onFetchWorkflow, deletingId, t, budgetList]
+    [onFetchWorkflow, deletingId, t, budgetList, isApprovalStatusZero]
   );
 
   const { tableColumns, scrollX } = usePersistedTableColumns({
@@ -623,10 +767,50 @@ export default function StockInEditTab({
         </div>
 
         <Space size={8}>
-          <Button onClick={onClose} style={{ height: 32, borderRadius: 6, borderColor: "#dce5e6", fontSize: 13 }}>
-            {t.common.close}
-          </Button>
-          {!hasDetails && (
+          {/* Nút Trình duyệt: chỉ hiển thị khi có chi tiết (items.length > 0) và ApprovalStatus = 0 */}
+          {isEditing && resolvedTransactionId && items && items.length > 0 && isApprovalStatusZero && (
+            <Popconfirm
+              title="Xác nhận trình duyệt phiếu nhập kho này?"
+              description="Sau khi trình duyệt, phiếu nhập sẽ chuyển sang trạng thái Chờ duyệt."
+              onConfirm={handleSubmitApproval}
+              okText="Trình duyệt"
+              cancelText="Hủy"
+              okButtonProps={{ loading: submittingApproval }}
+            >
+              <Button
+                type="primary"
+                icon={<IconSend size={15} strokeWidth={1.8} />}
+                loading={submittingApproval}
+                style={{
+                  background: "#008f89",
+                  borderColor: "#008f89",
+                  height: 32,
+                  fontSize: 13,
+                  fontWeight: 500,
+                  borderRadius: 6,
+                  color: "#FFFFFF",
+                  boxShadow: "0 2px 4px rgba(0, 143, 137, 0.2)",
+                  display: "inline-flex",
+                  alignItems: "center",
+                }}
+              >
+                Trình duyệt
+              </Button>
+            </Popconfirm>
+          )}
+
+          {/* Nút Gỡ xác nhận: dùng chung cho Nhập/Xuất, chỉ hiển thị khi trạng thái Đã duyệt */}
+          {isEditing && (
+            <UnconfirmTransactionButton
+              record={editingReceipt}
+              loading={unconfirming}
+              onConfirm={handleUnconfirm}
+              transactionType="receipt"
+            />
+          )}
+
+          {/* Button Lưu & Xóa: Ẩn khi phiếu đã duyệt hoặc từ chối */}
+          {!isTransactionApprovedOrRejected(editingReceipt) && (
             <Button
               type="primary"
               icon={<IconDeviceFloppy size={16} strokeWidth={2} />}
@@ -639,12 +823,48 @@ export default function StockInEditTab({
                 fontWeight: 500,
                 fontSize: 13,
                 boxShadow: "0 2px 4px rgba(0, 143, 137, 0.2)",
+                display: "inline-flex",
+                alignItems: "center",
               }}
               onClick={() => form.submit()}
             >
-              {isEditing ? t.receipt.updateReceipt : t.receipt.saveReceipt}
+              {t.common.save || "Lưu"}
             </Button>
           )}
+
+          {isEditing && onDeleteReceipt && editingReceipt && !isTransactionApprovedOrRejected(editingReceipt) && (
+            <Popconfirm
+              title={t.common.deleteConfirmTitle || "Xác nhận xóa phiếu này?"}
+              description={t.common.confirmDelete || "Hành động này sẽ xóa phiếu nhập kho và không thể hoàn tác."}
+              onConfirm={() => onDeleteReceipt(editingReceipt)}
+              okText={t.common.delete || "Xóa"}
+              cancelText={t.common.cancel || "Hủy"}
+              okButtonProps={{ danger: true, loading: deleting }}
+            >
+              <Button
+                danger
+                icon={<IconTrash size={15} strokeWidth={1.8} />}
+                style={{
+                  height: 32,
+                  padding: "0 14px",
+                  borderRadius: 6,
+                  background: "#FEE2E2",
+                  borderColor: "#FECACA",
+                  color: "#DC2626",
+                  fontSize: 13,
+                  fontWeight: 500,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                {t.common.delete || "Xóa"}
+              </Button>
+            </Popconfirm>
+          )}
+          <Button onClick={onClose} style={{ height: 32, borderRadius: 6, borderColor: "#dce5e6", fontSize: 13 }}>
+            {t.common.close}
+          </Button>
         </Space>
       </div>
 
@@ -787,7 +1007,6 @@ export default function StockInEditTab({
                     variant="borderless"
                     format="DD/MM/YYYY"
                     placeholder="Chọn ngày"
-                    disabled={isHeaderDisabled}
                     style={{
                       padding: 0,
                       width: "100%",
@@ -812,7 +1031,6 @@ export default function StockInEditTab({
                   <Input
                     variant="borderless"
                     placeholder="vd: Phiếu nhập kho từ đơn hàng PO..."
-                    disabled={isHeaderDisabled}
                     style={{
                       padding: 0,
                       fontWeight: 400,
@@ -854,31 +1072,16 @@ export default function StockInEditTab({
                 <span className="erp-info-label">
                   {t.table.status}
                 </span>
-                <div style={{ display: "flex", alignItems: "center", height: 24, paddingLeft: 11 }}>
-                  {(() => {
-                    const rawSt = String(editingReceipt?.StatusName || editingReceipt?.StatusCode || editingReceipt?.status || "").toUpperCase();
-                    const isCompleted = rawSt.includes("COMPLETED") || rawSt.includes("ĐÃ NHẬP KHO");
-                    const isPending = rawSt.includes("PENDING") || rawSt.includes("CHỜ DUYỆT");
-                    return (
-                      <Tag
-                        color={isCompleted ? "success" : isPending ? "warning" : "default"}
-                        style={{
-                          margin: 0,
-                          borderRadius: 4,
-                          fontSize: 11,
-                          fontWeight: 600,
-                          lineHeight: "18px",
-                          padding: "0 6px",
-                        }}
-                      >
-                        {isCompleted
-                          ? t.status.completed
-                          : isPending
-                          ? t.status.pending
-                          : (t.status.draft || "Chưa nhập kho")}
-                      </Tag>
-                    );
-                  })()}
+                <div style={{ display: "flex", alignItems: "center", height: 24, paddingLeft: 8 }}>
+                  <ApprovalBadge
+                    val={editingReceipt?.Status ?? editingReceipt?.StatusCode ?? 0}
+                    record={editingReceipt}
+                    customLabel={
+                      editingReceipt?.StatusName ||
+                      editingReceipt?.ApprovalStatusName ||
+                      ((editingReceipt?.Status ?? 0) === 0 ? "Đang lập" : undefined)
+                    }
+                  />
                 </div>
               </Col>
             </Row>
@@ -910,24 +1113,26 @@ export default function StockInEditTab({
               >
                 {t.common.refresh}
               </Button>
-              <Button
-                icon={<IconScale size={16} strokeWidth={1.8} />}
-                style={{
-                  color: "#008f89",
-                  borderColor: "#b2ded9",
-                  background: "#eef8f6",
-                  height: 32,
-                  borderRadius: 6,
-                  fontWeight: 500,
-                  fontSize: 13,
-                }}
-                onClick={() => {
-                  fetchApprovedBudgetList();
-                  setIsReconcileModalOpen(true);
-                }}
-              >
-                {t.receipt.reconcilePO}
-              </Button>
+              {isApprovalStatusZero && (
+                <Button
+                  icon={<IconScale size={16} strokeWidth={1.8} />}
+                  style={{
+                    color: "#008f89",
+                    borderColor: "#b2ded9",
+                    background: "#eef8f6",
+                    height: 32,
+                    borderRadius: 6,
+                    fontWeight: 500,
+                    fontSize: 13,
+                  }}
+                  onClick={() => {
+                    fetchApprovedBudgetList();
+                    setIsReconcileModalOpen(true);
+                  }}
+                >
+                  {t.receipt.reconcilePO}
+                </Button>
+              )}
             </Space>
           }
         >
@@ -941,53 +1146,71 @@ export default function StockInEditTab({
             loading={loadingItems}
             pagination={false}
             scroll={{ x: scrollX }}
-            summary={() => (
-              <Table.Summary fixed>
-                <Table.Summary.Row style={{ background: "#eef8f6", fontWeight: "bold" }}>
-                  {tableColumns.map((col, idx) => {
-                    const key = String(col.key ?? (col as any).dataIndex ?? idx);
-                    if (key === "Description") {
-                      return (
-                        <Table.Summary.Cell key={key} index={idx} align="right">
-                          <Text strong style={{ color: "#008f89" }}>{t.table.total}</Text>
-                        </Table.Summary.Cell>
-                      );
-                    }
-                    if (key === "Qnty") {
-                      return (
-                        <Table.Summary.Cell key={key} index={idx} align="right">
-                          <Text strong style={{ color: "#123443" }}>{totalQty.toLocaleString("vi-VN")}</Text>
-                        </Table.Summary.Cell>
-                      );
-                    }
-                    if (key === "Amount") {
-                      return (
-                        <Table.Summary.Cell key={key} index={idx} align="right">
-                          <Text strong style={{ color: "#123443" }}>{totalAmount.toLocaleString("vi-VN")}</Text>
-                        </Table.Summary.Cell>
-                      );
-                    }
-                    if (key === "TaxAmount") {
-                      return (
-                        <Table.Summary.Cell key={key} index={idx} align="right">
-                          <Text strong style={{ color: "#123443" }}>{totalTaxAmount.toLocaleString("vi-VN")}</Text>
-                        </Table.Summary.Cell>
-                      );
-                    }
-                    if (key === "totalWithVat") {
-                      return (
-                        <Table.Summary.Cell key={key} index={idx} align="right">
-                          <Text strong style={{ color: "#008f89", fontSize: 14 }}>
-                            {(totalAmount + totalTaxAmount).toLocaleString("vi-VN")}
-                          </Text>
-                        </Table.Summary.Cell>
-                      );
-                    }
-                    return <Table.Summary.Cell key={key} index={idx} />;
-                  })}
-                </Table.Summary.Row>
-              </Table.Summary>
-            )}
+            summary={() => {
+              const qntyIndex = tableColumns.findIndex(
+                (col: any) => (col.key || col.dataIndex) === "Qnty"
+              );
+              const colSpanBeforeQty = qntyIndex > 0 ? qntyIndex : 1;
+              const remainingColumns = tableColumns.slice(colSpanBeforeQty);
+
+              return (
+                <Table.Summary fixed>
+                  <Table.Summary.Row style={{ background: "#eef8f6", fontWeight: "bold" }}>
+                    <Table.Summary.Cell index={0} colSpan={colSpanBeforeQty} align="center">
+                      <span
+                        style={{
+                          fontWeight: 700,
+                          color: "#123443",
+                          fontSize: 13,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.5px",
+                        }}
+                      >
+                        {t.table.total ? t.table.total.replace(/:$/, "") : "TỔNG CỘNG"}
+                      </span>
+                    </Table.Summary.Cell>
+
+                    {remainingColumns.map((col, idx) => {
+                      const index = colSpanBeforeQty + idx;
+                      const key = String(col.key ?? (col as any).dataIndex ?? index);
+                      const fixedProps = col.fixed ? { fixed: col.fixed } : {};
+
+                      if (key === "Qnty") {
+                        return (
+                          <Table.Summary.Cell key={key} index={index} align="right" {...fixedProps}>
+                            <Text strong style={{ color: "#123443" }}>{totalQty.toLocaleString("vi-VN")}</Text>
+                          </Table.Summary.Cell>
+                        );
+                      }
+                      if (key === "Amount") {
+                        return (
+                          <Table.Summary.Cell key={key} index={index} align="right" {...fixedProps}>
+                            <Text strong style={{ color: "#123443" }}>{totalAmount.toLocaleString("vi-VN")}</Text>
+                          </Table.Summary.Cell>
+                        );
+                      }
+                      if (key === "TaxAmount") {
+                        return (
+                          <Table.Summary.Cell key={key} index={index} align="right" {...fixedProps}>
+                            <Text strong style={{ color: "#123443" }}>{totalTaxAmount.toLocaleString("vi-VN")}</Text>
+                          </Table.Summary.Cell>
+                        );
+                      }
+                      if (key === "totalWithVat") {
+                        return (
+                          <Table.Summary.Cell key={key} index={index} align="right" {...fixedProps}>
+                            <Text strong style={{ color: "#123443", fontSize: 13 }}>
+                              {(totalAmount + totalTaxAmount).toLocaleString("vi-VN")}
+                            </Text>
+                          </Table.Summary.Cell>
+                        );
+                      }
+                      return <Table.Summary.Cell key={key} index={index} {...fixedProps} />;
+                    })}
+                  </Table.Summary.Row>
+                </Table.Summary>
+              );
+            }}
           />
         </ErpDetailCard>
       </div>

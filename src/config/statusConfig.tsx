@@ -123,7 +123,6 @@ export function getStatusLabel(rawStatus: any, language: string = "vi"): string 
   const isEn = language === "en";
 
   if (
-    clean === "0" ||
     clean === "chưa làm" ||
     clean === "chua lam" ||
     clean.includes("not-started") ||
@@ -144,7 +143,8 @@ export function getStatusLabel(rawStatus: any, language: string = "vi"): string 
     clean === "approved" ||
     clean === "accepted" ||
     clean === "appr" ||
-    clean === "1"
+    clean === "1" ||
+    clean === "3"
   ) {
     return isEn ? "Approved" : "Đã duyệt";
   }
@@ -154,9 +154,13 @@ export function getStatusLabel(rawStatus: any, language: string = "vi"): string 
     clean.includes("co dk") ||
     clean.includes("điều kiện") ||
     clean.includes("dieu kien") ||
-    clean.includes("cond")
+    clean.includes("cond") ||
+    clean.includes("một phần") ||
+    clean.includes("mot phan") ||
+    clean.includes("partial") ||
+    clean === "4"
   ) {
-    return isEn ? "Cond-Approved" : "Duyệt có ĐK";
+    return isEn ? "Cond-Approved" : (clean.includes("một phần") || clean.includes("mot phan") || clean === "4" ? "Duyệt một phần" : "Duyệt có ĐK");
   }
 
   if (
@@ -188,13 +192,23 @@ export function getStatusLabel(rawStatus: any, language: string = "vi"): string 
     clean === "rejected" ||
     clean === "hủy" ||
     clean === "huy" ||
-    clean === "reject"
+    clean === "reject" ||
+    clean === "5" ||
+    clean === "-1"
   ) {
     return isEn ? "Rejected" : "Từ chối";
   }
 
-  if (clean === "draft" || clean === "bản nháp" || clean === "ban nhap" || clean === "nháp") {
-    return isEn ? "Draft" : "Bản nháp";
+  if (
+    clean === "0" ||
+    clean === "draft" ||
+    clean === "bản nháp" ||
+    clean === "ban nhap" ||
+    clean === "nháp" ||
+    clean === "đang lập" ||
+    clean === "dang lap"
+  ) {
+    return isEn ? "Draft" : (clean === "0" || clean.includes("lập") || clean.includes("lap") ? "Đang lập" : "Bản nháp");
   }
 
   return String(rawStatus);
@@ -213,7 +227,7 @@ export function getStatusStyle(rawStatus: any): StatusStyle {
     .trim()
     .toLowerCase();
 
-  if (clean === "0" || clean === "chưa làm" || clean === "chua lam" || clean.includes("not-started") || clean.includes("not started")) {
+  if (clean === "chưa làm" || clean === "chua lam" || clean.includes("not-started") || clean.includes("not started")) {
     return STATUS_CONFIG_MAP.not_started;
   }
   if (clean === "chấp thuận" || clean === "chap thuan" || clean === "accepted") {
@@ -225,8 +239,10 @@ export function getStatusStyle(rawStatus: any): StatusStyle {
     clean === "đã duyệt" ||
     clean === "da duyet" ||
     clean === "approved" ||
+    clean === "accepted" ||
     clean === "appr" ||
-    clean === "1"
+    clean === "1" ||
+    clean === "3"
   ) {
     return STATUS_CONFIG_MAP.approved;
   }
@@ -235,7 +251,11 @@ export function getStatusStyle(rawStatus: any): StatusStyle {
     clean.includes("co dk") ||
     clean.includes("điều kiện") ||
     clean.includes("dieu kien") ||
-    clean.includes("cond")
+    clean.includes("cond") ||
+    clean.includes("một phần") ||
+    clean.includes("mot phan") ||
+    clean.includes("partial") ||
+    clean === "4"
   ) {
     return STATUS_CONFIG_MAP.cond_approved;
   }
@@ -260,10 +280,27 @@ export function getStatusStyle(rawStatus: any): StatusStyle {
   ) {
     return STATUS_CONFIG_MAP.in_review;
   }
-  if (clean === "từ chối" || clean === "tu choi" || clean === "rejected" || clean === "hủy" || clean === "huy" || clean === "reject") {
+  if (
+    clean === "từ chối" ||
+    clean === "tu choi" ||
+    clean === "rejected" ||
+    clean === "hủy" ||
+    clean === "huy" ||
+    clean === "reject" ||
+    clean === "5" ||
+    clean === "-1"
+  ) {
     return STATUS_CONFIG_MAP.rejected;
   }
-  if (clean === "draft" || clean === "bản nháp" || clean === "ban nhap" || clean === "nháp") {
+  if (
+    clean === "0" ||
+    clean === "draft" ||
+    clean === "bản nháp" ||
+    clean === "ban nhap" ||
+    clean === "nháp" ||
+    clean === "đang lập" ||
+    clean === "dang lap"
+  ) {
     return STATUS_CONFIG_MAP.draft;
   }
 
@@ -275,7 +312,7 @@ export function getStatusStyle(rawStatus: any): StatusStyle {
  */
 export function renderStatusDotItem(rawStatus: any, customLabel?: string, language?: string) {
   const activeLang = getCurrentLanguage(language);
-  const style = getStatusStyle(rawStatus);
+  const style = getStatusStyle(customLabel || rawStatus);
   const text = customLabel || getStatusLabel(rawStatus, activeLang);
 
   return (
@@ -290,7 +327,7 @@ export function renderStatusDotItem(rawStatus: any, customLabel?: string, langua
           flexShrink: 0,
         }}
       />
-      <span style={{ color: "#1e293b", fontSize: 13, fontWeight: 400 }}>
+      <span style={{ color: "inherit", fontSize: 13, fontWeight: 400 }}>
         {text}
       </span>
     </div>
@@ -304,27 +341,23 @@ export function renderStatusDotItem(rawStatus: any, customLabel?: string, langua
 export function renderStatusBadge(rawStatus: any, customLabel?: string, language?: string) {
   const activeLang = getCurrentLanguage(language);
 
-  if (rawStatus === undefined || rawStatus === null || rawStatus === "") {
+  if ((rawStatus === undefined || rawStatus === null || rawStatus === "") && !customLabel) {
     return (
       <span
         style={{
-          background: STATUS_CONFIG_MAP.not_started.bg,
-          border: `1px solid ${STATUS_CONFIG_MAP.not_started.border}`,
-          color: STATUS_CONFIG_MAP.not_started.color,
-          borderRadius: 14,
-          padding: "2px 8px",
-          fontSize: 12,
-          fontWeight: 600,
           display: "inline-flex",
           alignItems: "center",
-          gap: 5,
+          gap: 6,
           whiteSpace: "nowrap",
+          color: "#1e293b",
+          fontSize: 13,
+          fontWeight: 400,
         }}
       >
         <span
           style={{
-            width: 6,
-            height: 6,
+            width: 7,
+            height: 7,
             borderRadius: "50%",
             backgroundColor: STATUS_CONFIG_MAP.not_started.dotColor,
             display: "inline-block",
@@ -336,29 +369,25 @@ export function renderStatusBadge(rawStatus: any, customLabel?: string, language
     );
   }
 
-  const style = getStatusStyle(rawStatus);
+  const style = getStatusStyle(customLabel || rawStatus);
   const text = customLabel || getStatusLabel(rawStatus, activeLang);
 
   return (
     <span
       style={{
-        background: style.bg,
-        border: `1px solid ${style.border}`,
-        color: style.color,
-        borderRadius: 14,
-        padding: "2px 8px",
-        fontSize: 12,
-        fontWeight: 600,
         display: "inline-flex",
         alignItems: "center",
-        gap: 5,
+        gap: 6,
         whiteSpace: "nowrap",
+        color: "#1e293b",
+        fontSize: 13,
+        fontWeight: 400,
       }}
     >
       <span
         style={{
-          width: 6,
-          height: 6,
+          width: 7,
+          height: 7,
           borderRadius: "50%",
           backgroundColor: style.dotColor,
           display: "inline-block",

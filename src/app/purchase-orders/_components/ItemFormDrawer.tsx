@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useMemo } from "react";
 import {
@@ -10,13 +10,13 @@ import {
   Input,
   InputNumber,
   Divider,
-  Checkbox,
 } from "antd";
 import {
   EditOutlined,
   PlusOutlined,
   SaveOutlined,
   CloseOutlined,
+  EyeOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useTranslation } from "@/locales/LanguageContext";
@@ -118,13 +118,19 @@ export default function ItemFormDrawer({
       title={
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {editingSubmissionItem ? (
-            <EditOutlined style={{ color: "#008f89", fontSize: 18 }} />
+            !isEditable ? (
+              <EyeOutlined style={{ color: "#008f89", fontSize: 18 }} />
+            ) : (
+              <EditOutlined style={{ color: "#008f89", fontSize: 18 }} />
+            )
           ) : (
             <PlusOutlined style={{ color: "#008f89", fontSize: 18 }} />
           )}
           <span style={{ fontSize: 16, fontWeight: 700, color: "#123443" }}>
             {editingSubmissionItem
-              ? (language === "en" ? "Edit PO Order Item" : "Chỉnh sửa Mặt hàng trong Đơn hàng PO")
+              ? isEditable
+                ? (language === "en" ? "Edit PO Order Item" : "Chỉnh sửa Mặt hàng trong Đơn hàng PO")
+                : (language === "en" ? "PO Order Item Details" : "Chi tiết Mặt hàng trong Đơn hàng PO")
               : (language === "en" ? "Add Item to PO Order" : "Thêm Mặt hàng vào Đơn hàng PO")}
           </span>
         </div>
@@ -182,7 +188,6 @@ export default function ItemFormDrawer({
           UnitPrice: 0,
           Unit: "Cái",
           Remarks: "",
-          StartProcessNow: true,
         }}
       >
         {/* Khối Thông tin mặt hàng (Dạng Thẻ Thông Tin Label trên + Giá trị in đậm dưới giống màn hình ngoài) */}
@@ -438,13 +443,6 @@ export default function ItemFormDrawer({
               ...(isEditable ? {} : { color: "#334155", backgroundColor: "#f7fbfa", cursor: "not-allowed" }),
             }}
           />
-        </Form.Item>
-
-        {/* Trình duyệt? */}
-        <Form.Item name="StartProcessNow" valuePropName="checked" style={{ marginBottom: 16 }}>
-          <Checkbox disabled={!isEditable} style={{ fontWeight: 500, color: "#334155" }}>
-            {language === "en" ? "Submit for approval?" : "Trình duyệt?"}
-          </Checkbox>
         </Form.Item>
 
         {/* Khối tổng tiền (Summary Box) theo thiết kế Purple #008f89 */}

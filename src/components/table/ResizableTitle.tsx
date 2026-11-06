@@ -19,7 +19,7 @@ export const ResizableTitle: React.FC<ResizableTitleProps> = (props) => {
 
   return (
     <Resizable
-      width={width}
+      width={Number(width)}
       height={0}
       handle={
         <span
@@ -27,16 +27,17 @@ export const ResizableTitle: React.FC<ResizableTitleProps> = (props) => {
           onClick={(e) => e.stopPropagation()}
           style={{
             position: "absolute",
-            right: -5,
+            right: 0,
             bottom: 0,
             top: 0,
-            width: 10,
+            width: 8,
             cursor: "col-resize",
-            zIndex: 1,
+            zIndex: 10,
           }}
         />
       }
       onResize={onResize}
+      onResizeStop={onResize}
       draggableOpts={{ enableUserSelectHack: false }}
     >
       <th {...restProps} style={{ ...restProps.style, position: restProps.style?.position || "relative" }}>

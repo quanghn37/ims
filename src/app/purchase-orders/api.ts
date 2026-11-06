@@ -19,9 +19,35 @@ export const purchaseOrdersApi = {
   getSubmissionStatus: <T = any>(params: BaseApiParams) => getFeatureData<T>("api/get-purchaseordersubmission-status", params),
   getProcessingStatuses: <T = any>(params: BaseApiParams) => getFeatureData<T>("api/get-processing-status-list", params),
   updateContractInfo: <T = any>(params: UpdateContractInfoParams, mode?: string) => postFeatureData<T>("api/update-purchaseorder-info", params, mode),
+  deletePurchaseOrder: <T = any>(contractId: number | string, params?: Record<string, any>) =>
+    postFeatureData<T>(
+      "api/update-purchaseorder-info",
+      {
+        ContractId: !isNaN(Number(contractId)) ? Number(contractId) : contractId,
+        WSId: "",
+        ...params,
+      },
+      "delete_purchase_order"
+    ),
   upsertSubmission: <T = any>(params: UpsertSubmissionParams, mode?: string) => postFeatureData<T>("api/upsert-purchaseordersubmission", params, mode),
   updateSubmissionReview: <T = any>(params: UpdateSubmissionReviewParams, mode?: string) => postFeatureData<T>("api/update-submission-review", params, mode),
   importSubmission: <T = any>(formData: FormData) => postFeatureForm<T>("api/upsert-purchaseordersubmission/import-excel-preview", formData),
+  submitOrderApproval: <T = any>(params: {
+    ContractId: number | string;
+    WorkType?: string;
+    LogIn?: string;
+    WSId?: string;
+    SessionId?: string;
+    Language?: string;
+    [key: string]: any;
+  }) =>
+    postFeatureData<T>("api/submit-purchaserorder-approval", {
+      WorkType: "purchase_order",
+      WSId: "",
+      Language: "vi",
+      ...params,
+      ContractId: !isNaN(Number(params.ContractId)) ? Number(params.ContractId) : params.ContractId,
+    }),
   getApprovedBudgetList: <T = any>(params: BaseApiParams) =>
     getFeatureData<T>("api/get-approvedbudget-list", {
       WSId: "",

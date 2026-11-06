@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { message } from "antd";
 import { extractApiList, extractTotalRows } from "@/lib/api-client";
 import { useColumnFiltering } from "@/lib/table-utils";
+import { getStatusLabel } from "@/config/statusConfig";
 import { ContractItem } from "@/types";
 import { contractsApi } from "../api";
 
@@ -17,7 +18,7 @@ export const contractColumnFields: Record<string, string[]> = {
   Description: ["Description", "Remarks", "ContractName"],
   PayTerms: ["PayTerms", "PaymentTerm", "PaytermId"],
   ContractDate: ["ContractDate", "Contractdate", "SignDate", "Signdate"],
-  StatusName: ["StatusName", "Status", "StatusCode"],
+  StatusName: ["StatusName"],
   CurrentAssignee: ["CurrentAssignee", "Assignee", "CurrentRole"],
   CreatedBy: ["CreatedBy", "Createdby"],
 };
@@ -30,7 +31,7 @@ const getContractSearchValues = (contract: ContractItem) => [
   contract.MainCode ?? contract.MainContractCode ?? "",
   (contract as any).MasterContract ?? (contract as any).MasterContractCode ?? (contract as any).ParentContractCode ?? "",
   contract.QuotationCode ?? contract.Quotationcode ?? "",
-  contract.StatusName ?? contract.Status ?? "",
+  contract.StatusName ?? getStatusLabel((contract as any).StatusCode, "vi") ?? "",
   contract.CurrentAssignee &&
   !["đã hoàn tất", "hoàn tất", "completed", "done"].includes(contract.CurrentAssignee.trim().toLowerCase())
     ? contract.CurrentAssignee
@@ -38,7 +39,7 @@ const getContractSearchValues = (contract: ContractItem) => [
   contract.CreatedBy ?? contract.Createdby ?? "",
 ];
 
-export function useContracts() {
+export function useContracts(enabled = true) {
   const [contracts, setContracts] = useState<ContractItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -56,7 +57,14 @@ export function useContracts() {
       const data = await contractsApi.getContracts({
         DisplayMode: "mat_equip",
       });
-      const list = extractApiList<ContractItem>(data);
+      const list = extractApiList<ContractItem>(data).map((item: any) => {
+        const rawStatus = item.StatusName || item.ApprovalStatusName || item.StatusCode;
+        const normalizedStatusName = getStatusLabel(rawStatus, "vi");
+        return {
+          ...item,
+          StatusName: item.StatusName && isNaN(Number(item.StatusName)) ? item.StatusName : normalizedStatusName,
+        };
+      });
       setContracts(list);
       setPagination({ current: page, pageSize, total: extractTotalRows(data, list.length) });
     } catch (e: any) {
@@ -67,7 +75,11 @@ export function useContracts() {
     }
   };
 
-  useEffect(() => { fetchContracts(1, 100); }, []);
+  useEffect(() => {
+    if (enabled) {
+      fetchContracts(1, 100);
+    }
+  }, [enabled]);
 
   useEffect(() => {
     setPagination((previous) => previous.current !== 1 ? { ...previous, current: 1 } : previous);

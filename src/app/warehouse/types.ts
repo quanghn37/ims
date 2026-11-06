@@ -81,7 +81,9 @@ export interface StockInReceipt {
   SubconOf?: number | string;
   subconOf?: number | string;
   StatusCode?: string;
-  Status?: string;
+  Status?: string | number;
+  ApprovalStatus?: string | number;
+  ApprovalStatusName?: string;
   [key: string]: any;
 }
 
@@ -96,15 +98,19 @@ export interface StockOutIssue {
   warehouseId: string;
   warehouseName: string;
   requisitionNo?: string;
+  MainCode?: string;
   receiver: string;
   issuer: string;
   description: string;
-  status: "DRAFT" | "PENDING" | "COMPLETED" | "CANCELLED";
+  status: "DRAFT" | "PENDING" | "COMPLETED" | "CANCELLED" | string;
+  ApprovalStatus?: string | number;
+  ApprovalStatusName?: string;
   totalQty: number;
   totalAmount: number;
   items: StockItemDetail[];
   createdBy: string;
   createdDate: string;
+  [key: string]: any;
 }
 
 export interface WarehouseOption {
@@ -285,7 +291,9 @@ export interface MaterialRequisition {
   requesterPhone?: string;
   warehouseId: string;
   warehouseName: string;
-  status: "DRAFT" | "PENDING" | "APPROVED" | "PARTIAL_ISSUED" | "COMPLETED" | "REJECTED";
+  status: "DRAFT" | "PENDING" | "APPROVED" | "PARTIAL_ISSUED" | "COMPLETED" | "REJECTED" | string;
+  ApprovalStatus?: string | number;
+  ApprovalStatusName?: string;
   description: string;
   approverName?: string;
   approvedDate?: string;

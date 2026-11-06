@@ -100,7 +100,7 @@ export const WorkflowRaciTable: React.FC<WorkflowRaciTableProps> = ({
       dataIndex: "ApprovalStatus",
       key: "ApprovalStatus",
       width: 145,
-      align: "center" as const,
+      align: "left" as const,
       render: (val: string) => renderStatusBadge(val, undefined, language),
     },
     {

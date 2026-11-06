@@ -6,24 +6,16 @@ import {
   Button,
   Input,
   Select,
-  Tag,
   Space,
-  Popconfirm,
   message,
 } from "antd";
 import type { ColumnType } from "antd/es/table";
 import {
-  IconFileText,
   IconPlus,
   IconSearch,
   IconRefresh,
   IconFileSpreadsheet,
-  IconClockHour4,
-  IconCheck,
-  IconUpload,
-  IconX,
 } from "@tabler/icons-react";
-import ActionIconButton from "@/components/common/ActionIconButton";
 import dayjs from "dayjs";
 import {
   MaterialRequisition,
@@ -33,8 +25,7 @@ import { warehouseApi } from "../api";
 import { extractApiList, extractTotalRows } from "@/lib/api-client";
 import ResizableTitle from "@/components/table/ResizableTitle";
 import { usePersistedTableColumns } from "@/components/table/usePersistedTableColumns";
-import RequisitionDetailDrawer from "./_components/RequisitionDetailDrawer";
-import RequisitionCreateModal from "./_components/RequisitionCreateModal";
+import ApprovalBadge from "@/components/common/ApprovalBadge";
 import RequisitionEditTab from "./_components/RequisitionEditTab";
 import { useTranslation } from "@/locales/LanguageContext";
 import { ErpPageContainer, ErpDetailContainer } from "@/components/layout/ErpPageContainer";
@@ -54,13 +45,6 @@ export default function MaterialRequisitionPage() {
     total: 0,
   });
 
-  // Drawer / Modal states
-  const [selectedRequisition, setSelectedRequisition] = useState<MaterialRequisition | null>(null);
-  const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-
-  // Tab states
-  const [activeTabKey, setActiveTabKey] = useState<string>("list");
   const [isEditTabOpen, setIsEditTabOpen] = useState(false);
   const [editingRequisition, setEditingRequisition] = useState<MaterialRequisition | null>(null);
 
@@ -96,7 +80,11 @@ export default function MaterialRequisitionPage() {
           const totalItems = Number(r.TotalItems ?? r.itemCount ?? 0);
           const totalRequestedQty = Number(r.TotalRequestedQty ?? r.TotalQty ?? r.Qnty ?? 0);
           const totalApprovedQty = Number(r.TotalApprovedQty ?? 0);
-          const status = r.StatusCode || r.Status || r.status || "PENDING";
+
+          // Chuẩn hóa Status & StatusName theo API (Status = 0 là Đang lập)
+          const rawStatus = r.Status !== undefined && r.Status !== null ? r.Status : r.StatusCode;
+          const statusNum = rawStatus !== undefined && rawStatus !== null && !isNaN(Number(rawStatus)) ? Number(rawStatus) : 0;
+          const statusName = r.StatusName || r.ApprovalStatusName || (statusNum === 0 ? "Đang lập" : String(rawStatus ?? ""));
           const priority = r.Priority || r.priority || "NORMAL";
 
           return {
@@ -112,7 +100,12 @@ export default function MaterialRequisitionPage() {
             requesterPhone: r.RequesterPhone || "",
             warehouseId,
             warehouseName,
-            status,
+            status: statusNum === 0 ? "DRAFT" : (statusNum === 1 ? "APPROVED" : (statusNum === 2 ? "PENDING" : String(statusNum))),
+            Status: statusNum,
+            StatusCode: String(statusNum),
+            StatusName: statusName,
+            ApprovalStatus: r.ApprovalStatus !== undefined && r.ApprovalStatus !== null ? r.ApprovalStatus : statusNum,
+            ApprovalStatusName: statusName,
             description,
             totalRequestedQty,
             totalApprovedQty,
@@ -167,7 +160,7 @@ export default function MaterialRequisitionPage() {
   // Tải danh sách kho thực tế từ API
   useEffect(() => {
     warehouseApi
-      .getWarehouseList({ PageNum: 1, PageSize: 50, Keyword: "" })
+      .getWarehouseList()
       .then((res) => {
         const list = extractApiList<any>(res);
         if (list && list.length > 0) {
@@ -213,87 +206,6 @@ export default function MaterialRequisitionPage() {
   }, [requisitions, selectedWarehouseFilter, selectedStatusFilter, selectedPriorityFilter]);
 
   // Handlers
-  const handleOpenDetail = (record: MaterialRequisition) => {
-    handleOpenEdit(record);
-  };
-
-  const handleCloseDetail = () => {
-    setIsDetailDrawerOpen(false);
-    setSelectedRequisition(null);
-  };
-
-  const handleApprove = (id: string) => {
-    setRequisitions((prev) =>
-      prev.map((r) => {
-        if (r.id === id) {
-          const updatedItems = r.items.map((it) => ({
-            ...it,
-            approvedQty: it.requestedQty,
-          }));
-          const totalApprovedQty = updatedItems.reduce((acc, cur) => acc + (cur.approvedQty || 0), 0);
-          return {
-            ...r,
-            status: "APPROVED",
-            approverName: "CHT. Mai Quốc Tuấn",
-            approvedDate: dayjs().format("YYYY-MM-DD HH:mm"),
-            totalApprovedQty,
-            items: updatedItems,
-          };
-        }
-        return r;
-      })
-    );
-    // Also update current drawer state if open
-    setSelectedRequisition((prev) =>
-      prev && prev.id === id
-        ? {
-            ...prev,
-            status: "APPROVED",
-            approverName: "CHT. Mai Quốc Tuấn",
-            approvedDate: dayjs().format("YYYY-MM-DD HH:mm"),
-          }
-        : prev
-    );
-  };
-
-  const handleReject = (id: string, reason: string) => {
-    setRequisitions((prev) =>
-      prev.map((r) => {
-        if (r.id === id) {
-          return {
-            ...r,
-            status: "REJECTED",
-            approverName: "BCH Công Trường",
-            approvedDate: dayjs().format("YYYY-MM-DD HH:mm"),
-            rejectReason: reason,
-          };
-        }
-        return r;
-      })
-    );
-    setSelectedRequisition((prev) =>
-      prev && prev.id === id
-        ? {
-            ...prev,
-            status: "REJECTED",
-            approverName: "BCH Công Trường",
-            approvedDate: dayjs().format("YYYY-MM-DD HH:mm"),
-            rejectReason: reason,
-          }
-        : prev
-    );
-    message.error(`Đã từ chối phiếu yêu cầu!`);
-  };
-
-  const handleSubmitForApproval = (id: string) => {
-    setRequisitions((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, status: "PENDING" } : r))
-    );
-    setSelectedRequisition((prev) =>
-      prev && prev.id === id ? { ...prev, status: "PENDING" } : prev
-    );
-  };
-
   const handleDelete = async (id: string) => {
     const target = requisitions.find((r) => r.id === id);
     const transId = (target as any)?.TransactionId ?? (target as any)?.Id ?? (!isNaN(Number(id)) ? Number(id) : null);
@@ -312,67 +224,29 @@ export default function MaterialRequisitionPage() {
     message.success("Đã xóa phiếu yêu cầu xuất vật tư!");
   };
 
-  const handleSaveCreate = (newReq: MaterialRequisition) => {
-    fetchRequisitions(1, pagination.pageSize, "");
-    message.success(`Đã thêm phiếu yêu cầu ${newReq.requisitionCode} thành công!`);
-  };
-
   const handleOpenCreate = () => {
     setEditingRequisition(null);
     setIsEditTabOpen(true);
-    setActiveTabKey("edit");
   };
 
   const handleOpenEdit = (record: MaterialRequisition) => {
     setEditingRequisition(record);
     setIsEditTabOpen(true);
-    setActiveTabKey("edit");
   };
 
   const handleCloseEditTab = () => {
     setIsEditTabOpen(false);
     setEditingRequisition(null);
-    setActiveTabKey("list");
   };
 
   const handleSaveRequisition = (savedData: MaterialRequisition, isNewlyCreated?: boolean) => {
-    fetchRequisitions(pagination.current, pagination.pageSize, searchKeyword);
     if (isNewlyCreated) {
       setEditingRequisition(savedData);
+      setRequisitions((prev) => [savedData, ...prev]);
     } else {
       message.success(`Đã lưu phiếu yêu cầu ${savedData.requisitionCode} thành công!`);
       handleCloseEditTab();
-    }
-  };
-
-  // Status & Priority Renderers
-  const renderStatusTag = (status: string) => {
-    switch (status) {
-      case "PENDING":
-        return <Tag color="warning" icon={<IconClockHour4 size={14} style={{ verticalAlign: "middle" }} />}>{t.status.pending}</Tag>;
-      case "APPROVED":
-        return <Tag color="processing" icon={<IconCheck size={14} style={{ verticalAlign: "middle" }} />}>{t.status.approved}</Tag>;
-      case "PARTIAL_ISSUED":
-        return <Tag color="cyan" icon={<IconUpload size={14} style={{ verticalAlign: "middle" }} />}>{t.status.partialIssued}</Tag>;
-      case "COMPLETED":
-        return <Tag color="success" icon={<IconCheck size={14} style={{ verticalAlign: "middle" }} />}>{t.status.completed}</Tag>;
-      case "REJECTED":
-        return <Tag color="error" icon={<IconX size={14} style={{ verticalAlign: "middle" }} />}>{t.status.rejected}</Tag>;
-      case "DRAFT":
-      default:
-        return <Tag color="default">{t.status.draft}</Tag>;
-    }
-  };
-
-  const renderPriorityTag = (priority: string) => {
-    switch (priority) {
-      case "URGENT":
-        return <Tag color="#EF4444" style={{ fontWeight: 600 }}>{t.status.urgent}</Tag>;
-      case "HIGH":
-        return <Tag color="#F59E0B" style={{ fontWeight: 600 }}>{t.status.high}</Tag>;
-      case "NORMAL":
-      default:
-        return <Tag color="#3B82F6">{t.status.normal}</Tag>;
+      fetchRequisitions(pagination.current, pagination.pageSize, searchKeyword);
     }
   };
 
@@ -486,31 +360,29 @@ export default function MaterialRequisitionPage() {
         render: (val, r: any) => val || r.Description || "---",
       },
       {
+        title: t.table.status || (language === "en" ? "Status" : "Trạng thái"),
+        dataIndex: "StatusName",
+        key: "StatusName",
+        width: 140,
+        align: "left",
+        render: (_val, record: any) => {
+          const displayLabel = record?.StatusName || record?.ApprovalStatusName;
+          const statusVal = record?.Status ?? record?.StatusCode ?? 0;
+          return (
+            <ApprovalBadge
+              val={statusVal}
+              record={record}
+              customLabel={displayLabel}
+            />
+          );
+        },
+      },
+      {
         key: "_spacer",
         title: "",
         width: undefined,
         cannotHide: true,
         render: () => null,
-      },
-      {
-        title: "",
-        key: "action",
-        width: 70,
-        align: "center",
-        fixed: "right",
-        cannotHide: true,
-        render: (_, record) => (
-          <Popconfirm
-            title={t.common.deleteConfirmTitle}
-            description={t.common.deleteConfirmDesc}
-            okText={t.common.delete}
-            cancelText={t.common.cancel}
-            okButtonProps={{ danger: true }}
-            onConfirm={() => handleDelete(record.id)}
-          >
-            <ActionIconButton action="delete" size="small" />
-          </Popconfirm>
-        ),
       },
     ],
     [pagination.current, pagination.pageSize, t, language]
@@ -519,7 +391,6 @@ export default function MaterialRequisitionPage() {
   const { tableColumns, scrollX } = usePersistedTableColumns({
     tableKey: "warehouse_material_requisitions_v3",
     columns: baseColumns,
-    actionColumnKey: "action",
     defaultScrollX: 1300,
   });
 
@@ -531,19 +402,16 @@ export default function MaterialRequisitionPage() {
           onClose={handleCloseEditTab}
           editingRequisition={editingRequisition}
           onSave={handleSaveRequisition}
-        />
-        <RequisitionDetailDrawer
-          open={isDetailDrawerOpen}
-          onClose={handleCloseDetail}
-          requisition={selectedRequisition}
-          onApprove={handleApprove}
-          onReject={handleReject}
-          onSubmitForApproval={handleSubmitForApproval}
-        />
-        <RequisitionCreateModal
-          open={isCreateModalOpen}
-          onClose={() => setIsCreateModalOpen(false)}
-          onSave={handleSaveCreate}
+          onUpdateEditingRequisition={(updated) => {
+            setEditingRequisition(updated);
+            setRequisitions((prev) =>
+              prev.map((r) => (r.id === updated.id ? updated : r))
+            );
+          }}
+          onDelete={async (req: any) => {
+            await handleDelete(req.id);
+            handleCloseEditTab();
+          }}
         />
       </ErpDetailContainer>
     );
@@ -551,42 +419,6 @@ export default function MaterialRequisitionPage() {
 
   return (
     <ErpPageContainer>
-      {/* Scoped CSS for requisition main table */}
-      <style jsx global>{`
-        .requisition-main-table .ant-table-thead > tr > th {
-          background: #f7fbfa !important;
-          color: #123443 !important;
-          font-size: 13px !important;
-          font-weight: 600 !important;
-          line-height: 18px !important;
-          border-color: #dce5e6 !important;
-          padding: 10px 12px !important;
-        }
-        .requisition-main-table .ant-table-tbody > tr > td {
-          color: #123443 !important;
-          font-size: 13px !important;
-          line-height: 18px !important;
-          border-color: #dce5e6 !important;
-          padding: 10px 12px !important;
-          height: 46px !important;
-        }
-        .requisition-main-table .ant-table-tbody > tr:hover > td {
-          background-color: #eef8f6 !important;
-        }
-        .requisition-main-table .ant-table-container {
-          border: 1px solid #dce5e6 !important;
-          border-radius: 8px !important;
-          overflow: hidden;
-        }
-        .requisition-main-table .ant-pagination .ant-pagination-item-active {
-          border-color: #008f89 !important;
-          background-color: #008f89 !important;
-        }
-        .requisition-main-table .ant-pagination .ant-pagination-item-active a {
-          color: #FFFFFF !important;
-        }
-      `}</style>
-
       {/* Toolbar Header */}
       <div
         style={{
@@ -641,10 +473,6 @@ export default function MaterialRequisitionPage() {
             style={{ width: 220, height: 36, borderRadius: 8, fontSize: 13.5 }}
             prefix={<IconSearch size={16} strokeWidth={1.8} style={{ color: "#94A3B8" }} />}
           />
-
-          <span style={{ fontSize: 13, color: "#64748b", whiteSpace: "nowrap" }}>
-            {t.common.total || "Tổng"}: <strong style={{ color: "#008f89" }}>{filteredRequisitions.length}</strong> {t.requisition.reqCount || "yêu cầu"}
-          </span>
         </div>
 
         <Space size={10} style={{ flexShrink: 0 }}>
@@ -715,23 +543,6 @@ export default function MaterialRequisitionPage() {
             fetchRequisitions(page, pageSize, searchKeyword);
           },
         }}
-      />
-
-      {/* Detail Drawer */}
-      <RequisitionDetailDrawer
-        open={isDetailDrawerOpen}
-        onClose={handleCloseDetail}
-        requisition={selectedRequisition}
-        onApprove={handleApprove}
-        onReject={handleReject}
-        onSubmitForApproval={handleSubmitForApproval}
-      />
-
-      {/* Create Modal */}
-      <RequisitionCreateModal
-        open={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onSave={handleSaveCreate}
       />
     </ErpPageContainer>
   );

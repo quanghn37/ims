@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import {
   Drawer,
   Table,
@@ -11,7 +11,6 @@ import {
   DatePicker,
   Spin,
   Empty,
-  Tag,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
@@ -22,6 +21,7 @@ import {
 import dayjs from "dayjs";
 import { StockCardReportData, StockCardTransactionItem } from "../../types";
 import { useTranslation } from "@/locales/LanguageContext";
+import ResizableTitle from "@/components/table/ResizableTitle";
 
 const { RangePicker } = DatePicker;
 
@@ -69,7 +69,30 @@ export default function StockCardDrawer({
     return data?.Transactions ?? [];
   }, [data]);
 
-  const columns: ColumnsType<StockCardTransactionItem> = [
+  const STORAGE_KEY = "stock_card_table_widths_v1";
+
+  const [columnWidths, setColumnWidths] = useState<Record<string, number>>(() => {
+    if (typeof window === "undefined") return {};
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error(e);
+    }
+    return {};
+  });
+
+  const handleResize = useCallback((colKey: string) => (_: any, { size }: { size: { width: number } }) => {
+    setColumnWidths((prev) => {
+      const next = { ...prev, [colKey]: Math.max(size.width, 40) };
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      } catch (e) {}
+      return next;
+    });
+  }, []);
+
+  const columns: ColumnsType<StockCardTransactionItem> = useMemo(() => [
     {
       title: "STT",
       dataIndex: "RowNum",
@@ -77,7 +100,7 @@ export default function StockCardDrawer({
       width: 50,
       align: "center",
       render: (val: number, _, index: number) => (
-        <span style={{ color: "#718894", fontSize: 13 }}>{val ?? index + 1}</span>
+        <span style={{ color: "#334155", fontSize: 13 }}>{val ?? index + 1}</span>
       ),
     },
     {
@@ -100,8 +123,8 @@ export default function StockCardDrawer({
       render: (val: string) => (
         <span
           style={{
-            fontWeight: 600,
-            color: "#008f89",
+            fontWeight: 400,
+            color: "#334155",
             fontFamily: "monospace",
             fontSize: 13,
           }}
@@ -121,8 +144,8 @@ export default function StockCardDrawer({
           <div>
             <span
               style={{
-                color: isReceipt ? "#16A34A" : "#DC2626",
-                fontWeight: 600,
+                color: "#334155",
+                fontWeight: 400,
                 fontSize: 13,
               }}
             >
@@ -131,7 +154,7 @@ export default function StockCardDrawer({
                 : language === "en" ? "Stock Out" : "Xuất kho"}
             </span>
             {r.SubType && (
-              <span style={{ fontSize: 11, color: "#718894", marginLeft: 4 }}>
+              <span style={{ fontSize: 11, color: "#64748b", marginLeft: 4 }}>
                 ({r.SubType})
               </span>
             )}
@@ -145,7 +168,7 @@ export default function StockCardDrawer({
       key: "ReferenceNo",
       width: 155,
       render: (val: string) => (
-        <span style={{ color: "#475569", fontSize: 12 }}>{val || "---"}</span>
+        <span style={{ color: "#334155", fontSize: 13 }}>{val || "---"}</span>
       ),
     },
     {
@@ -155,7 +178,7 @@ export default function StockCardDrawer({
       width: 180,
       ellipsis: true,
       render: (val: string) => (
-        <span style={{ color: "#718894", fontSize: 13 }}>{val || "---"}</span>
+        <span style={{ color: "#334155", fontSize: 13 }}>{val || "---"}</span>
       ),
     },
     // Nhóm Cột Nhập
@@ -171,8 +194,8 @@ export default function StockCardDrawer({
           render: (val: number) => (
             <span
               style={{
-                color: val > 0 ? "#16A34A" : "#718894",
-                fontWeight: val > 0 ? 600 : 400,
+                color: "#334155",
+                fontWeight: 400,
                 fontSize: 13,
               }}
             >
@@ -201,8 +224,8 @@ export default function StockCardDrawer({
           render: (val: number) => (
             <span
               style={{
-                color: val > 0 ? "#16A34A" : "#718894",
-                fontWeight: val > 0 ? 600 : 400,
+                color: "#334155",
+                fontWeight: 400,
                 fontSize: 13,
               }}
             >
@@ -225,8 +248,8 @@ export default function StockCardDrawer({
           render: (val: number) => (
             <span
               style={{
-                color: val > 0 ? "#DC2626" : "#718894",
-                fontWeight: val > 0 ? 600 : 400,
+                color: "#334155",
+                fontWeight: 400,
                 fontSize: 13,
               }}
             >
@@ -255,8 +278,8 @@ export default function StockCardDrawer({
           render: (val: number) => (
             <span
               style={{
-                color: val > 0 ? "#DC2626" : "#718894",
-                fontWeight: val > 0 ? 600 : 400,
+                color: "#334155",
+                fontWeight: 400,
                 fontSize: 13,
               }}
             >
@@ -277,7 +300,7 @@ export default function StockCardDrawer({
           width: 100,
           align: "right",
           render: (val: number) => (
-            <span style={{ fontWeight: 600, color: "#123443", fontSize: 13 }}>
+            <span style={{ fontWeight: 400, color: "#334155", fontSize: 13 }}>
               {Number(val || 0).toLocaleString(numLocale)}
             </span>
           ),
@@ -289,14 +312,51 @@ export default function StockCardDrawer({
           width: 130,
           align: "right",
           render: (val: number) => (
-            <span style={{ fontWeight: 600, color: "#008f89", fontSize: 13 }}>
+            <span style={{ fontWeight: 400, color: "#334155", fontSize: 13 }}>
               {Number(val || 0).toLocaleString(numLocale)}
             </span>
           ),
         },
       ],
     },
-  ];
+  ], [language, numLocale]);
+
+  const makeResizableColumn = useCallback((col: any): any => {
+    if (col.children && col.children.length > 0) {
+      return {
+        ...col,
+        children: col.children.map(makeResizableColumn),
+      };
+    }
+    const colKey = String(col.key || col.dataIndex);
+    const colWidth = columnWidths[colKey] ?? col.width ?? 100;
+
+    return {
+      ...col,
+      width: colWidth,
+      onHeaderCell: (headerColumn: any) => ({
+        width: headerColumn.width || colWidth,
+        onResize: handleResize(colKey),
+      }),
+    };
+  }, [columnWidths, handleResize]);
+
+  const resizableColumns = useMemo(() => {
+    return columns.map(makeResizableColumn);
+  }, [columns, makeResizableColumn]);
+
+  const scrollX = useMemo(() => {
+    const getLeafWidths = (cols: any[]): number => {
+      return cols.reduce((sum, col) => {
+        if (col.children && col.children.length > 0) {
+          return sum + getLeafWidths(col.children);
+        }
+        const colKey = String(col.key || col.dataIndex);
+        return sum + (columnWidths[colKey] ?? col.width ?? 100);
+      }, 0);
+    };
+    return Math.max(getLeafWidths(columns), 1350);
+  }, [columns, columnWidths]);
 
   return (
     <Drawer
@@ -480,26 +540,16 @@ export default function StockCardDrawer({
             overflow: "hidden",
           }}
         >
-          <div
-            style={{
-              padding: "12px 16px",
-              borderBottom: "1px solid #dce5e6",
-              fontWeight: 600,
-              fontSize: 14,
-              color: "#123443",
-            }}
-          >
-            <span>{language === "en" ? "Stock card transaction details" : "Chi tiết các giao dịch xuất nhập Thẻ kho"}</span>
-          </div>
-
           <Table
+            components={{ header: { cell: ResizableTitle } }}
+            tableLayout="fixed"
             size="middle"
             dataSource={transactions}
-            columns={columns}
+            columns={resizableColumns}
             rowKey={(r, idx) => `${r.RowNum ?? idx}_${r.DocCode ?? ""}`}
             pagination={false}
             bordered
-            scroll={{ x: 1350 }}
+            scroll={{ x: scrollX }}
             locale={{
               emptyText: (
                 <Empty
@@ -512,7 +562,7 @@ export default function StockCardDrawer({
               if (transactions.length === 0) return null;
               const getLeafCols = (cols: any[]): any[] =>
                 cols.flatMap((c) => (c.children && c.children.length > 0 ? getLeafCols(c.children) : c));
-              const leafCols = getLeafCols(columns);
+              const leafCols = getLeafCols(resizableColumns);
 
               return (
                 <Table.Summary.Row style={{ background: "#eef8f6", fontWeight: 600 }}>
@@ -522,7 +572,7 @@ export default function StockCardDrawer({
                       return (
                         <Table.Summary.Cell key={key} index={index} align="center">
                           <span style={{ fontWeight: 700, color: "#123443", fontSize: 13 }}>
-                            {language === "en" ? "Total Movements:" : "Tổng cộng phát sinh:"}
+                            {language === "en" ? "Total" : "Tổng cộng"}
                           </span>
                         </Table.Summary.Cell>
                       );
@@ -530,56 +580,56 @@ export default function StockCardDrawer({
                     if (key === "ReceiptQty") {
                       return (
                         <Table.Summary.Cell key={key} index={index} align="right">
-                          <span style={{ color: "#16A34A" }}>{totalReceiptQty.toLocaleString(numLocale)}</span>
+                          <span style={{ color: "#123443" }}>{totalReceiptQty.toLocaleString(numLocale)}</span>
                         </Table.Summary.Cell>
                       );
                     }
                     if (key === "ReceiptUnitPrice") {
                       return (
                         <Table.Summary.Cell key={key} index={index} align="right">
-                          <span>-</span>
+                          <span style={{ color: "#123443" }}>-</span>
                         </Table.Summary.Cell>
                       );
                     }
                     if (key === "ReceiptAmount") {
                       return (
                         <Table.Summary.Cell key={key} index={index} align="right">
-                          <span style={{ color: "#16A34A" }}>{totalReceiptValue.toLocaleString(numLocale)}</span>
+                          <span style={{ color: "#123443" }}>{totalReceiptValue.toLocaleString(numLocale)}</span>
                         </Table.Summary.Cell>
                       );
                     }
                     if (key === "IssueQty") {
                       return (
                         <Table.Summary.Cell key={key} index={index} align="right">
-                          <span style={{ color: "#DC2626" }}>{totalIssueQty.toLocaleString(numLocale)}</span>
+                          <span style={{ color: "#123443" }}>{totalIssueQty.toLocaleString(numLocale)}</span>
                         </Table.Summary.Cell>
                       );
                     }
                     if (key === "IssueUnitPrice") {
                       return (
                         <Table.Summary.Cell key={key} index={index} align="right">
-                          <span>-</span>
+                          <span style={{ color: "#123443" }}>-</span>
                         </Table.Summary.Cell>
                       );
                     }
                     if (key === "IssueAmount") {
                       return (
                         <Table.Summary.Cell key={key} index={index} align="right">
-                          <span style={{ color: "#DC2626" }}>{totalIssueValue.toLocaleString(numLocale)}</span>
+                          <span style={{ color: "#123443" }}>{totalIssueValue.toLocaleString(numLocale)}</span>
                         </Table.Summary.Cell>
                       );
                     }
-                    if (key === "ClosingQty") {
+                    if (key === "ClosingQty" || key === "RunningQty") {
                       return (
                         <Table.Summary.Cell key={key} index={index} align="right">
                           <span style={{ color: "#123443" }}>{closingQty.toLocaleString(numLocale)}</span>
                         </Table.Summary.Cell>
                       );
                     }
-                    if (key === "ClosingAmount") {
+                    if (key === "ClosingAmount" || key === "RunningValue") {
                       return (
                         <Table.Summary.Cell key={key} index={index} align="right">
-                          <span style={{ color: "#008f89", fontWeight: 700 }}>
+                          <span style={{ color: "#123443", fontWeight: 700 }}>
                             {closingValue.toLocaleString(numLocale)}
                           </span>
                         </Table.Summary.Cell>
