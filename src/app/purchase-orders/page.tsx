@@ -41,7 +41,18 @@ function PurchaseOrdersPageContent() {
 
   const queryOrderId = searchParams.get("id") || searchParams.get("contractId");
   const queryAction = searchParams.get("action");
-  const isDetailPage = Boolean(queryOrderId || queryAction);
+
+  const [inPlaceDetail, setInPlaceDetail] = useState<{
+    open: boolean;
+    orderId?: string | number | null;
+    action?: string | null;
+  }>(() => ({
+    open: Boolean(queryOrderId || queryAction),
+    orderId: queryOrderId,
+    action: queryAction,
+  }));
+
+  const isDetailPage = inPlaceDetail.open;
 
   const currentUserId = user?.LogIn || "";
   const STORAGE_KEY_MAIN = `table_cols_purchase_orders_main_${currentUserId}`;
@@ -404,9 +415,9 @@ function PurchaseOrdersPageContent() {
     fetchOrderDrawerItems(record.ContractId);
   }, [fetchOrderDrawerItems, fetchPriceListRefList, orderForm, setClientList, setContractRefList, setPriceListRefList, setSelectedClientDisplay, setSelectedContractDisplay, setSelectedPriceListDisplay, setSelectedWarehouseDisplay]);
 
-  // Load đơn hàng khi mở tab trình duyệt có id
+  // Load đơn hàng khi mở chi tiết
   const handleRefreshSingleOrder = useCallback(async () => {
-    const targetId = editingOrder?.ContractId || queryOrderId;
+    const targetId = editingOrder?.ContractId || inPlaceDetail.orderId;
     if (!targetId) return;
     try {
       const data = await purchaseOrdersApi.getPurchaseOrders({
@@ -415,7 +426,7 @@ function PurchaseOrdersPageContent() {
         WSId: "",
         PageNum: 1,
         PageSize: 10,
-        ContractId: targetId,
+        ContractId: targetId ? String(targetId) : undefined,
       });
       const list = extractApiList<ContractItem>(data);
       const found = list.find((c) => String(c.ContractId) === String(targetId)) || list[0];
@@ -425,10 +436,11 @@ function PurchaseOrdersPageContent() {
     } catch (e) {
       console.error("Lỗi làm mới đơn hàng:", e);
     }
-  }, [editingOrder?.ContractId, queryOrderId, applyOrderToForm]);
+  }, [editingOrder?.ContractId, inPlaceDetail.orderId, applyOrderToForm]);
 
   useEffect(() => {
-    if (!queryOrderId) return;
+    const targetId = inPlaceDetail.orderId;
+    if (!targetId) return;
     const loadSingleOrder = async () => {
       setLoadingSingleOrder(true);
       try {
@@ -438,10 +450,10 @@ function PurchaseOrdersPageContent() {
           WSId: "",
           PageNum: 1,
           PageSize: 10,
-          ContractId: queryOrderId,
+          ContractId: targetId ? String(targetId) : undefined,
         });
         const list = extractApiList<ContractItem>(data);
-        const found = list.find((c) => String(c.ContractId) === String(queryOrderId)) || list[0];
+        const found = list.find((c) => String(c.ContractId) === String(targetId)) || list[0];
         if (found) {
           applyOrderToForm(found);
           if (typeof document !== "undefined") {
@@ -458,11 +470,11 @@ function PurchaseOrdersPageContent() {
       }
     };
     loadSingleOrder();
-  }, [queryOrderId, applyOrderToForm]);
+  }, [inPlaceDetail.orderId, applyOrderToForm]);
 
   // Mở tab tạo mới
   useEffect(() => {
-    if (queryAction === "create") {
+    if (inPlaceDetail.action === "create") {
       setEditingOrder(null);
       setSelectedOrder(null);
       orderForm.resetFields();
@@ -489,7 +501,7 @@ function PurchaseOrdersPageContent() {
         document.title = "Tạo đơn hàng";
       }
     }
-  }, [queryAction, orderForm, setContractRefList, setPriceListRefList, setSelectedClientDisplay, setSelectedContractDisplay, setSelectedPriceListDisplay, setSelectedWarehouseDisplay]);
+  }, [inPlaceDetail.action, orderForm, setContractRefList, setPriceListRefList, setSelectedClientDisplay, setSelectedContractDisplay, setSelectedPriceListDisplay, setSelectedWarehouseDisplay]);
 
   const handleRefreshDrawerItems = async () => {
     const targetId = editingOrder?.ContractId || selectedOrder?.ContractId;
@@ -728,7 +740,10 @@ function PurchaseOrdersPageContent() {
             : "Tạo mới đơn hàng PO thành công! Đã chuyển sang màn hình chi tiết."
         );
         if (!editingOrder && refreshedOrder.ContractId) {
-          window.location.href = `/purchase-orders?id=${refreshedOrder.ContractId}`;
+          setInPlaceDetail({ open: true, orderId: refreshedOrder.ContractId });
+          if (typeof window !== "undefined") {
+            window.history.replaceState(null, "", `/purchase-orders?id=${refreshedOrder.ContractId}`);
+          }
         }
       } else if (!editingOrder && targetContractId) {
         const fallbackOrder: any = {
@@ -749,7 +764,10 @@ function PurchaseOrdersPageContent() {
         };
         applyOrderToForm(fallbackOrder);
         message.success("Tạo mới đơn hàng PO thành công! Đã chuyển sang màn hình chi tiết.");
-        window.location.href = `/purchase-orders?id=${targetContractId}`;
+        setInPlaceDetail({ open: true, orderId: targetContractId });
+        if (typeof window !== "undefined") {
+          window.history.replaceState(null, "", `/purchase-orders?id=${targetContractId}`);
+        }
       } else {
         message.success("Cập nhật đơn hàng thành công!");
       }
@@ -768,14 +786,8 @@ function PurchaseOrdersPageContent() {
       try {
         localStorage.setItem("consims_po_updated", String(Date.now()));
       } catch (e) {}
-      if (isDetailPage) {
-        if (typeof window !== "undefined") {
-          if (window.opener) {
-            window.close();
-          } else {
-            window.location.href = "/purchase-orders";
-          }
-        }
+      if (typeof window !== "undefined" && window.opener) {
+        window.close();
       } else {
         handleCloseDetail();
       }
@@ -842,13 +854,14 @@ function PurchaseOrdersPageContent() {
   };
 
   const handleCloseDetail = () => {
+    setInPlaceDetail({ open: false, orderId: null, action: null });
+    setEditingOrder(null);
+    setSelectedOrder(null);
+    setOrderDrawerItems([]);
     if (typeof window !== "undefined") {
-      if (window.opener) {
-        window.close();
-      } else {
-        window.location.href = "/purchase-orders";
-      }
+      window.history.pushState(null, "", "/purchase-orders");
     }
+    fetchOrders(pagination.current, pagination.pageSize);
   };
 
   const existingOrderItemIds = useMemo(() => {
@@ -1045,10 +1058,17 @@ function PurchaseOrdersPageContent() {
         storageKey={STORAGE_KEY_MAIN}
         onRefresh={fetchOrders}
         onCreate={() => {
-          window.open("/purchase-orders?action=create", "_blank");
+          setInPlaceDetail({ open: true, action: "create" });
+          if (typeof window !== "undefined") {
+            window.history.pushState(null, "", "/purchase-orders?action=create");
+          }
         }}
         onEdit={(record) => {
-          window.open(`/purchase-orders?id=${record.ContractId}`, "_blank");
+          setInPlaceDetail({ open: true, orderId: record.ContractId });
+          applyOrderToForm(record);
+          if (typeof window !== "undefined") {
+            window.history.pushState(null, "", `/purchase-orders?id=${record.ContractId}`);
+          }
         }}
       />
     </ErpPageContainer>

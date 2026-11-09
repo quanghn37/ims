@@ -3,11 +3,12 @@ import { UserSession } from "@/types";
 
 const IS_BROWSER = typeof window !== "undefined";
 
-// Use internal Next.js proxy route to eliminate CORS issues
-const BASE_URL = "/api/consims";
+// Sử dụng Proxy nội bộ Next.js để loại bỏ triệt để lỗi CORS khi Backend khác cổng
+// Cấu hình target backend tập trung tại CONSIMS_API_URL trong .env.local (Dev: http://localhost:3000, Prod: https://api.consims.com)
+export const API_BASE_URL = "/api/consims";
 
 export const apiClient = axios.create({
-  baseURL: BASE_URL,
+  baseURL: API_BASE_URL,
   timeout: 60000, // Tăng lên 60s để các API truy vấn báo cáo / danh sách hợp đồng lớn không bị timeout 10s
 });
 

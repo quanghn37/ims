@@ -1,17 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 
-export const dynamic = "force-dynamic";
+const TARGET_BASE = process.env.CONSIMS_API_URL || "http://localhost:3000";
 
 async function proxyRequest(
   req: NextRequest,
   context: { params: { path?: string[] } | Promise<{ path?: string[] }> }
 ) {
-  const targetBase = (process.env.CONSIMS_API_URL || "https://api.consims.com").replace(/\/$/, "");
   const params = await Promise.resolve(context?.params);
   const pathSegments = params?.path || [];
   const subpath = pathSegments.join("/");
   const search = req.nextUrl.search;
-  const targetUrl = `${targetBase}/${subpath}${search}`;
+  const targetUrl = `${TARGET_BASE.replace(/\/$/, "")}/${subpath}${search}`;
 
   const forwardHeaders: Record<string, string> = {};
   req.headers.forEach((value, key) => {
@@ -53,6 +52,16 @@ async function proxyRequest(
       }
     });
 
+    // HTTP specifications and Fetch API standard: null body status (101, 204, 205, 304) must not have a body
+    const isNullBodyStatus = [101, 204, 205, 304].includes(backendRes.status);
+    if (isNullBodyStatus) {
+      return new NextResponse(null, {
+        status: backendRes.status,
+        statusText: backendRes.statusText,
+        headers: responseHeaders,
+      });
+    }
+
     const responseBody = await backendRes.arrayBuffer();
     return new NextResponse(responseBody, {
       status: backendRes.status,
@@ -64,7 +73,7 @@ async function proxyRequest(
     return NextResponse.json(
       {
         Success: "false",
-        Message: `Không thể kết nối đến máy chủ ERP backend (${targetBase}): ${err.message}`,
+        Message: `Không thể kết nối đến máy chủ ERP backend (${TARGET_BASE}): ${err.message}`,
         error: err.message,
       },
       { status: 502 }

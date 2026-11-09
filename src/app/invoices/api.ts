@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 import { contractsApi } from "@/app/contracts/api";
-import { extractApiList, getStoredSession } from "@/lib/api-client";
+import { extractApiList, getStoredSession, API_BASE_URL } from "@/lib/api-client";
 import { getFeatureData, postFeatureData } from "@/lib/feature-api";
 import { IpcRecord, PaymentPrepItem } from "./types";
 
@@ -90,7 +90,7 @@ export const invoicesApi = {
         if (typeof window !== "undefined") {
           try {
             const queryStr = `params=${encodeURIComponent(JSON.stringify(params))}`;
-            const fetchRes = await fetch(`/api/consims/api/get-ipc-list?${queryStr}`);
+            const fetchRes = await fetch(`${API_BASE_URL}/api/get-ipc-list?${queryStr}`);
             if (fetchRes.ok) {
               const json = await fetchRes.json();
               const directList = extractApiList(json);
@@ -385,7 +385,7 @@ export const invoicesApi = {
     };
 
     try {
-      // 1. Gọi qua getFeatureData (qua proxy nội bộ /api/consims)
+      // 1. Gọi qua getFeatureData (qua API_BASE_URL)
       const res = await getFeatureData("api/get-ipc-detail", params, { skipCache: true });
       if (res && (Array.isArray(res.Data) || Array.isArray(res.data) || Array.isArray(res))) {
         return res;
@@ -395,7 +395,7 @@ export const invoicesApi = {
       if (typeof window !== "undefined") {
         try {
           const queryStr = `params=${encodeURIComponent(JSON.stringify(params))}`;
-          const fetchRes = await fetch(`/api/consims/api/get-ipc-detail?${queryStr}`);
+          const fetchRes = await fetch(`${API_BASE_URL}/api/get-ipc-detail?${queryStr}`);
           if (fetchRes.ok) {
             const json = await fetchRes.json();
             if (json && (Array.isArray(json.Data) || Array.isArray(json.data) || Array.isArray(json))) {
@@ -440,7 +440,7 @@ export const invoicesApi = {
     };
 
     try {
-      // 1. Gọi qua getFeatureData (qua proxy nội bộ /api/consims)
+      // 1. Gọi qua getFeatureData (qua API_BASE_URL)
       const res = await getFeatureData("api/get-file-list", params, { skipCache: true });
       if (res && (Array.isArray(res.Data) || Array.isArray(res.data) || Array.isArray(res))) {
         return res;
@@ -450,7 +450,7 @@ export const invoicesApi = {
       if (typeof window !== "undefined") {
         try {
           const queryStr = `params=${encodeURIComponent(JSON.stringify(params))}`;
-          const fetchRes = await fetch(`/api/consims/api/get-file-list?${queryStr}`);
+          const fetchRes = await fetch(`${API_BASE_URL}/api/get-file-list?${queryStr}`);
           if (fetchRes.ok) {
             const json = await fetchRes.json();
             if (json && (Array.isArray(json.Data) || Array.isArray(json.data) || Array.isArray(json))) {
@@ -494,7 +494,7 @@ export const invoicesApi = {
     };
 
     try {
-      // 1. Gọi qua getFeatureData (qua proxy nội bộ /api/consims)
+      // 1. Gọi qua getFeatureData (qua API_BASE_URL)
       const res = await getFeatureData("api/get-vat-invoice", params, { skipCache: true });
       if (res && (Array.isArray(res.Data) || Array.isArray(res.data) || Array.isArray(res))) {
         return res;
@@ -504,7 +504,7 @@ export const invoicesApi = {
       if (typeof window !== "undefined") {
         try {
           const queryStr = `params=${encodeURIComponent(JSON.stringify(params))}`;
-          const fetchRes = await fetch(`/api/consims/api/get-vat-invoice?${queryStr}`);
+          const fetchRes = await fetch(`${API_BASE_URL}/api/get-vat-invoice?${queryStr}`);
           if (fetchRes.ok) {
             const json = await fetchRes.json();
             if (json && (Array.isArray(json.Data) || Array.isArray(json.data) || Array.isArray(json))) {

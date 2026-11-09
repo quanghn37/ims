@@ -54,8 +54,6 @@ export default function ContractsTable({ filteredContracts, loading, searchKeywo
           return (
             <a
               href={`/contracts?id=${r.ContractId}`}
-              target="_blank"
-              rel="noopener noreferrer"
               onClick={(e) => {
                 e.preventDefault();
                 onEdit(r);
@@ -67,7 +65,7 @@ export default function ContractsTable({ filteredContracts, loading, searchKeywo
                 fontSize: 13,
                 textDecoration: "none",
               }}
-              title="Mở chi tiết hợp đồng trong tab mới"
+              title="Xem chi tiết hợp đồng"
             >
               {code}
             </a>

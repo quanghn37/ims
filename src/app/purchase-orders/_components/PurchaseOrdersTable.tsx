@@ -65,8 +65,6 @@ export default function PurchaseOrdersTable({
         return (
           <a
             href={`/purchase-orders?id=${record.ContractId}`}
-            target="_blank"
-            rel="noopener noreferrer"
             onClick={(e) => {
               e.preventDefault();
               onEdit(record);
@@ -79,7 +77,7 @@ export default function PurchaseOrdersTable({
               fontSize: 13,
               textDecoration: "none",
             }}
-            title="Mở chi tiết đơn hàng trong tab mới"
+            title="Xem chi tiết đơn hàng"
           >
             {code}
           </a>

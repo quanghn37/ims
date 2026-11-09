@@ -37,7 +37,19 @@ function ContractsPageContent() {
   const queryAction = searchParams.get("action");
   const queryParentId = searchParams.get("parentId");
 
-  const isDetailPage = Boolean(queryContractId || queryAction);
+  const [inPlaceDetail, setInPlaceDetail] = useState<{
+    open: boolean;
+    contractId?: string | number | null;
+    action?: string | null;
+    parentId?: string | number | null;
+  }>(() => ({
+    open: Boolean(queryContractId || queryAction),
+    contractId: queryContractId,
+    action: queryAction,
+    parentId: queryParentId,
+  }));
+
+  const isDetailPage = inPlaceDetail.open;
   const currentUserId = user?.LogIn || "";
   const STORAGE_KEY_MAIN = `table_cols_contracts_main_${currentUserId}`;
 
@@ -234,9 +246,19 @@ function ContractsPageContent() {
     setAttachments([]);
   }, [contractForm]);
 
-  // Khi mở tab trình duyệt có queryContractId: tự động tải thông tin hợp đồng
+  const handleCloseDetail = useCallback(() => {
+    setInPlaceDetail({ open: false, contractId: null, action: null, parentId: null });
+    setEditingContract(null);
+    if (typeof window !== "undefined") {
+      window.history.pushState(null, "", "/contracts");
+    }
+    fetchContracts(pagination.current, pagination.pageSize);
+  }, [fetchContracts, pagination.current, pagination.pageSize]);
+
+  // Khi mở tab/màn hình chi tiết: tự động tải thông tin hợp đồng
   useEffect(() => {
-    if (!queryContractId) return;
+    const targetId = inPlaceDetail.contractId;
+    if (!targetId) return;
 
     const loadSingleContract = async () => {
       setLoadingSingleContract(true);
@@ -244,16 +266,16 @@ function ContractsPageContent() {
         const data = await contractsApi.getContracts(
           {
             DisplayMode: "mat_equip",
-            ContractId: queryContractId,
+            ContractId: targetId || undefined,
           },
           { skipCache: true }
         );
         const list = extractApiList<ContractItem>(data);
-        const contract = list.find((c) => Number(c.ContractId) === Number(queryContractId)) || list[0];
+        const contract = list.find((c) => Number(c.ContractId) === Number(targetId)) || list[0];
         if (contract) {
           applyContractToForm(contract);
           if (typeof document !== "undefined") {
-            document.title = `Chi tiết HĐ: ${contract.ContractCode || queryContractId}`;
+            document.title = `Chi tiết HĐ: ${contract.ContractCode || targetId}`;
           }
         } else {
           message.error("Không tìm thấy thông tin hợp đồng này.");
@@ -267,11 +289,11 @@ function ContractsPageContent() {
     };
 
     loadSingleContract();
-  }, [queryContractId, applyContractToForm]);
+  }, [inPlaceDetail.contractId, applyContractToForm]);
 
-  // Khi mở tab trình duyệt với action=create hoặc action=addendum
+  // Khi action = create hoặc action = addendum
   useEffect(() => {
-    if (queryAction === "create") {
+    if (inPlaceDetail.action === "create") {
       setEditingContract(null);
       contractForm.resetFields();
       setSelectedClientDisplay("");
@@ -294,18 +316,18 @@ function ContractsPageContent() {
       if (typeof document !== "undefined") {
         document.title = "Tạo Hợp đồng mới";
       }
-    } else if (queryAction === "addendum" && queryParentId) {
+    } else if (inPlaceDetail.action === "addendum" && inPlaceDetail.parentId) {
       const loadParent = async () => {
         try {
           const data = await contractsApi.getContracts(
             {
               DisplayMode: "mat_equip",
-              ContractId: queryParentId,
+              ContractId: inPlaceDetail.parentId || undefined,
             },
             { skipCache: true }
           );
           const list = extractApiList<ContractItem>(data);
-          const parent = list.find((c) => Number(c.ContractId) === Number(queryParentId)) || list[0];
+          const parent = list.find((c) => Number(c.ContractId) === Number(inPlaceDetail.parentId)) || list[0];
           if (parent) {
             setEditingContract(null);
             contractForm.resetFields();
@@ -337,7 +359,7 @@ function ContractsPageContent() {
               PayTerms: parent.PayTerms || (parent as any).PaymentTerm || undefined,
             });
             if (typeof document !== "undefined") {
-              document.title = `Tạo Phụ lục cho HĐ: ${parent.ContractCode || queryParentId}`;
+              document.title = `Tạo Phụ lục cho HĐ: ${parent.ContractCode || inPlaceDetail.parentId}`;
             }
           }
         } catch (e) {
@@ -346,7 +368,7 @@ function ContractsPageContent() {
       };
       loadParent();
     }
-  }, [queryAction, queryParentId, contractForm]);
+  }, [inPlaceDetail.action, inPlaceDetail.parentId, contractForm]);
 
   // Xử lý lưu hợp đồng
   const handleSubmitContract = async (values: any) => {
@@ -476,7 +498,8 @@ function ContractsPageContent() {
         } catch (e) {}
 
         if (newContractId) {
-          // Chuyển URL tab này sang chế độ chi tiết của HĐ mới tạo
+          // Chuyển URL và trạng thái sang chế độ chi tiết của HĐ mới tạo
+          setInPlaceDetail({ open: true, contractId: newContractId });
           if (typeof window !== "undefined") {
             window.history.replaceState(null, "", `/contracts?id=${newContractId}`);
           }
@@ -587,15 +610,7 @@ function ContractsPageContent() {
       <ErpDetailContainer>
         <ContractFormDrawer
           open={true}
-          onClose={() => {
-            if (typeof window !== "undefined") {
-              if (window.opener) {
-                window.close();
-              } else {
-                window.location.href = "/contracts";
-              }
-            }
-          }}
+          onClose={handleCloseDetail}
           editingContract={editingContract}
           form={contractForm}
           submitting={submittingContract}
@@ -676,13 +691,23 @@ function ContractsPageContent() {
         storageKey={STORAGE_KEY_MAIN}
         onRefresh={fetchContracts}
         onCreate={() => {
-          window.open("/contracts?action=create", "_blank");
+          setInPlaceDetail({ open: true, action: "create" });
+          if (typeof window !== "undefined") {
+            window.history.pushState(null, "", "/contracts?action=create");
+          }
         }}
         onEdit={(record) => {
-          window.open(`/contracts?id=${record.ContractId}`, "_blank");
+          setInPlaceDetail({ open: true, contractId: record.ContractId });
+          applyContractToForm(record);
+          if (typeof window !== "undefined") {
+            window.history.pushState(null, "", `/contracts?id=${record.ContractId}`);
+          }
         }}
         onCreateAddendum={(record) => {
-          window.open(`/contracts?action=addendum&parentId=${record.ContractId}`, "_blank");
+          setInPlaceDetail({ open: true, action: "addendum", parentId: record.ContractId });
+          if (typeof window !== "undefined") {
+            window.history.pushState(null, "", `/contracts?action=addendum&parentId=${record.ContractId}`);
+          }
         }}
         onDelete={handleDeleteContract}
       />

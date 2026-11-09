@@ -31,7 +31,6 @@ export default function StockInReconcileModal({
   const { t, language } = useTranslation();
   const [loadingReconcile, setLoadingReconcile] = useState(false);
   const [submittingReconcile, setSubmittingReconcile] = useState(false);
-  const [startProcessNow, setStartProcessNow] = useState<boolean>(true);
   const [poItems, setPoItems] = useState<any[]>([]);
   const [selectedPoRowKeys, setSelectedPoRowKeys] = useState<React.Key[]>([]);
 
@@ -77,9 +76,7 @@ export default function StockInReconcileModal({
         };
       });
       setPoItems(mappedList);
-      const defaultKeys = mappedList.map((item: any) => item._key);
-      setSelectedPoRowKeys(defaultKeys);
-      setStartProcessNow(true);
+      setSelectedPoRowKeys([]);
       if (mappedList.length === 0) {
         message.info(language === "en" ? "No items found in this PO!" : "Không có dòng vật tư nào từ đơn hàng PO!");
       }
@@ -172,7 +169,7 @@ export default function StockInReconcileModal({
     try {
       await warehouseApi.createInventorySubmissionFromPo({
         TransactionId: Number(transactionId),
-        StartProcessNow: startProcessNow ? "Yes" : "No",
+        StartProcessNow: "No",
         ApplyDefinedAssignment: "Yes",
         Items: payloadItems,
       });
@@ -427,19 +424,12 @@ export default function StockInReconcileModal({
             width: "100%",
           }}
         >
-          <Space size={18} align="center">
+          <div>
             <span style={{ fontSize: 13, color: "#718894" }}>
               {language === "en" ? "Selected " : "Đã chọn "}
               <strong style={{ color: "#008f89" }}>{selectedPoRowKeys.length}</strong> {language === "en" ? "materials" : "vật tư"}
             </span>
-            <Checkbox
-              checked={startProcessNow}
-              onChange={(e) => setStartProcessNow(e.target.checked)}
-              style={{ fontWeight: 500 }}
-            >
-              {language === "en" ? "Submit for Approval" : "Trình duyệt"}
-            </Checkbox>
-          </Space>
+          </div>
 
           <Space size={8}>
             <Button

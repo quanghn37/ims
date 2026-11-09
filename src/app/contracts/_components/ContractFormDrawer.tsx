@@ -259,12 +259,10 @@ export default function ContractFormDrawer({
 
       onRefreshContracts?.();
 
-      if (typeof window !== "undefined") {
-        if (window.opener) {
-          window.close();
-        } else {
-          window.location.href = "/contracts";
-        }
+      if (typeof window !== "undefined" && window.opener) {
+        window.close();
+      } else {
+        onClose();
       }
     } catch (e: any) {
       message.error(e?.message || "Xóa hợp đồng thất bại.");

@@ -40,9 +40,17 @@ function QuotationsPageContent() {
   const queryAction = searchParams.get("action");
   const currentUserId = user?.LogIn || "";
 
-  // Chi tiết / Mở form
-  const [isEditTabOpen, setIsEditTabOpen] = useState(false);
-  const isDetailPage = Boolean(queryContractId || queryAction || isEditTabOpen);
+  // Chi tiết / Mở form in-place
+  const [inPlaceDetail, setInPlaceDetail] = useState<{
+    open: boolean;
+    contractId?: string | number | null;
+    action?: string | null;
+  }>(() => ({
+    open: Boolean(queryContractId || queryAction),
+    contractId: queryContractId,
+    action: queryAction,
+  }));
+  const isDetailPage = inPlaceDetail.open;
 
   // ===============================================================
   // STATE CHO MÀN HÌNH DANH SÁCH (KHI Ở TAB DANH SÁCH /quotations)
@@ -59,7 +67,7 @@ function QuotationsPageContent() {
     columnSuggestions,
     filteredQuotations,
     isFiltering,
-  } = useQuotations(!Boolean(queryContractId || queryAction));
+  } = useQuotations(!isDetailPage);
 
   // Tự động đồng bộ danh sách khi có cập nhật từ tab chi tiết khác
   useEffect(() => {
@@ -273,24 +281,66 @@ function QuotationsPageContent() {
     [contractForm]
   );
 
-  // Khi mở tab trình duyệt có queryContractId: tự động tải thông tin bảng giá
+  const handleOpenEditContract = useCallback((record: ContractItem) => {
+    setInPlaceDetail({ open: true, contractId: record.ContractId });
+    applyContractToForm(record);
+    fetchSubmissionsForContract(record.ContractId);
+    if (typeof window !== "undefined") {
+      window.history.pushState(null, "", `/quotations?id=${record.ContractId}`);
+    }
+  }, [applyContractToForm, fetchSubmissionsForContract]);
+
+  const handleOpenCreateQuotation = useCallback(() => {
+    setInPlaceDetail({ open: true, action: "create" });
+    setEditingContract(null);
+    setSelectedContract(null);
+    setSubmissions([]);
+    contractForm.resetFields();
+    setSelectedClientDisplay("");
+    setSelectedMainContractDisplay("");
+    contractForm.setFieldsValue({
+      Currency: "VND",
+      PaymentTerm: "DK03",
+      ContractDate: dayjs(),
+      FromDate: dayjs(),
+      ToDate: dayjs().add(1, "year"),
+    });
+    setAttachments([]);
+    if (typeof window !== "undefined") {
+      window.history.pushState(null, "", "/quotations?action=create");
+    }
+  }, [contractForm]);
+
+  const handleCloseEditTab = useCallback(() => {
+    setInPlaceDetail({ open: false, contractId: null, action: null });
+    setEditingContract(null);
+    setSelectedContract(null);
+    setSubmissions([]);
+    if (typeof window !== "undefined") {
+      window.history.pushState(null, "", "/quotations");
+    }
+    fetchQuotations(pagination.current, pagination.pageSize);
+  }, [fetchQuotations, pagination.current, pagination.pageSize]);
+
+  // Khi mở tab/màn hình chi tiết: tự động tải thông tin bảng giá
   useEffect(() => {
-    if (!queryContractId) return;
+    const targetId = inPlaceDetail.contractId;
+    if (!targetId) return;
 
     const loadSingleQuotation = async () => {
       setLoadingSingleContract(true);
       try {
         const data = await quotationsApi.getContracts({
           DisplayMode: "quotation",
-          ContractId: queryContractId,
+          ContractId: targetId || undefined,
         });
         const list = extractApiList<ContractItem>(data);
-        const contract = list.find((c) => Number(c.ContractId) === Number(queryContractId)) || list[0];
+        const contract = list.find((c) => Number(c.ContractId) === Number(targetId)) || list[0];
         if (contract) {
           applyContractToForm(contract);
           fetchSubmissionsForContract(contract.ContractId);
           if (typeof document !== "undefined") {
-            document.title = `Bảng giá: ${contract.ContractCode || queryContractId}`;
+            document.title = `Bảng giá: ${contract.ContractCode || targetId}`;
           }
         } else {
           message.error("Không tìm thấy thông tin bảng giá này.");
@@ -304,11 +354,11 @@ function QuotationsPageContent() {
     };
 
     loadSingleQuotation();
-  }, [queryContractId, applyContractToForm, fetchSubmissionsForContract]);
+  }, [inPlaceDetail.contractId, applyContractToForm, fetchSubmissionsForContract]);
 
-  // Khi mở tab trình duyệt với action=create
+  // Khi mở với action=create
   useEffect(() => {
-    if (queryAction === "create") {
+    if (inPlaceDetail.action === "create") {
       setEditingContract(null);
       setSelectedContract(null);
       setSubmissions([]);
@@ -327,26 +377,7 @@ function QuotationsPageContent() {
         document.title = "Tạo bảng giá";
       }
     }
-  }, [queryAction, contractForm, setSubmissions]);
-
-  const handleOpenEditContract = (record: ContractItem) => {
-    applyContractToForm(record);
-    fetchSubmissionsForContract(record.ContractId);
-    setIsEditTabOpen(true);
-  };
-
-  const handleCloseEditTab = () => {
-    if (typeof window !== "undefined") {
-      if (window.opener) {
-        window.close();
-      } else if (queryContractId || queryAction) {
-        window.location.href = "/quotations";
-      } else {
-        setIsEditTabOpen(false);
-        setEditingContract(null);
-      }
-    }
-  };
+  }, [inPlaceDetail.action, contractForm, setSubmissions]);
 
   const handleSubmitContract = async (values: any) => {
     setSubmittingContract(true);
@@ -697,12 +728,8 @@ function QuotationsPageContent() {
         isFiltering={isFiltering}
         columnSuggestions={columnSuggestions}
         onRefresh={fetchQuotations}
-        onCreate={() => {
-          window.open("/quotations?action=create", "_blank");
-        }}
-        onEdit={(record) => {
-          window.open(`/quotations?id=${record.ContractId}`, "_blank");
-        }}
+        onCreate={handleOpenCreateQuotation}
+        onEdit={handleOpenEditContract}
         onDelete={handleDeleteContract}
       />
     </ErpPageContainer>
