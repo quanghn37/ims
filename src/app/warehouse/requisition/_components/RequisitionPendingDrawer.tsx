@@ -8,7 +8,6 @@ import {
   Input,
   InputNumber,
   Select,
-  Space,
   Tag,
   message,
 } from "antd";
@@ -109,6 +108,13 @@ export default function RequisitionPendingDrawer({
   }, [approvedBudgetList]);
 
   const [submittingConfirm, setSubmittingConfirm] = useState(false);
+  const [activeBtn, setActiveBtn] = useState<"add" | "addAndClose" | null>(null);
+
+  useEffect(() => {
+    if (!submittingConfirm) {
+      setActiveBtn(null);
+    }
+  }, [submittingConfirm]);
 
   // Fetch danh sách vật tư tồn kho từ API api/get-pending-forrequest
   const fetchPendingItems = useCallback(
@@ -212,7 +218,7 @@ export default function RequisitionPendingDrawer({
   };
 
   // Xác nhận thêm các vật tư đã chọn -> gọi POST api/upsert-inventory-submission
-  const handleConfirm = async () => {
+  const handleConfirm = async (shouldClose = true) => {
     const selected = pendingItems.filter((it) => selectedPendingKeys.includes(it._key));
     if (selected.length === 0) {
       message.warning(language === "en" ? "Please select at least 1 item to add to requisition!" : "Vui lòng tích chọn ít nhất 1 mặt hàng để thêm vào yêu cầu!");
@@ -304,8 +310,17 @@ export default function RequisitionPendingDrawer({
 
       onConfirm(createdItems);
       message.success(language === "en" ? `Added ${createdItems.length} items to requisition successfully!` : `Đã thêm ${createdItems.length} mặt hàng vào danh mục yêu cầu xuất!`);
-      onClose();
+      
+      // Bỏ tích chọn các vật tư đã thêm
       setSelectedPendingKeys([]);
+
+      if (shouldClose) {
+        onClose();
+      } else {
+        // Loại bỏ các vật tư vừa thêm ra khỏi danh sách chờ trong drawer để người dùng tiếp tục chọn vật tư khác
+        const addedKeys = new Set(selected.map((it) => it._key));
+        setPendingItems((prev) => prev.filter((it) => !addedKeys.has(it._key)));
+      }
     } catch (err: any) {
       console.error("Lỗi khi thêm vật tư vào yêu cầu:", err);
       message.error(err?.message || (language === "en" ? "Failed to add items to requisition!" : "Thêm vật tư vào yêu cầu thất bại!"));
@@ -489,46 +504,68 @@ export default function RequisitionPendingDrawer({
         <div
           style={{
             display: "flex",
-            justifyContent: "space-between",
+            justifyContent: "flex-end",
             alignItems: "center",
             width: "100%",
             padding: "4px 8px",
+            gap: 8,
           }}
         >
-          <Space size={18} align="center">
-            <span style={{ fontSize: 13, color: "#718894" }}>
-              {language === "en" ? "Selected " : "Đã chọn "}
-              <strong style={{ color: "#008f89" }}>{selectedPendingKeys.length}</strong> {language === "en" ? "materials" : "vật tư"}
-            </span>
-          </Space>
-
-          <Space size={8}>
-            <Button
-              onClick={onClose}
-              style={{ height: 36, borderRadius: 8, borderColor: "#dce5e6" }}
-            >
-              {t.common.cancel}
-            </Button>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              loading={submittingConfirm}
-              style={{
-                background: "#008f89",
-                borderColor: "#008f89",
-                height: 36,
-                borderRadius: 8,
-                fontWeight: 500,
-                boxShadow: "0 2px 4px rgba(0, 143, 137, 0.2)",
-              }}
-              onClick={handleConfirm}
-              disabled={selectedPendingKeys.length === 0 || submittingConfirm}
-            >
-              {language === "en"
-                ? `Add to Requisition (${selectedPendingKeys.length} materials)`
-                : `Thêm vào yêu cầu (${selectedPendingKeys.length} vật tư)`}
-            </Button>
-          </Space>
+          <Button
+            onClick={onClose}
+            style={{
+              height: 32,
+              borderRadius: 6,
+              borderColor: "#dce5e6",
+              background: "#FFFFFF",
+              color: "#334155",
+              fontSize: 13,
+              fontWeight: 500,
+            }}
+          >
+            {t.common.cancel}
+          </Button>
+          <Button
+            icon={<PlusOutlined style={{ fontSize: 13 }} />}
+            style={{
+              height: 32,
+              borderRadius: 6,
+              borderColor: "#008f89",
+              background: "#FFFFFF",
+              color: "#008f89",
+              fontSize: 13,
+              fontWeight: 500,
+            }}
+            onClick={() => {
+              setActiveBtn("add");
+              handleConfirm(false);
+            }}
+            loading={submittingConfirm && activeBtn === "add"}
+            disabled={selectedPendingKeys.length === 0 || submittingConfirm}
+          >
+            {language === "en" ? "Add to Requisition" : "Thêm vào yêu cầu"}
+          </Button>
+          <Button
+            type="primary"
+            icon={<PlusOutlined style={{ fontSize: 13 }} />}
+            style={{
+              background: "#008f89",
+              borderColor: "#008f89",
+              height: 32,
+              borderRadius: 6,
+              fontSize: 13,
+              fontWeight: 500,
+              color: "#FFFFFF",
+            }}
+            onClick={() => {
+              setActiveBtn("addAndClose");
+              handleConfirm(true);
+            }}
+            loading={submittingConfirm && activeBtn === "addAndClose"}
+            disabled={selectedPendingKeys.length === 0 || submittingConfirm}
+          >
+            {language === "en" ? "Add and Close" : "Thêm và Đóng"}
+          </Button>
         </div>
       }
     >

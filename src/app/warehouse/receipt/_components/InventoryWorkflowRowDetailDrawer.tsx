@@ -1,13 +1,11 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React from "react";
 import {
   Drawer,
   Button,
   InputNumber,
-  Select,
   Spin,
-  Tag,
   Input,
 } from "antd";
 import {
@@ -17,8 +15,9 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
-import { renderStatusDotItem } from "@/config/statusConfig";
 import { useTranslation } from "@/locales/LanguageContext";
+import ApprovalDecisionSelect from "@/components/common/ApprovalDecisionSelect";
+import RaciRoleTag from "@/components/common/RaciRoleTag";
 
 interface InventoryWorkflowRowDetailDrawerProps {
   open: boolean;
@@ -60,71 +59,6 @@ export default function InventoryWorkflowRowDetailDrawer({
   const { t, language } = useTranslation();
   const numLocale = language === "en" ? "en-US" : "vi-VN";
 
-  const selectOptions = useMemo(() => {
-    if (processingStatusList.length > 0) {
-      const seen = new Set<string>();
-      return processingStatusList
-        .map((item: any) => {
-          const raw = item.Description || item.StatusName || item.Value || item.Alias || "";
-          const cleanLabel = String(raw).replace(/[✅❌⏳]/g, "").trim();
-          let finalLabel = cleanLabel || raw;
-
-          if (language === "en") {
-            const lower = cleanLabel.toLowerCase();
-            if (lower === "approved" || lower === "chấp thuận" || lower === "duyệt" || lower === "đã duyệt") {
-              finalLabel = "Approved";
-            } else if (lower === "cond-approved" || lower === "cond approved") {
-              finalLabel = "Cond-Approved";
-            } else if (lower === "đang làm" || lower === "dang lam" || lower === "in-progress" || lower === "in progress" || lower === "processing") {
-              finalLabel = "In-Progress";
-            } else if (lower === "từ chối" || lower === "rejected") {
-              finalLabel = "Rejected";
-            } else if (lower === "chưa làm" || lower === "not-started" || lower === "not started") {
-              finalLabel = "Not-Started";
-            }
-          } else {
-            const lower = cleanLabel.toLowerCase();
-            if (lower === "approved") {
-              finalLabel = "Chấp thuận";
-            } else if (lower === "cond-approved") {
-              finalLabel = "Duyệt có điều kiện";
-            } else if (lower === "in-progress" || lower === "processing" || lower === "in progress") {
-              finalLabel = "Đang làm";
-            } else if (lower === "rejected") {
-              finalLabel = "Từ chối";
-            } else if (lower === "not-started" || lower === "not started") {
-              finalLabel = "Chưa làm";
-            }
-          }
-
-          return {
-            value: raw,
-            label: renderStatusDotItem(raw, finalLabel),
-          };
-        })
-        .filter((it: any) => {
-          if (!it.value || seen.has(it.value)) return false;
-          seen.add(it.value);
-          return true;
-        });
-    }
-
-    return [
-      {
-        value: language === "en" ? "Approved" : "Chấp thuận",
-        label: renderStatusDotItem("Approved", language === "en" ? "Approved" : "Chấp thuận"),
-      },
-      {
-        value: language === "en" ? "In-Progress" : "Đang làm",
-        label: renderStatusDotItem("In-Progress", language === "en" ? "In-Progress" : "Đang làm"),
-      },
-      {
-        value: language === "en" ? "Rejected" : "Từ chối",
-        label: renderStatusDotItem("Rejected", language === "en" ? "Rejected" : "Từ chối"),
-      },
-    ];
-  }, [processingStatusList, language]);
-
   return (
     <Drawer
       closable={true}
@@ -136,20 +70,7 @@ export default function InventoryWorkflowRowDetailDrawer({
             {selectedWorkflowRow?.FullName || selectedWorkflowRow?.UserName || (language === "en" ? "Approver" : "Người duyệt")}
           </span>
           {selectedWorkflowRow?.Role && (
-            <Tag
-              style={{
-                background: "#dce5e6",
-                color: "#008f89",
-                border: "none",
-                borderRadius: 16,
-                fontWeight: 600,
-                fontSize: 12,
-                padding: "2px 10px",
-                margin: 0,
-              }}
-            >
-              {selectedWorkflowRow.Role}
-            </Tag>
+            <RaciRoleTag role={selectedWorkflowRow.Role} />
           )}
         </div>
       }
@@ -223,13 +144,13 @@ export default function InventoryWorkflowRowDetailDrawer({
               <div style={{ marginBottom: 6, fontSize: 13, fontWeight: 500, color: "#334155" }}>
                 {t("workflow.decision") || "Quyết định"}
               </div>
-              <Select
-                value={rowDetailDecision || undefined}
+              <ApprovalDecisionSelect
+                role={selectedWorkflowRow.Role}
+                value={rowDetailDecision}
                 onChange={setRowDetailDecision}
-                placeholder={t("workflow.selectDecision") || "— Chọn quyết định —"}
-                style={{ width: "100%", height: 40 }}
+                statusList={processingStatusList}
                 loading={loadingProcessingStatus}
-                options={selectOptions}
+                style={{ height: 40 }}
               />
             </div>
 

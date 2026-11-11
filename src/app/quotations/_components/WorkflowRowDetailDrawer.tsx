@@ -6,16 +6,15 @@ import {
   Button,
   Divider,
   InputNumber,
-  Select,
   Spin,
   Typography,
-  Tag,
   Input,
 } from "antd";
 import { AuditOutlined, SaveOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
-import { renderStatusDotItem } from "@/config/statusConfig";
 import { useTranslation } from "@/locales/LanguageContext";
+import ApprovalDecisionSelect from "@/components/common/ApprovalDecisionSelect";
+import RaciRoleTag from "@/components/common/RaciRoleTag";
 
 const { Text } = Typography;
 
@@ -63,7 +62,9 @@ export default function WorkflowRowDetailDrawer({
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <AuditOutlined style={{ color: "#008f89" }} />
           <Text>{selectedWorkflowRow?.FullName || "---"}</Text>
-          <Tag color="default">{selectedWorkflowRow?.Role || ""}</Tag>
+          {selectedWorkflowRow?.Role && (
+            <RaciRoleTag role={selectedWorkflowRow.Role} />
+          )}
         </div>
       }
       placement="right"
@@ -112,73 +113,13 @@ export default function WorkflowRowDetailDrawer({
               <div style={{ marginBottom: 6, fontSize: 13 }}>
                 {t("workflow.decision") || "Quyết định"}
               </div>
-              <Select
-                value={rowDetailDecision || undefined}
+              <ApprovalDecisionSelect
+                role={selectedWorkflowRow.Role}
+                value={rowDetailDecision}
                 onChange={setRowDetailDecision}
-                placeholder={t("workflow.selectDecision") || "Chọn quyết định..."}
-                style={{ width: "100%" }}
+                statusList={processingStatusList}
                 loading={loadingProcessingStatus}
-                options={
-                  processingStatusList.length > 0
-                    ? (() => {
-                        const seen = new Set<string>();
-                        return processingStatusList
-                          .map((item: any) => {
-                            const raw = item.Description || item.StatusName || item.Value || item.Alias || "";
-                            const clean = String(raw).replace(/[✅❌⏳]/g, "").trim();
-                            let label = clean || raw;
-
-                            if (language === "en") {
-                              const lower = clean.toLowerCase();
-                              if (lower === "duyệt" || lower === "chấp thuận" || lower === "đã duyệt" || lower === "approved") {
-                                label = "Approved";
-                              } else if (lower === "cond-approved" || lower === "cond approved") {
-                                label = "Cond-Approved";
-                              } else if (lower === "từ chối" || lower === "rejected") {
-                                label = "Rejected";
-                              } else if (lower === "đang làm" || lower === "dang lam" || lower === "in-progress" || lower === "in progress" || lower === "processing") {
-                                label = "In-Progress";
-                              } else if (lower === "chưa làm" || lower === "not-started" || lower === "not started") {
-                                label = "Not-Started";
-                              }
-                            } else {
-                              const lower = clean.toLowerCase();
-                              if (lower === "approved") {
-                                label = "Chấp thuận";
-                              } else if (lower === "cond-approved") {
-                                label = "Duyệt có điều kiện";
-                              } else if (lower === "in-progress" || lower === "processing" || lower === "in progress") {
-                                label = "Đang làm";
-                              } else if (lower === "rejected") {
-                                label = "Từ chối";
-                              } else if (lower === "not-started" || lower === "not started") {
-                                label = "Chưa làm";
-                              }
-                            }
-
-                            return { value: raw, label: renderStatusDotItem(raw, label) };
-                          })
-                          .filter((it: any) => {
-                            if (!it.value || seen.has(it.value)) return false;
-                            seen.add(it.value);
-                            return true;
-                          });
-                      })()
-                    : [
-                        {
-                          value: language === "en" ? "Approved" : "Chấp thuận",
-                          label: renderStatusDotItem("Approved", language === "en" ? "Approved" : "Chấp thuận"),
-                        },
-                        {
-                          value: language === "en" ? "In-Progress" : "Đang làm",
-                          label: renderStatusDotItem("In-Progress", language === "en" ? "In-Progress" : "Đang làm"),
-                        },
-                        {
-                          value: language === "en" ? "Rejected" : "Từ chối",
-                          label: renderStatusDotItem("Rejected", language === "en" ? "Rejected" : "Từ chối"),
-                        },
-                      ]
-                }
+                style={{ height: 40 }}
               />
             </div>
 

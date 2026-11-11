@@ -12,6 +12,8 @@ export interface BaseApiParams {
   DisplayMode?: string;
   Role?: string;
   Stage?: string;
+  Language?: string;
+  [key: string]: any;
 }
 
 export interface GetClientListParams extends BaseApiParams {

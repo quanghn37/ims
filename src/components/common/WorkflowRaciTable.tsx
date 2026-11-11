@@ -101,7 +101,7 @@ export const WorkflowRaciTable: React.FC<WorkflowRaciTableProps> = ({
       key: "ApprovalStatus",
       width: 145,
       align: "left" as const,
-      render: (val: string) => renderStatusBadge(val, undefined, language),
+      render: (val: string, r: any) => renderStatusBadge(r.ApprovalDecision || val, undefined, language),
     },
     {
       title: language === "en" ? "Remarks / Comments" : "Ý kiến / Ghi chú",

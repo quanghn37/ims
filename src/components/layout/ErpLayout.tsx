@@ -7,6 +7,7 @@ import {
   IconFileText,
   IconFileCheck,
   IconShoppingCart,
+  IconClipboardCheck,
   IconBuildingWarehouse,
   IconReceipt2,
   IconBuildingCommunity,
@@ -103,6 +104,11 @@ export const ErpLayout: React.FC<ErpLayoutProps> = ({ children }) => {
       key: "/purchase-orders",
       icon: <IconShoppingCart size={18} strokeWidth={1.8} />,
       label: <Link href="/purchase-orders" prefetch={false}>{t("menu.purchaseOrders")}</Link>,
+    },
+    {
+      key: "/submissions",
+      icon: <IconClipboardCheck size={18} strokeWidth={1.8} />,
+      label: <Link href="/submissions" prefetch={false}>{t("menu.submissions")}</Link>,
     },
     {
       key: "warehouse",

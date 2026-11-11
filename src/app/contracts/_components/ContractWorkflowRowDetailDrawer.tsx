@@ -1,17 +1,17 @@
 "use client";
 
-import React, { useMemo } from "react";
-import { Drawer, Button, Select, Spin, Tag, Input } from "antd";
+import React from "react";
+import { Drawer, Button, Spin, Input } from "antd";
 import {
   IconClipboardCheck,
   IconClock,
   IconX,
   IconDeviceFloppy,
-  IconCheck,
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
-import { renderStatusDotItem } from "@/config/statusConfig";
 import { useTranslation } from "@/locales/LanguageContext";
+import ApprovalDecisionSelect from "@/components/common/ApprovalDecisionSelect";
+import RaciRoleTag from "@/components/common/RaciRoleTag";
 
 interface ContractWorkflowRowDetailDrawerProps {
   open: boolean;
@@ -45,86 +45,6 @@ export default function ContractWorkflowRowDetailDrawer({
   const { t, language } = useTranslation();
   const numLocale = language === "en" ? "en-US" : "vi-VN";
 
-  const selectOptions = useMemo(() => {
-    if (processingStatusList && processingStatusList.length > 0) {
-      const seen = new Set<string>();
-      const list = processingStatusList
-        .map((item: any) => {
-          const raw = item.Description || item.StatusName || item.Value || item.Alias || "";
-          const cleanLabel = String(raw).replace(/[✅❌⏳]/g, "").trim();
-          let finalLabel = cleanLabel || raw;
-
-          if (language === "en") {
-            const lower = cleanLabel.toLowerCase();
-            if (lower === "approved" || lower === "chấp thuận" || lower === "duyệt" || lower === "đã duyệt") {
-              finalLabel = "Approved";
-            } else if (lower === "cond-approved" || lower === "cond approved") {
-              finalLabel = "Cond-Approved";
-            } else if (
-              lower === "đang làm" ||
-              lower === "dang lam" ||
-              lower === "in-progress" ||
-              lower === "in progress" ||
-              lower === "processing"
-            ) {
-              finalLabel = "In-Progress";
-            } else if (lower === "từ chối" || lower === "rejected") {
-              finalLabel = "Rejected";
-            } else if (lower === "chưa làm" || lower === "not-started" || lower === "not started") {
-              finalLabel = "Not-Started";
-            }
-          } else {
-            const lower = cleanLabel.toLowerCase();
-            if (lower === "approved") {
-              finalLabel = "Chấp thuận";
-            } else if (lower === "cond-approved") {
-              finalLabel = "Duyệt có điều kiện";
-            } else if (lower === "in-progress" || lower === "processing" || lower === "in progress") {
-              finalLabel = "Đang làm";
-            } else if (lower === "rejected") {
-              finalLabel = "Từ chối";
-            } else if (lower === "not-started" || lower === "not started") {
-              finalLabel = "Chưa làm";
-            }
-          }
-
-          return {
-            value: raw,
-            label: renderStatusDotItem(raw, finalLabel),
-          };
-        })
-        .filter((it: any) => {
-          if (!it.value || seen.has(it.value)) return false;
-          seen.add(it.value);
-          return true;
-        });
-
-      if (rowDetailDecision && !seen.has(rowDetailDecision)) {
-        list.unshift({ value: rowDetailDecision, label: renderStatusDotItem(rowDetailDecision) });
-      }
-      return list;
-    }
-
-    const fallback =
-      language === "en"
-        ? [
-            { value: "Approved", label: renderStatusDotItem("Approved", "Approved") },
-            { value: "In-Progress", label: renderStatusDotItem("In-Progress", "In-Progress") },
-            { value: "Rejected", label: renderStatusDotItem("Rejected", "Rejected") },
-          ]
-        : [
-            { value: "Duyệt", label: renderStatusDotItem("Duyệt", "Duyệt") },
-            { value: "Chấp thuận", label: renderStatusDotItem("Chấp thuận", "Chấp thuận") },
-            { value: "Đang làm", label: renderStatusDotItem("Đang làm", "Đang làm") },
-            { value: "Từ chối", label: renderStatusDotItem("Từ chối", "Từ chối") },
-          ];
-
-    if (rowDetailDecision && !fallback.some((item) => item.value === rowDetailDecision)) {
-      fallback.unshift({ value: rowDetailDecision, label: renderStatusDotItem(rowDetailDecision) });
-    }
-    return fallback;
-  }, [processingStatusList, language, rowDetailDecision]);
-
   const displayAmount = Number(
     selectedWorkflowRow?.Amount ?? contractAmount ?? 0
   );
@@ -142,20 +62,7 @@ export default function ContractWorkflowRowDetailDrawer({
               (language === "en" ? "Approver" : "Người duyệt")}
           </span>
           {selectedWorkflowRow?.Role && (
-            <Tag
-              style={{
-                background: "#dce5e6",
-                color: "#008f89",
-                border: "none",
-                borderRadius: 16,
-                fontWeight: 600,
-                fontSize: 12,
-                padding: "2px 10px",
-                margin: 0,
-              }}
-            >
-              {selectedWorkflowRow.Role}
-            </Tag>
+            <RaciRoleTag role={selectedWorkflowRow.Role} />
           )}
         </div>
       }
@@ -200,13 +107,13 @@ export default function ContractWorkflowRowDetailDrawer({
       {selectedWorkflowRow && (
         <Spin spinning={loadingProcessingStatus}>
           <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-            {/* THỜI GIAN THỰC HIỆN */}
-            {(selectedWorkflowRow.ActualStart || selectedWorkflowRow.ActualFinish) && (
+            {/* THỜI GIAN BẮT ĐẦU */}
+            {selectedWorkflowRow.ActualStart && (
               <div
                 style={{
                   display: "flex",
-                  flexDirection: "column",
-                  gap: 6,
+                  alignItems: "center",
+                  gap: 8,
                   fontSize: 13,
                   color: "#334155",
                   background: "#f7fbfa",
@@ -216,24 +123,11 @@ export default function ContractWorkflowRowDetailDrawer({
                   fontWeight: 500,
                 }}
               >
-                {selectedWorkflowRow.ActualStart && (
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <IconClock size={16} strokeWidth={1.8} style={{ color: "#718894" }} />
-                    <span>
-                      {t("workflow.startTime") || "Bắt đầu"}:{" "}
-                      {dayjs(selectedWorkflowRow.ActualStart).format("HH:mm DD/MM/YYYY")}
-                    </span>
-                  </div>
-                )}
-                {selectedWorkflowRow.ActualFinish && (
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#008f89" }}>
-                    <IconCheck size={16} strokeWidth={2.2} />
-                    <span>
-                      {t("workflow.finishTime") || "Hoàn thành"}:{" "}
-                      {dayjs(selectedWorkflowRow.ActualFinish).format("HH:mm DD/MM/YYYY")}
-                    </span>
-                  </div>
-                )}
+                <IconClock size={16} style={{ color: "#718894" }} />
+                <span>
+                  {t("workflow.startTime") || "Bắt đầu"}:{" "}
+                  {dayjs(selectedWorkflowRow.ActualStart).format("HH:mm DD/MM/YYYY")}
+                </span>
               </div>
             )}
 
@@ -242,13 +136,13 @@ export default function ContractWorkflowRowDetailDrawer({
               <div style={{ marginBottom: 6, fontSize: 13, fontWeight: 500, color: "#334155" }}>
                 {t("workflow.decision") || "Quyết định"}
               </div>
-              <Select
-                value={rowDetailDecision || undefined}
+              <ApprovalDecisionSelect
+                role={selectedWorkflowRow.Role}
+                value={rowDetailDecision}
                 onChange={setRowDetailDecision}
-                placeholder={t("workflow.selectDecision") || "— Chọn quyết định —"}
-                style={{ width: "100%", height: 40 }}
+                statusList={processingStatusList}
                 loading={loadingProcessingStatus}
-                options={selectOptions}
+                style={{ height: 40 }}
               />
             </div>
 

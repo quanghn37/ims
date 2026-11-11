@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { message } from "antd";
 import { extractApiList } from "@/lib/api-client";
+import { useTranslation } from "@/locales/LanguageContext";
 import { purchaseOrdersApi } from "../api";
 
 export function useOrderWorkflow({
@@ -14,6 +15,7 @@ export function useOrderWorkflow({
   selectedOrder: any;
   fetchOrderDrawerItems: (contractId: any) => Promise<void>;
 }) {
+  const { language } = useTranslation();
   const [isWorkflowDrawerOpen, setIsWorkflowDrawerOpen] = useState(false);
   const [workflowData, setWorkflowData] = useState<any[]>([]);
   const [loadingWorkflow, setLoadingWorkflow] = useState(false);
@@ -67,13 +69,14 @@ export function useOrderWorkflow({
     setRowDetailQnty(Number(record.Qnty || 0));
     setRowDetailUnitPrice(Number(record.UnitPrice || 0));
     setRowDetailRemarks(record.Remarks || "");
-    setRowDetailDecision(record.ApprovalStatus || "");
+    setRowDetailDecision(record.ApprovalStatus || record.ApprovalDecision || "");
     setIsRowDetailOpen(true);
     setLoadingProcessingStatus(true);
     try {
       const data = await purchaseOrdersApi.getProcessingStatuses({
-        DisplayMode: "approval_no_all",
-        Role: record.Role || "A",
+        DisplayMode: "official_with_role",
+        Language: language || "vi",
+        WSId: "",
       });
       setProcessingStatusList(extractApiList(data));
     } catch (e: any) {

@@ -609,13 +609,6 @@ export default function OrderDetailItemsSection({
                     </Table.Summary.Cell>
                   );
                 }
-                if (key === "TaxAmount") {
-                  return (
-                    <Table.Summary.Cell key={key} index={index} align="center">
-                      <Text style={{ color: "#475569", fontSize: 13 }}>8%</Text>
-                    </Table.Summary.Cell>
-                  );
-                }
                 if (key === "TotalAmountWithVat") {
                   return (
                     <Table.Summary.Cell key={key} index={index} align="right">

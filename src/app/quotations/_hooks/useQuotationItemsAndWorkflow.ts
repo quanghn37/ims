@@ -3,6 +3,7 @@ import { Form, message } from "antd";
 import type { FormInstance } from "antd";
 import dayjs from "dayjs";
 import { extractApiList } from "@/lib/api-client";
+import { useTranslation } from "@/locales/LanguageContext";
 import { quotationsApi } from "../api";
 import { ContractItem, SubmissionItem } from "@/types";
 import { parseDateSafe } from "../_components/types";
@@ -12,6 +13,7 @@ export function useQuotationItemsAndWorkflow(
   editingContract: ContractItem | null,
   contractForm: FormInstance
 ) {
+  const { language } = useTranslation();
   // --- Drawer Detail Submissions ---
   const [submissions, setSubmissions] = useState<SubmissionItem[]>([]);
   const [loadingSubmissions, setLoadingSubmissions] = useState(false);
@@ -223,7 +225,7 @@ export function useQuotationItemsAndWorkflow(
     setIsItemModalOpen(true);
   };
 
-  const handleCreateSubmission = async (values: any) => {
+  const handleCreateSubmission = async (values: any, shouldClose = true) => {
     const targetContract = selectedContract || editingContract;
     if (!targetContract) return;
     setSubmittingItem(true);
@@ -283,10 +285,43 @@ export function useQuotationItemsAndWorkflow(
           ? "Cập nhật vật tư thành công!"
           : "Thêm vật tư vào bảng giá thành công!"
       );
-      setIsItemModalOpen(false);
-      itemForm.resetFields();
+      
       const target = selectedContract || editingContract;
       if (target) fetchSubmissionsForContract(target.ContractId);
+
+      if (shouldClose) {
+        setIsItemModalOpen(false);
+        itemForm.resetFields();
+      } else {
+        // Làm mới (refresh trắng thông tin) để người dùng có thể tiếp tục chọn vật tư mới để thêm
+        setEditingSubmissionItem(null);
+        itemForm.resetFields();
+        const defaultFromDate =
+          contractForm.getFieldValue("FromDate") ||
+          parseDateSafe(target?.StartDate || target?.FromDate || (target as any)?.EffectiveDate) ||
+          dayjs();
+        const defaultToDate =
+          contractForm.getFieldValue("ToDate") ||
+          parseDateSafe(
+            target?.EndDate || target?.ToDate || (target as any)?.ExpiredDate || (target as any)?.ExpireDate
+          ) ||
+          null;
+
+        itemForm.setFieldsValue({
+          MaterialId: undefined,
+          ItemId: undefined,
+          ItemName: "",
+          ItemDate: defaultFromDate,
+          FromDate: defaultFromDate,
+          ToDate: defaultToDate,
+          Qnty: 0,
+          TaxRate: 0.08,
+          UnitPrice: 0,
+          Unit: "Cái",
+          Remarks: "",
+          StartProcessNow: false,
+        });
+      }
     } catch (e: any) {
       message.error(e.message || "Không thể lưu vật tư.");
     } finally {
@@ -435,13 +470,14 @@ export function useQuotationItemsAndWorkflow(
     setRowDetailQnty(Number(record.Qnty || 0));
     setRowDetailUnitPrice(Number(record.UnitPrice || 0));
     setRowDetailRemarks(record.Remarks || "");
-    setRowDetailDecision(record.ApprovalStatus || "");
+    setRowDetailDecision(record.ApprovalStatus || record.ApprovalDecision || "");
     setIsRowDetailOpen(true);
     setLoadingProcessingStatus(true);
     try {
       const data = await quotationsApi.getProcessingStatuses({
-        DisplayMode: "approval_no_all",
-        Role: record.Role || "A",
+        DisplayMode: "official_with_role",
+        Language: language || "vi",
+        WSId: "",
       });
       setProcessingStatusList(extractApiList(data));
     } catch (e: any) {

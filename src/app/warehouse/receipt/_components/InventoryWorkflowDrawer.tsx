@@ -84,8 +84,9 @@ export default function InventoryWorkflowDrawer({
 
     try {
       const data = await warehouseApi.getProcessingStatuses({
-        DisplayMode: "approval_no_all",
-        Role: record.Role || "A",
+        DisplayMode: "official_with_role",
+        Language: language || "vi",
+        WSId: "",
       });
       setProcessingStatusList(extractApiList(data));
     } catch {

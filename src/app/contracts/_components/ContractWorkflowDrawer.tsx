@@ -38,16 +38,48 @@ export default function ContractWorkflowDrawer({
 
   const handleOpenRowDetail = async (record: any) => {
     setSelectedWorkflowRow(record);
-    setRowDetailDecision(record.ApprovalDecision || record.ApprovalStatus || (language === "en" ? "Approved" : "Duyệt"));
+    const initialRaw = record.ApprovalDecision || record.ApprovalStatus || "";
+    setRowDetailDecision(initialRaw);
     setRowDetailRemarks(record.Remarks || "");
     setIsRowDetailOpen(true);
     setLoadingProcessingStatus(true);
     try {
       const data = await contractsApi.getProcessingStatuses({
-        DisplayMode: "approval_no_all",
-        Role: record.Role || "A",
+        DisplayMode: "official_with_role",
+        Language: language || "vi",
+        WSId: "",
       });
-      setProcessingStatusList(extractApiList(data));
+      const list = extractApiList(data);
+      setProcessingStatusList(list);
+
+      // Tự động tìm Description phù hợp theo Role của dòng đang chọn
+      const role = (record.Role || "A").toUpperCase();
+      const roleList = list.filter((it: any) => (it.Role || "").toUpperCase() === role);
+      const currentLower = initialRaw.toLowerCase().trim();
+
+      const matched = roleList.find((it: any) => {
+        const desc = String(it.Description || "").toLowerCase().trim();
+        const alias = String(it.Alias || "").toLowerCase().trim();
+        return desc === currentLower || alias === currentLower;
+      });
+
+      if (matched) {
+        setRowDetailDecision(matched.Description);
+      } else if (roleList.length > 0) {
+        // Tìm trạng thái tương đồng (VD: In-Progress / Đang làm)
+        const inProg = roleList.find(
+          (it: any) =>
+            it.Status === 2 ||
+            String(it.Alias || "").toLowerCase() === "in-progress" ||
+            String(it.Description || "").toLowerCase().includes("làm") ||
+            String(it.Description || "").toLowerCase().includes("xem")
+        );
+        if (inProg && (currentLower.includes("làm") || currentLower.includes("progress") || currentLower.includes("xem"))) {
+          setRowDetailDecision(inProg.Description);
+        } else if (!initialRaw) {
+          setRowDetailDecision(roleList[0].Description);
+        }
+      }
     } catch {
       setProcessingStatusList([]);
     } finally {

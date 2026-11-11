@@ -45,7 +45,7 @@ interface ItemFormDrawerProps {
   taxItemTotal: number;
   grandItemTotal: number;
   watchedTaxRate: number;
-  onFinish: (values: any) => void;
+  onFinish: (values: any, shouldClose?: boolean) => void;
   readOnly?: boolean;
 }
 
@@ -68,6 +68,14 @@ export default function ItemFormDrawer({
   const { t, language } = useTranslation();
   const [isItemLovOpen, setIsItemLovOpen] = useState(false);
   const [itemSearchInput, setItemSearchInput] = useState("");
+  const saveActionRef = React.useRef<"save" | "saveAndClose">("saveAndClose");
+  const [activeBtn, setActiveBtn] = useState<"save" | "saveAndClose" | null>(null);
+
+  React.useEffect(() => {
+    if (!submitting) {
+      setActiveBtn(null);
+    }
+  }, [submitting]);
 
   const handleSelectItem = (record: any) => {
     const matId = record.MaterialId ?? record.ItemId ?? record.Id;
@@ -145,23 +153,51 @@ export default function ItemFormDrawer({
               {readOnly ? t.itemDrawer.close : t.itemDrawer.cancel}
             </Button>
             {!readOnly && (
-              <Button
-                type="primary"
-                icon={<SaveOutlined style={{ fontSize: 14 }} />}
-                style={{
-                  background: "#008f89",
-                  borderColor: "#008f89",
-                  borderRadius: 6,
-                  height: 32,
-                  fontSize: 13,
-                  fontWeight: 500,
-                  color: "#FFFFFF",
-                }}
-                onClick={() => form.submit()}
-                loading={submitting}
-              >
-                {t.itemDrawer.saveItem}
-              </Button>
+              <>
+                <Button
+                  icon={<SaveOutlined style={{ fontSize: 14 }} />}
+                  style={{
+                    borderColor: "#008f89",
+                    background: "#FFFFFF",
+                    borderRadius: 6,
+                    height: 32,
+                    fontSize: 13,
+                    fontWeight: 500,
+                    color: "#008f89",
+                  }}
+                  onClick={() => {
+                    saveActionRef.current = "save";
+                    setActiveBtn("save");
+                    form.submit();
+                  }}
+                  loading={submitting && activeBtn === "save"}
+                  disabled={submitting}
+                >
+                  {t.itemDrawer.save || "Lưu"}
+                </Button>
+                <Button
+                  type="primary"
+                  icon={<SaveOutlined style={{ fontSize: 14 }} />}
+                  style={{
+                    background: "#008f89",
+                    borderColor: "#008f89",
+                    borderRadius: 6,
+                    height: 32,
+                    fontSize: 13,
+                    fontWeight: 500,
+                    color: "#FFFFFF",
+                  }}
+                  onClick={() => {
+                    saveActionRef.current = "saveAndClose";
+                    setActiveBtn("saveAndClose");
+                    form.submit();
+                  }}
+                  loading={submitting && activeBtn === "saveAndClose"}
+                  disabled={submitting}
+                >
+                  {t.itemDrawer.saveAndClose || "Lưu và Đóng"}
+                </Button>
+              </>
             )}
           </div>
         }
@@ -212,7 +248,8 @@ export default function ItemFormDrawer({
           form={form}
           layout="vertical"
           disabled={readOnly}
-          onFinish={onFinish}
+          onFinish={(values) => onFinish(values, saveActionRef.current === "saveAndClose")}
+          onFinishFailed={() => setActiveBtn(null)}
           initialValues={{
             ItemDate: dayjs(),
             Qnty: 0,

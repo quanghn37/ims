@@ -10,7 +10,7 @@ import { ContractItem } from "@/types";
 import dayjs from "dayjs";
 
 import { useAuth } from "@/lib/auth-context";
-import { AttachmentFile, parseDateSafe } from "./_components/types";
+import { AttachmentFile, parseDateSafe } from "./types";
 import ContractsTable from "./_components/ContractsTable";
 import { useContracts } from "./_hooks/useContracts";
 import { useTranslation } from "@/locales/LanguageContext";
