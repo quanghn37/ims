@@ -1,26 +1,25 @@
 "use client";
 
 import React, { useState, useMemo, useEffect, useCallback } from "react";
-import { Button, Input, Select, DatePicker, Dropdown, message, Space } from "antd";
+import { Button, Input, Select, DatePicker, message, Space } from "antd";
 import dayjs from "dayjs";
 import {
   IconRefresh,
   IconDeviceFloppy,
   IconSearch,
-  IconChevronDown,
   IconFileSpreadsheet,
 } from "@tabler/icons-react";
 import { ErpPageContainer } from "@/components/layout/ErpPageContainer";
 import SubmissionApprovalTable from "./_components/SubmissionApprovalTable";
 import {
   SubmissionRow,
-  STATUS_OPTIONS,
   SubmissionFilterState,
   WorkTypeItem,
   ContractOptionItem,
   ProcessingStatusItem,
   ProcessingStatusWithRoleItem,
   getStatusDotColor,
+  normalizeApprovalStatusAlias,
 } from "./types";
 import { submissionsApi } from "./api";
 import { useTranslation } from "@/locales/LanguageContext";
@@ -323,25 +322,64 @@ export default function SubmissionsPage() {
     ];
   }, [workTypes, isEn]);
 
-  // Danh sách trạng thái chuẩn hóa từ API get-processing-status-list
+  // Danh sách trạng thái lấy động theo cột Quyết định và Vai trò
   const statusList = useMemo(() => {
-    if (processingStatuses.length > 0) {
-      return processingStatuses.map((item) => ({
-        key: item.Alias,
-        alias: item.Alias,
-        description: item.Description,
-        dotColor: getStatusDotColor(item.Alias),
-        statusNum: item.Status,
-      }));
+    // 1. Nếu người dùng chọn một Vai trò cụ thể (A, R, C, I)
+    if (filters.role && filters.role !== "all") {
+      const roleUpper = filters.role.toUpperCase();
+      const roleStatuses = (statusesWithRole || []).filter(
+        (st) => String(st.Role || "").toUpperCase() === roleUpper
+      );
+      if (roleStatuses.length > 0) {
+        return [
+          {
+            key: "All",
+            alias: "All",
+            description: isEn ? "All" : "Tất cả",
+            dotColor: "#008f89",
+          },
+          ...roleStatuses.map((st) => ({
+            key: st.Description,
+            alias: st.Alias,
+            description: st.Description,
+            dotColor: getStatusDotColor(normalizeApprovalStatusAlias(st.Alias || st.Description)),
+          })),
+        ];
+      }
     }
-    return STATUS_OPTIONS.map((opt) => ({
-      key: opt.alias || opt.key,
-      alias: opt.alias || opt.key,
-      description: isEn ? opt.labelEn : opt.labelVi,
-      dotColor: opt.dotColor,
-      statusNum: 0,
-    }));
-  }, [processingStatuses, isEn]);
+
+    // 2. Nếu chọn "Tất cả vai trò" (filters.role === "all"):
+    // Lấy động trực tiếp từ các quyết định thực tế đang có trong cột Quyết định của danh sách dữ liệu
+    const statusMap = new Map<string, { key: string; alias: string; description: string; dotColor: string }>();
+
+    rows.forEach((r) => {
+      const desc = (r.statusDescription || r.decision || "").trim();
+      const alias = (r.statusAlias || r.decision || "").trim();
+      if (!desc && !alias) return;
+
+      const mapKey = desc || alias;
+      if (!statusMap.has(mapKey)) {
+        statusMap.set(mapKey, {
+          key: mapKey,
+          alias: alias || mapKey,
+          description: desc || alias,
+          dotColor: getStatusDotColor(normalizeApprovalStatusAlias(alias || desc)),
+        });
+      }
+    });
+
+    const dynamicStatuses = Array.from(statusMap.values());
+
+    return [
+      {
+        key: "All",
+        alias: "All",
+        description: isEn ? "All" : "Tất cả",
+        dotColor: "#008f89",
+      },
+      ...dynamicStatuses,
+    ];
+  }, [rows, filters.role, statusesWithRole, isEn]);
 
   // Đếm số lượng theo trạng thái cho thanh Pills
   const counts = useMemo(() => {
@@ -350,7 +388,12 @@ export default function SubmissionsPage() {
       all: rows.length,
     };
     rows.forEach((r) => {
-      const alias = r.statusAlias || r.decision;
+      const desc = (r.statusDescription || "").trim();
+      const alias = (r.statusAlias || r.decision || "").trim();
+      if (desc) {
+        c[desc] = (c[desc] || 0) + 1;
+        c[desc.toLowerCase()] = (c[desc.toLowerCase()] || 0) + 1;
+      }
       if (alias) {
         c[alias] = (c[alias] || 0) + 1;
         c[alias.toLowerCase()] = (c[alias.toLowerCase()] || 0) + 1;
@@ -362,10 +405,12 @@ export default function SubmissionsPage() {
   // Lọc dữ liệu theo bộ lọc
   const filteredRows = useMemo(() => {
     return rows.filter((r) => {
-      // Lọc trạng thái (theo Alias từ API get-processing-status-list)
+      // Lọc trạng thái (theo Quyết định động)
       if (filters.status && filters.status.toLowerCase() !== "all") {
-        const rowStatus = String(r.statusAlias || r.decision || "").toLowerCase();
-        if (rowStatus !== filters.status.toLowerCase()) {
+        const target = filters.status.trim().toLowerCase();
+        const rowDesc = (r.statusDescription || "").trim().toLowerCase();
+        const rowAlias = (r.statusAlias || r.decision || "").trim().toLowerCase();
+        if (rowDesc !== target && rowAlias !== target) {
           return false;
         }
       }
@@ -431,58 +476,6 @@ export default function SubmissionsPage() {
     message.info(isEn ? "Data refreshed!" : "Đã làm mới dữ liệu!");
   };
 
-  // Menu tùy chọn trạng thái duyệt (Custom LOV) lấy Description từ API
-  const currentStatusOpt = useMemo(() => {
-    return (
-      statusList.find(
-        (s) => s.alias.toLowerCase() === (filters.status || "All").toLowerCase()
-      ) || statusList[0]
-    );
-  }, [statusList, filters.status]);
-
-  const statusMenuItems = useMemo(() => {
-    return statusList.map((opt) => {
-      const isSelected = opt.alias.toLowerCase() === (filters.status || "All").toLowerCase();
-      return {
-        key: opt.alias,
-        label: (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: 8,
-              padding: "3px 4px",
-              minWidth: 130,
-            }}
-          >
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-              <span
-                style={{
-                  width: 7.5,
-                  height: 7.5,
-                  borderRadius: "50%",
-                  background: opt.dotColor,
-                  display: "inline-block",
-                  flexShrink: 0,
-                }}
-              />
-              <span style={{ fontSize: 12, fontWeight: isSelected ? 600 : 400 }}>
-                {opt.description}
-              </span>
-            </div>
-            {isSelected && (
-              <span style={{ color: "#008f89", fontWeight: 700, fontSize: 13, marginLeft: "auto" }}>
-                ✓
-              </span>
-            )}
-          </div>
-        ),
-        onClick: () => setFilters((prev) => ({ ...prev, status: opt.alias })),
-      };
-    });
-  }, [statusList, filters.status]);
-
   return (
     <ErpPageContainer style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       {/* 1. Header Trang */}
@@ -520,8 +513,8 @@ export default function SubmissionsPage() {
           gap: 10,
         }}
       >
-        {/* Hàng 1: Hợp đồng, Tìm kiếm, Trạng thái duyệt (chiều ngang gọn 160px), Nút Lọc */}
-        <div style={{ display: "grid", gridTemplateColumns: "2.5fr 2.3fr 160px auto", gap: 12, alignItems: "center" }}>
+        {/* Hàng 1: Hợp đồng, Tìm kiếm, Nút Lọc */}
+        <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr auto", gap: 12, alignItems: "center" }}>
           <div>
             <div style={{ fontSize: 11, fontWeight: 700, color: "#475569", textTransform: "uppercase", marginBottom: 4 }}>
               {isEn ? "Contract" : "Hợp đồng"}
@@ -551,50 +544,6 @@ export default function SubmissionsPage() {
               value={filters.searchKeyword}
               onChange={(e) => setFilters((prev) => ({ ...prev, searchKeyword: e.target.value }))}
             />
-          </div>
-
-          {/* LOV Trạng thái duyệt tùy chỉnh có chấm màu */}
-          <div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#475569", textTransform: "uppercase", marginBottom: 4 }}>
-              {isEn ? "Approval Status" : "Trạng thái duyệt"}
-            </div>
-            <Dropdown menu={{ items: statusMenuItems }} trigger={["click"]}>
-              <button
-                type="button"
-                style={{
-                  height: 32,
-                  padding: "0 10px",
-                  borderRadius: 6,
-                  border: "1px solid #cbd5e1",
-                  fontSize: 12.5,
-                  fontWeight: 500,
-                  background: "#ffffff",
-                  width: "100%",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  cursor: "pointer",
-                  outline: "none",
-                }}
-              >
-                <div style={{ display: "inline-flex", alignItems: "center", gap: 8, overflow: "hidden" }}>
-                  <span
-                    style={{
-                      width: 7.5,
-                      height: 7.5,
-                      borderRadius: "50%",
-                      background: currentStatusOpt?.dotColor || "#94a3b8",
-                      display: "inline-block",
-                      flexShrink: 0,
-                    }}
-                  />
-                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {currentStatusOpt?.description || (isEn ? "All" : "Tất cả")}
-                  </span>
-                </div>
-                <IconChevronDown size={14} color="#64748b" style={{ flexShrink: 0 }} />
-              </button>
-            </Dropdown>
           </div>
 
           <div style={{ alignSelf: "flex-end" }}>
@@ -630,7 +579,7 @@ export default function SubmissionsPage() {
             </div>
             <Select
               value={filters.role}
-              onChange={(val) => setFilters((prev) => ({ ...prev, role: val }))}
+              onChange={(val) => setFilters((prev) => ({ ...prev, role: val, status: "All" }))}
               style={{ width: "100%" }}
               options={[
                 { value: "all", label: isEn ? "All" : "Tất cả" },
@@ -682,7 +631,7 @@ export default function SubmissionsPage() {
         </div>
       </div>
 
-      {/* 3. Thanh Toolbar Status Pills nhanh lấy danh mục từ API kèm Cụm nút hành động */}
+      {/* 3. Thanh Toolbar Status Pills nhanh lấy động theo Quyết định kèm Cụm nút hành động */}
       <div
         style={{
           display: "flex",
@@ -695,13 +644,32 @@ export default function SubmissionsPage() {
       >
         <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
           {statusList.map((opt) => {
-            const isActive = (filters.status || "All").toLowerCase() === opt.alias.toLowerCase();
-            const count = counts[opt.alias] || 0;
+            const currentFilter = (filters.status || "All").trim().toLowerCase();
+            const optKey = (opt.key || "").trim().toLowerCase();
+            const optAlias = (opt.alias || "").trim().toLowerCase();
+            const optDesc = (opt.description || "").trim().toLowerCase();
+
+            const isActive =
+              currentFilter === optKey ||
+              currentFilter === optAlias ||
+              currentFilter === optDesc;
+
+            const count =
+              counts[opt.key] ??
+              counts[opt.description] ??
+              counts[opt.alias] ??
+              0;
+
             return (
               <button
-                key={opt.alias}
+                key={opt.key || opt.alias}
                 type="button"
-                onClick={() => setFilters((prev) => ({ ...prev, status: opt.alias }))}
+                onClick={() =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    status: opt.key === "All" || opt.alias === "All" ? "All" : (opt.description || opt.alias),
+                  }))
+                }
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
