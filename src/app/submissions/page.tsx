@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useState, useMemo, useEffect, useCallback } from "react";
-import { Button, Input, Select, DatePicker, message, Space } from "antd";
+import { Button, Input, Select, DatePicker, Popover, Checkbox, message, Space } from "antd";
 import dayjs from "dayjs";
 import {
   IconRefresh,
   IconDeviceFloppy,
   IconSearch,
+  IconChevronDown,
   IconFileSpreadsheet,
 } from "@tabler/icons-react";
 import { ErpPageContainer } from "@/components/layout/ErpPageContainer";
@@ -59,6 +60,10 @@ export default function SubmissionsPage() {
     role: "all",
     dateRange: undefined,
   });
+
+  // Trạng thái lọc đa chọn (Multi-select Checkbox)
+  const [selectedStatusKeys, setSelectedStatusKeys] = useState<string[]>(["__ALL__"]);
+  const [statusPopoverOpen, setStatusPopoverOpen] = useState(false);
 
   // Tải danh sách Trạng thái phê duyệt từ backend
   useEffect(() => {
@@ -322,8 +327,8 @@ export default function SubmissionsPage() {
     ];
   }, [workTypes, isEn]);
 
-  // Danh sách trạng thái lấy động theo cột Quyết định và Vai trò
-  const statusList = useMemo(() => {
+  // Danh sách trạng thái động theo cột Quyết định và Vai trò
+  const availableStatuses = useMemo(() => {
     // 1. Nếu người dùng chọn một Vai trò cụ thể (A, R, C, I)
     if (filters.role && filters.role !== "all") {
       const roleUpper = filters.role.toUpperCase();
@@ -331,20 +336,12 @@ export default function SubmissionsPage() {
         (st) => String(st.Role || "").toUpperCase() === roleUpper
       );
       if (roleStatuses.length > 0) {
-        return [
-          {
-            key: "All",
-            alias: "All",
-            description: isEn ? "All" : "Tất cả",
-            dotColor: "#008f89",
-          },
-          ...roleStatuses.map((st) => ({
-            key: st.Description,
-            alias: st.Alias,
-            description: st.Description,
-            dotColor: getStatusDotColor(normalizeApprovalStatusAlias(st.Alias || st.Description)),
-          })),
-        ];
+        return roleStatuses.map((st) => ({
+          key: st.Description,
+          alias: st.Alias,
+          description: st.Description,
+          dotColor: getStatusDotColor(normalizeApprovalStatusAlias(st.Alias || st.Description)),
+        }));
       }
     }
 
@@ -368,20 +365,10 @@ export default function SubmissionsPage() {
       }
     });
 
-    const dynamicStatuses = Array.from(statusMap.values());
+    return Array.from(statusMap.values());
+  }, [rows, filters.role, statusesWithRole]);
 
-    return [
-      {
-        key: "All",
-        alias: "All",
-        description: isEn ? "All" : "Tất cả",
-        dotColor: "#008f89",
-      },
-      ...dynamicStatuses,
-    ];
-  }, [rows, filters.role, statusesWithRole, isEn]);
-
-  // Đếm số lượng theo trạng thái cho thanh Pills
+  // Đếm số lượng theo trạng thái
   const counts = useMemo(() => {
     const c: Record<string, number> = {
       All: rows.length,
@@ -402,15 +389,101 @@ export default function SubmissionsPage() {
     return c;
   }, [rows]);
 
+  const isAllSelected =
+    selectedStatusKeys.includes("__ALL__") ||
+    (availableStatuses.length > 0 && selectedStatusKeys.length >= availableStatuses.length);
+
+  const isIndeterminate =
+    !isAllSelected &&
+    selectedStatusKeys.length > 0 &&
+    availableStatuses.length > 0 &&
+    selectedStatusKeys.length < availableStatuses.length;
+
+  const isItemChecked = (key: string) => {
+    if (isAllSelected) return true;
+    return selectedStatusKeys.includes(key);
+  };
+
+  const handleToggleAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedStatusKeys(["__ALL__"]);
+    } else {
+      setSelectedStatusKeys([]);
+    }
+  };
+
+  const handleToggleStatus = (statusKey: string) => {
+    const currentlyChecked = isItemChecked(statusKey);
+
+    if (currentlyChecked) {
+      // Đang có CHECK => BỎ CHỌN
+      let currentActiveKeys: string[];
+      if (isAllSelected) {
+        currentActiveKeys = availableStatuses.map((s) => s.key);
+      } else {
+        currentActiveKeys = selectedStatusKeys.filter((k) => k !== "__ALL__");
+      }
+      const next = currentActiveKeys.filter((k) => k !== statusKey);
+      setSelectedStatusKeys(next);
+    } else {
+      // Đang TRỐNG => CHECK CHỌN
+      const next = [...selectedStatusKeys.filter((k) => k !== "__ALL__"), statusKey];
+      if (availableStatuses.length > 0 && next.length >= availableStatuses.length) {
+        setSelectedStatusKeys(["__ALL__"]);
+      } else {
+        setSelectedStatusKeys(next);
+      }
+    }
+  };
+
+  const triggerDisplay = useMemo(() => {
+    if (isAllSelected) {
+      return {
+        label: `${isEn ? "All" : "Tất cả"} (${rows.length})`,
+        dotColor: "#008f89",
+      };
+    }
+    if (selectedStatusKeys.length === 0) {
+      return {
+        label: isEn ? "None selected (0)" : "Chưa chọn (0)",
+        dotColor: "#94a3b8",
+      };
+    }
+    if (selectedStatusKeys.length === 1) {
+      const found = availableStatuses.find((s) => s.key === selectedStatusKeys[0]);
+      const count = counts[selectedStatusKeys[0]] || 0;
+      return {
+        label: `${found?.description || selectedStatusKeys[0]} (${count})`,
+        dotColor: found?.dotColor || "#008f89",
+      };
+    }
+    // Nhiều trạng thái
+    const totalCount = selectedStatusKeys.reduce((acc, k) => acc + (counts[k] || 0), 0);
+    return {
+      label: isEn
+        ? `Selected: ${selectedStatusKeys.length} (${totalCount})`
+        : `Đã chọn: ${selectedStatusKeys.length} (${totalCount})`,
+      dotColor: "#008f89",
+    };
+  }, [isAllSelected, selectedStatusKeys, availableStatuses, rows.length, counts, isEn]);
+
   // Lọc dữ liệu theo bộ lọc
   const filteredRows = useMemo(() => {
     return rows.filter((r) => {
-      // Lọc trạng thái (theo Quyết định động)
-      if (filters.status && filters.status.toLowerCase() !== "all") {
-        const target = filters.status.trim().toLowerCase();
+      // Lọc trạng thái (theo danh sách checkbox đa chọn)
+      if (!isAllSelected) {
+        if (selectedStatusKeys.length === 0) {
+          return false;
+        }
         const rowDesc = (r.statusDescription || "").trim().toLowerCase();
         const rowAlias = (r.statusAlias || r.decision || "").trim().toLowerCase();
-        if (rowDesc !== target && rowAlias !== target) {
+
+        const matchStatus = selectedStatusKeys.some((stKey) => {
+          const target = stKey.trim().toLowerCase();
+          return rowDesc === target || rowAlias === target;
+        });
+
+        if (!matchStatus) {
           return false;
         }
       }
@@ -459,7 +532,7 @@ export default function SubmissionsPage() {
       }
       return true;
     });
-  }, [rows, filters]);
+  }, [rows, filters, selectedStatusKeys, isAllSelected]);
 
   // Thao tác Lưu phê duyệt
   const handleSave = () => {
@@ -499,6 +572,21 @@ export default function SubmissionsPage() {
               : "Xem xét, đối chiếu và phê duyệt các hạng mục đệ trình khối lượng / chi phí từ Nhà thầu"}
           </div>
         </div>
+
+        <Space size={8}>
+          <Button icon={<IconRefresh size={15} />} onClick={handleRefresh}>
+            {isEn ? "Refresh" : "Làm mới"}
+          </Button>
+          <Button
+            type="primary"
+            icon={<IconDeviceFloppy size={15} />}
+            loading={saving}
+            onClick={handleSave}
+            style={{ background: "#008f89", borderColor: "#008f89" }}
+          >
+            {isEn ? "Save Changes" : "Lưu phê duyệt"}
+          </Button>
+        </Space>
       </div>
 
       {/* 2. Khung bộ lọc (Filter Card 2 hàng chuẩn) */}
@@ -513,8 +601,8 @@ export default function SubmissionsPage() {
           gap: 10,
         }}
       >
-        {/* Hàng 1: Hợp đồng, Tìm kiếm, Nút Lọc */}
-        <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr auto", gap: 12, alignItems: "center" }}>
+        {/* Hàng 1: Hợp đồng, Tìm kiếm, Trạng thái duyệt (Multi-select Checkbox), Nút Lọc */}
+        <div style={{ display: "grid", gridTemplateColumns: "1.8fr 1.5fr 1.2fr auto", gap: 12, alignItems: "center" }}>
           <div>
             <div style={{ fontSize: 11, fontWeight: 700, color: "#475569", textTransform: "uppercase", marginBottom: 4 }}>
               {isEn ? "Contract" : "Hợp đồng"}
@@ -544,6 +632,198 @@ export default function SubmissionsPage() {
               value={filters.searchKeyword}
               onChange={(e) => setFilters((prev) => ({ ...prev, searchKeyword: e.target.value }))}
             />
+          </div>
+
+          {/* Ô lọc Trạng thái duyệt dạng Dropdown Checkbox Đa chọn */}
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#475569", textTransform: "uppercase", marginBottom: 4 }}>
+              {isEn ? "Approval Status" : "Trạng thái duyệt"}
+            </div>
+            <Popover
+              open={statusPopoverOpen}
+              onOpenChange={setStatusPopoverOpen}
+              trigger="click"
+              placement="bottomLeft"
+              content={
+                <div style={{ width: 230, padding: "2px 0" }}>
+                  <div
+                    style={{
+                      padding: "4px 8px 6px",
+                      borderBottom: "1px solid #f1f5f9",
+                      marginBottom: 4,
+                    }}
+                  >
+                    <Checkbox
+                      checked={isAllSelected}
+                      indeterminate={isIndeterminate}
+                      onChange={(e) => handleToggleAll(e.target.checked)}
+                      style={{ fontWeight: 600, fontSize: 12.5 }}
+                    >
+                      {isEn ? "All" : "Tất cả"} ({rows.length})
+                    </Checkbox>
+                  </div>
+                  <div
+                    style={{
+                      maxHeight: 220,
+                      overflowY: "auto",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 2,
+                      padding: "0 4px",
+                    }}
+                  >
+                    {availableStatuses.map((st) => {
+                      const isChecked = isItemChecked(st.key);
+                      const count = counts[st.key] ?? counts[st.description] ?? counts[st.alias] ?? 0;
+                      return (
+                        <div
+                          key={st.key}
+                          onClick={() => handleToggleStatus(st.key)}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            padding: "4px 6px",
+                            borderRadius: 4,
+                            cursor: "pointer",
+                            background: isChecked ? "#f0fdfa" : "transparent",
+                            transition: "background 0.15s",
+                          }}
+                        >
+                          <Checkbox
+                            checked={isChecked}
+                            style={{ fontSize: 12, pointerEvents: "none" }}
+                          >
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                              <span
+                                style={{
+                                  width: 7.5,
+                                  height: 7.5,
+                                  borderRadius: "50%",
+                                  background: st.dotColor,
+                                  display: "inline-block",
+                                  flexShrink: 0,
+                                }}
+                              />
+                              <span
+                                style={{
+                                  color: isChecked ? "#0f766e" : "#334155",
+                                  fontWeight: isChecked ? 600 : 400,
+                                }}
+                              >
+                                {st.description}
+                              </span>
+                            </span>
+                          </Checkbox>
+                          <span
+                            style={{
+                              fontSize: 11,
+                              fontWeight: 500,
+                              color: isChecked ? "#008f89" : "#64748b",
+                              background: isChecked ? "#ccfbf1" : "#f1f5f9",
+                              padding: "1px 6px",
+                              borderRadius: 10,
+                            }}
+                          >
+                            {count}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div
+                    style={{
+                      borderTop: "1px solid #f1f5f9",
+                      paddingTop: 6,
+                      marginTop: 4,
+                      paddingLeft: 4,
+                      paddingRight: 4,
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedStatusKeys(["__ALL__"])}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          color: "#008f89",
+                          fontSize: 11.5,
+                          cursor: "pointer",
+                          padding: "2px 0",
+                          fontWeight: 500,
+                        }}
+                      >
+                        {isEn ? "Select All" : "Chọn tất cả"}
+                      </button>
+                      <span style={{ color: "#cbd5e1", fontSize: 11 }}>|</span>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedStatusKeys([])}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          color: "#64748b",
+                          fontSize: 11.5,
+                          cursor: "pointer",
+                          padding: "2px 0",
+                          fontWeight: 500,
+                        }}
+                      >
+                        {isEn ? "Deselect All" : "Bỏ chọn"}
+                      </button>
+                    </div>
+                    <Button
+                      size="small"
+                      type="primary"
+                      onClick={() => setStatusPopoverOpen(false)}
+                      style={{ height: 24, fontSize: 11.5, background: "#008f89", borderColor: "#008f89" }}
+                    >
+                      {isEn ? "Done" : "Xong"}
+                    </Button>
+                  </div>
+                </div>
+              }
+            >
+              <button
+                type="button"
+                style={{
+                  height: 32,
+                  padding: "0 10px",
+                  borderRadius: 6,
+                  border: "1px solid #cbd5e1",
+                  fontSize: 12.5,
+                  fontWeight: 500,
+                  background: "#ffffff",
+                  width: "100%",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  cursor: "pointer",
+                  outline: "none",
+                }}
+              >
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 7, overflow: "hidden" }}>
+                  <span
+                    style={{
+                      width: 7.5,
+                      height: 7.5,
+                      borderRadius: "50%",
+                      background: triggerDisplay.dotColor,
+                      display: "inline-block",
+                      flexShrink: 0,
+                    }}
+                  />
+                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "#334155" }}>
+                    {triggerDisplay.label}
+                  </span>
+                </div>
+                <IconChevronDown size={14} color="#64748b" style={{ flexShrink: 0 }} />
+              </button>
+            </Popover>
           </div>
 
           <div style={{ alignSelf: "flex-end" }}>
@@ -579,7 +859,10 @@ export default function SubmissionsPage() {
             </div>
             <Select
               value={filters.role}
-              onChange={(val) => setFilters((prev) => ({ ...prev, role: val, status: "All" }))}
+              onChange={(val) => {
+                setFilters((prev) => ({ ...prev, role: val, status: "All" }));
+                setSelectedStatusKeys(["__ALL__"]);
+              }}
               style={{ width: "100%" }}
               options={[
                 { value: "all", label: isEn ? "All" : "Tất cả" },
@@ -622,6 +905,7 @@ export default function SubmissionsPage() {
                   role: "all",
                   dateRange: undefined,
                 });
+                setSelectedStatusKeys(["__ALL__"]);
                 setDateRange(null);
               }}
             >
@@ -631,103 +915,7 @@ export default function SubmissionsPage() {
         </div>
       </div>
 
-      {/* 3. Thanh Toolbar Status Pills nhanh lấy động theo Quyết định kèm Cụm nút hành động */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: 12,
-          flexWrap: "wrap",
-          margin: "2px 0",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-          {statusList.map((opt) => {
-            const currentFilter = (filters.status || "All").trim().toLowerCase();
-            const optKey = (opt.key || "").trim().toLowerCase();
-            const optAlias = (opt.alias || "").trim().toLowerCase();
-            const optDesc = (opt.description || "").trim().toLowerCase();
-
-            const isActive =
-              currentFilter === optKey ||
-              currentFilter === optAlias ||
-              currentFilter === optDesc;
-
-            const count =
-              counts[opt.key] ??
-              counts[opt.description] ??
-              counts[opt.alias] ??
-              0;
-
-            return (
-              <button
-                key={opt.key || opt.alias}
-                type="button"
-                onClick={() =>
-                  setFilters((prev) => ({
-                    ...prev,
-                    status: opt.key === "All" || opt.alias === "All" ? "All" : (opt.description || opt.alias),
-                  }))
-                }
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 6,
-                  padding: "3px 10px",
-                  borderRadius: 20,
-                  fontSize: 12,
-                  fontWeight: isActive ? 600 : 500,
-                  background: isActive ? "#f0fdfa" : "#ffffff",
-                  color: isActive ? "#008f89" : "#475569",
-                  border: `1px solid ${isActive ? "#99d2cf" : "#e2e8f0"}`,
-                  cursor: "pointer",
-                  transition: "all 0.15s",
-                }}
-              >
-                <span
-                  style={{
-                    width: 7.5,
-                    height: 7.5,
-                    borderRadius: "50%",
-                    background: opt.dotColor,
-                    display: "inline-block",
-                  }}
-                />
-                <span>{opt.description}</span>
-                <span
-                  style={{
-                    padding: "0 6px",
-                    background: isActive ? "#e6f4f3" : "#f1f5f9",
-                    color: isActive ? "#008f89" : "#64748b",
-                    borderRadius: 10,
-                    fontSize: 11,
-                  }}
-                >
-                  {count}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        <Space size={8}>
-          <Button icon={<IconRefresh size={15} />} onClick={handleRefresh}>
-            {isEn ? "Refresh" : "Làm mới"}
-          </Button>
-          <Button
-            type="primary"
-            icon={<IconDeviceFloppy size={15} />}
-            loading={saving}
-            onClick={handleSave}
-            style={{ background: "#008f89", borderColor: "#008f89" }}
-          >
-            {isEn ? "Save Changes" : "Lưu phê duyệt"}
-          </Button>
-        </Space>
-      </div>
-
-      {/* 4. Bảng dữ liệu đệ trình */}
+      {/* 3. Bảng dữ liệu đệ trình */}
       <div style={{ flex: 1, minHeight: 0 }}>
         <SubmissionApprovalTable
           dataSource={filteredRows}
