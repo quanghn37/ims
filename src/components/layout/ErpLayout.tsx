@@ -111,6 +111,11 @@ export const ErpLayout: React.FC<ErpLayoutProps> = ({ children }) => {
       label: <Link href="/submissions" prefetch={false}>{t("menu.submissions")}</Link>,
     },
     {
+      key: "/submissions-v2",
+      icon: <IconClipboardCheck size={18} strokeWidth={1.8} />,
+      label: <Link href="/submissions-v2" prefetch={false}>{t("menu.submissionsV2")}</Link>,
+    },
+    {
       key: "warehouse",
       icon: <IconBuildingWarehouse size={18} strokeWidth={1.8} />,
       label: t("menu.warehouse"),
@@ -275,6 +280,7 @@ export const ErpLayout: React.FC<ErpLayoutProps> = ({ children }) => {
               {activePath === "/quotations" && t("pageTitles.quotations")}
               {activePath === "/contracts" && t("pageTitles.contracts")}
               {activePath === "/purchase-orders" && t("pageTitles.purchaseOrders")}
+              {activePath.startsWith("/submissions") && t("pageTitles.submissions")}
               {activePath.startsWith("/warehouse/receipt") && t("pageTitles.receipt")}
               {activePath.startsWith("/warehouse/requisition") && t("pageTitles.requisition")}
               {activePath.startsWith("/warehouse/issue") && t("pageTitles.issue")}

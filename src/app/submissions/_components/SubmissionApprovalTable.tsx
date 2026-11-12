@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import { Table, Dropdown, Input, InputNumber } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
@@ -10,9 +10,9 @@ import {
   ProcessingStatusItem,
   ProcessingStatusWithRoleItem,
   getStatusDotColor,
+  normalizeApprovalStatusAlias,
 } from "../types";
 import { ResizableTitle } from "@/components/table/ResizableTitle";
-import { usePersistedColumnWidths } from "@/lib/table-utils";
 import { useTranslation } from "@/locales/LanguageContext";
 
 interface SubmissionApprovalTableProps {
@@ -109,7 +109,7 @@ export default function SubmissionApprovalTable({
       width: 170,
       align: "left",
       render: (val: string, record: SubmissionRow) => (
-        <span style={{ fontFamily: "monospace", color: "#008f89", fontWeight: 500, fontSize: 12.5 }}>
+        <span style={{ fontFamily: "monospace", color: "#123443", fontWeight: 400, fontSize: 12.5 }}>
           {val || record.contractCode || "-"}
         </span>
       ),
@@ -153,17 +153,6 @@ export default function SubmissionApprovalTable({
       ),
     },
     {
-      title: isEn ? "Work Cat." : "Nhóm CV",
-      dataIndex: "submittedWorkCat",
-      key: "submittedWorkCat",
-      width: 130,
-      align: "left",
-      render: (val: string | null | undefined, record: SubmissionRow) => {
-        const displayVal = val ?? record.workCategory ?? null;
-        return <span style={{ fontSize: 12, color: "#123443" }}>{displayVal ?? "-"}</span>;
-      },
-    },
-    {
       title: isEn ? "Unit" : "ĐVT",
       dataIndex: "unit",
       key: "unit",
@@ -178,13 +167,25 @@ export default function SubmissionApprovalTable({
           {isEn ? "1. Submission Info" : "1. Thông tin Đệ trình"}
         </span>
       ),
+      key: "subInfoGroup",
       children: [
+        {
+          title: isEn ? "Work Cat." : "Nhóm CV",
+          dataIndex: "submittedWorkCat",
+          key: "submittedWorkCat",
+          width: 130,
+          align: "left",
+          render: (val: string | null | undefined, record: SubmissionRow) => {
+            const displayVal = val ?? record.workCategory ?? null;
+            return <span style={{ fontSize: 12, color: "#123443" }}>{displayVal ?? "-"}</span>;
+          },
+        },
         {
           title: isEn ? "Quantity" : "Khối lượng",
           dataIndex: "subQty",
           key: "subQty",
           width: 85,
-          align: "right",
+          align: "left",
           render: (val: number) => (
             <span style={{ fontFamily: "monospace", fontSize: 12.5 }}>
               {val != null ? Number(val).toLocaleString("vi-VN", { minimumFractionDigits: 2 }) : "-"}
@@ -196,7 +197,7 @@ export default function SubmissionApprovalTable({
           dataIndex: "subPrice",
           key: "subPrice",
           width: 95,
-          align: "right",
+          align: "left",
           render: (val: number) => (
             <span style={{ fontFamily: "monospace", fontSize: 12.5 }}>
               {val != null ? Number(val).toLocaleString("vi-VN") : "-"}
@@ -210,7 +211,7 @@ export default function SubmissionApprovalTable({
           width: 110,
           align: "right",
           render: (val: number) => (
-            <span style={{ fontFamily: "monospace", color: "#1d4ed8", fontWeight: 500, fontSize: 12.5 }}>
+            <span style={{ fontFamily: "monospace", color: "#123443", fontWeight: 400, fontSize: 12.5 }}>
               {val != null ? Number(val).toLocaleString("vi-VN") : "-"}
             </span>
           ),
@@ -255,7 +256,68 @@ export default function SubmissionApprovalTable({
           {isEn ? "2. Decision & Approval" : "2. Quyết định & Phê duyệt"}
         </span>
       ),
+      key: "decisionGroup",
       children: [
+        {
+          title: isEn ? "Work Cat." : "Nhóm CV",
+          dataIndex: "reviewedWorkCat",
+          key: "reviewedWorkCat",
+          width: 130,
+          align: "left",
+          render: (val: string | null | undefined, record: SubmissionRow) => {
+            const displayVal = val ?? record.reviewedWorkCat ?? null;
+            return <span style={{ fontSize: 12, color: "#123443" }}>{displayVal ?? "-"}</span>;
+          },
+        },
+        {
+          title: isEn ? "Appr. Qty" : "KL duyệt",
+          dataIndex: "apprQty",
+          key: "apprQty",
+          width: 85,
+          align: "left",
+          render: (val: number, record: SubmissionRow) => (
+            <InputNumber
+              size="small"
+              value={val}
+              min={0}
+              step={0.01}
+              precision={2}
+              style={{ width: "100%", textAlign: "left", fontFamily: "monospace", fontSize: 12 }}
+              onChange={(v) => handleCellChange(record.key, "apprQty", v)}
+            />
+          ),
+        },
+        {
+          title: isEn ? "Appr. Price" : "ĐG duyệt",
+          dataIndex: "apprPrice",
+          key: "apprPrice",
+          width: 95,
+          align: "left",
+          render: (val: number, record: SubmissionRow) => (
+            <InputNumber
+              size="small"
+              value={val}
+              min={0}
+              step={1000}
+              formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ".")}
+              parser={(v) => (v ? Number(v.replace(/\./g, "")) : 0)}
+              style={{ width: "100%", textAlign: "left", fontFamily: "monospace", fontSize: 12 }}
+              onChange={(v) => handleCellChange(record.key, "apprPrice", v)}
+            />
+          ),
+        },
+        {
+          title: isEn ? "Amount" : "Thành tiền",
+          dataIndex: "apprAmount",
+          key: "apprAmount",
+          width: 115,
+          align: "right",
+          render: (val: number) => (
+            <span style={{ fontFamily: "monospace", color: "#123443", fontWeight: 400, fontSize: 12.5 }}>
+              {val != null ? Number(val).toLocaleString("vi-VN") : "0"}
+            </span>
+          ),
+        },
         {
           title: isEn ? "Decision" : "Quyết định",
           dataIndex: "decision",
@@ -271,23 +333,33 @@ export default function SubmissionApprovalTable({
             // Tìm option tương ứng với Role của dòng trực tiếp từ API
             let currentOpt: { alias: string; description: string; dotColor: string } | undefined;
             if (roleStatuses.length > 0) {
+              const targetAlias = String(record.statusAlias || decisionVal || "").trim().toLowerCase();
+              const targetDesc = String(record.statusDescription || "").trim().toLowerCase();
+              const normalized = normalizeApprovalStatusAlias(targetAlias || targetDesc).toLowerCase();
+
               const matched =
-                (record.statusDescription &&
-                  roleStatuses.find(
-                    (s) =>
-                      s.Description.trim().toLowerCase() ===
-                      record.statusDescription?.trim().toLowerCase()
-                  )) ||
-                roleStatuses.find(
-                  (s) =>
-                    s.Alias.toLowerCase() ===
-                    String(record.statusAlias || decisionVal || "").toLowerCase()
-                ) ||
-                roleStatuses.find(
-                  (s) =>
-                    s.Description.toLowerCase() === String(decisionVal || "").toLowerCase()
-                ) ||
+                // 1. Khớp theo Alias chuẩn (độc lập với ngôn ngữ)
+                roleStatuses.find((s) => s.Alias.toLowerCase() === targetAlias) ||
+                // 2. Khớp theo Normalized Alias
+                roleStatuses.find((s) => s.Alias.toLowerCase() === normalized) ||
+                // 3. Khớp theo Description hiện tại
+                (targetDesc && roleStatuses.find((s) => s.Description.trim().toLowerCase() === targetDesc)) ||
+                // 4. Nhận diện ngữ nghĩa an toàn đa ngôn ngữ
+                (targetDesc.includes("chưa") || targetDesc.includes("pending") || targetDesc.includes("not-started")
+                  ? roleStatuses.find((s) => Number(s.Status) === 3)
+                  : undefined) ||
+                (targetDesc.includes("đang") || targetDesc.includes("progress")
+                  ? roleStatuses.find((s) => Number(s.Status) === 2)
+                  : undefined) ||
+                (targetDesc.includes("đồng ý") || targetDesc.includes("approved") || targetDesc.includes("duyệt") || targetDesc.includes("chấp thuận")
+                  ? roleStatuses.find((s) => Number(s.Status) === 0)
+                  : undefined) ||
+                (targetDesc.includes("không đồng ý") || targetDesc.includes("reject") || targetDesc.includes("từ chối") || targetDesc.includes("hủy")
+                  ? roleStatuses.find((s) => Number(s.Status) === -1)
+                  : undefined) ||
+                roleStatuses.find((s) => Number(s.Status) === 2) ||
                 roleStatuses[0];
+
               currentOpt = {
                 alias: matched.Alias,
                 description: matched.Description,
@@ -397,66 +469,6 @@ export default function SubmissionApprovalTable({
           },
         },
         {
-          title: isEn ? "Work Cat." : "Nhóm CV",
-          dataIndex: "reviewedWorkCat",
-          key: "reviewedWorkCat",
-          width: 130,
-          align: "left",
-          render: (val: string | null | undefined, record: SubmissionRow) => {
-            const displayVal = val ?? record.reviewedWorkCat ?? null;
-            return <span style={{ fontSize: 12, color: "#123443" }}>{displayVal ?? "-"}</span>;
-          },
-        },
-        {
-          title: isEn ? "Appr. Qty" : "KL duyệt",
-          dataIndex: "apprQty",
-          key: "apprQty",
-          width: 85,
-          align: "right",
-          render: (val: number, record: SubmissionRow) => (
-            <InputNumber
-              size="small"
-              value={val}
-              min={0}
-              step={0.01}
-              precision={2}
-              style={{ width: "100%", textAlign: "right", fontFamily: "monospace", fontSize: 12 }}
-              onChange={(v) => handleCellChange(record.key, "apprQty", v)}
-            />
-          ),
-        },
-        {
-          title: isEn ? "Appr. Price" : "ĐG duyệt",
-          dataIndex: "apprPrice",
-          key: "apprPrice",
-          width: 95,
-          align: "right",
-          render: (val: number, record: SubmissionRow) => (
-            <InputNumber
-              size="small"
-              value={val}
-              min={0}
-              step={1000}
-              formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ".")}
-              parser={(v) => (v ? Number(v.replace(/\./g, "")) : 0)}
-              style={{ width: "100%", textAlign: "right", fontFamily: "monospace", fontSize: 12 }}
-              onChange={(v) => handleCellChange(record.key, "apprPrice", v)}
-            />
-          ),
-        },
-        {
-          title: isEn ? "Amount" : "Thành tiền",
-          dataIndex: "apprAmount",
-          key: "apprAmount",
-          width: 115,
-          align: "right",
-          render: (val: number) => (
-            <span style={{ fontFamily: "monospace", color: "#008f89", fontWeight: 600, fontSize: 12.5 }}>
-              {val != null ? Number(val).toLocaleString("vi-VN") : "0"}
-            </span>
-          ),
-        },
-        {
           title: isEn ? "Comments" : "Ý kiến",
           dataIndex: "remarks",
           key: "remarks",
@@ -475,40 +487,80 @@ export default function SubmissionApprovalTable({
     },
   ], [isEn, dataSource, decisionOptions, statusesWithRole]);
 
-  // Hook ghi nhớ và thay đổi độ rộng cột vào localStorage
-  const { columns: resizableColumns, handleResizeColumn } = usePersistedColumnWidths(
-    initialColumns as any[],
-    STORAGE_KEY
+  // Quản lý độ rộng cột ResizableTitle & lưu localStorage
+  const [columnWidths, setColumnWidths] = useState<Record<string, number>>(() => {
+    if (typeof window === "undefined") return {};
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  const handleResize = useCallback(
+    (colKey: string) => (_: unknown, { size }: { size: { width: number } }) => {
+      setColumnWidths((prev) => {
+        const next = { ...prev, [colKey]: Math.max(size.width, 50) };
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+        } catch {}
+        return next;
+      });
+    },
+    []
   );
 
   const finalColumns = useMemo(() => {
-    return (resizableColumns as any[]).map((col, index) => {
+    return (initialColumns as any[]).map((col) => {
       if (col.children) {
         return {
           ...col,
           onHeaderCell: () => ({
             style: { textAlign: "center" },
           }),
-          children: col.children.map((childCol: any, childIdx: number) => ({
-            ...childCol,
-            onHeaderCell: (headerCol: any) => ({
-              width: headerCol.width,
-              onResize: handleResizeColumn(100 + index * 10 + childIdx),
-              style: { textAlign: "center" },
-            }),
-          })),
+          children: col.children.map((childCol: any) => {
+            const childKey = String(childCol.key || childCol.dataIndex);
+            const currentWidth = columnWidths[childKey] || childCol.width || 100;
+            return {
+              ...childCol,
+              width: currentWidth,
+              onHeaderCell: (headerCol: any) => ({
+                width: headerCol.width,
+                onResize: handleResize(childKey),
+                style: { textAlign: "center" },
+              }),
+            };
+          }),
         };
       }
+      const colKey = String(col.key || col.dataIndex);
+      const currentWidth = columnWidths[colKey] || col.width || 100;
       return {
         ...col,
+        width: currentWidth,
         onHeaderCell: (headerCol: any) => ({
           width: headerCol.width,
-          onResize: handleResizeColumn(index),
+          onResize: handleResize(colKey),
           style: { textAlign: "center" },
         }),
       };
     });
-  }, [resizableColumns, handleResizeColumn]);
+  }, [initialColumns, columnWidths, handleResize]);
+
+  const scrollX = useMemo(() => {
+    let total = 0;
+    finalColumns.forEach((col: any) => {
+      if (col.children) {
+        col.children.forEach((childCol: any) => {
+          total += Number(childCol.width) || 100;
+        });
+      } else {
+        total += Number(col.width) || 100;
+      }
+    });
+    return Math.max(total, 1960);
+  }, [finalColumns]);
 
   // Gắn ResizableTitle component
   const components = useMemo(() => ({
@@ -540,6 +592,7 @@ export default function SubmissionApprovalTable({
       <Table<SubmissionRow>
         bordered
         size="small"
+        tableLayout="fixed"
         className="erp-detail-table submission-approval-table"
         components={components}
         columns={finalColumns as any}
@@ -547,37 +600,47 @@ export default function SubmissionApprovalTable({
         rowKey="key"
         pagination={false}
         loading={loading}
-        scroll={{ x: 1960, y: "calc(100vh - 355px)" }}
+        scroll={{ x: scrollX, y: "calc(100vh - 355px)" }}
         summary={() => (
           <Table.Summary fixed="bottom">
             <Table.Summary.Row style={{ background: "#eef8f6", fontWeight: 700 }}>
-              <Table.Summary.Cell index={0} colSpan={8} align="right">
+              <Table.Summary.Cell index={0} colSpan={7} align="right">
                 <span style={{ fontSize: 13, color: "#123443" }}>
                   {isEn ? "Σ TOTAL:" : "Σ TỔNG CỘNG:"}
                 </span>
               </Table.Summary.Cell>
-              {/* Tổng đệ trình */}
-              <Table.Summary.Cell index={1} align="right">-</Table.Summary.Cell>
-              <Table.Summary.Cell index={2} align="right">-</Table.Summary.Cell>
-              <Table.Summary.Cell index={3} align="right">
-                <span style={{ fontFamily: "monospace", color: "#1d4ed8", fontSize: 13.5 }}>
+              {/* Nhóm 1: Thông tin Đệ trình */}
+              {/* Nhóm CV */}
+              <Table.Summary.Cell index={1} align="center">-</Table.Summary.Cell>
+              {/* Khối lượng */}
+              <Table.Summary.Cell index={2} align="left">-</Table.Summary.Cell>
+              {/* Đơn giá */}
+              <Table.Summary.Cell index={3} align="left">-</Table.Summary.Cell>
+              {/* Thành tiền */}
+              <Table.Summary.Cell index={4} align="right">
+                <span style={{ fontFamily: "monospace", color: "#123443", fontWeight: 700, fontSize: 13.5 }}>
                   {totalSubAmount.toLocaleString("vi-VN")}
                 </span>
               </Table.Summary.Cell>
               {/* Vai trò */}
-              <Table.Summary.Cell index={4} align="center">-</Table.Summary.Cell>
-              {/* Tổng duyệt */}
               <Table.Summary.Cell index={5} align="center">-</Table.Summary.Cell>
+              {/* Nhóm 2: Quyết định & Phê duyệt */}
               {/* Nhóm CV duyệt (ReviewedWorkCat) */}
               <Table.Summary.Cell index={6} align="center">-</Table.Summary.Cell>
-              <Table.Summary.Cell index={7} align="right">-</Table.Summary.Cell>
-              <Table.Summary.Cell index={8} align="right">-</Table.Summary.Cell>
+              {/* KL duyệt */}
+              <Table.Summary.Cell index={7} align="left">-</Table.Summary.Cell>
+              {/* ĐG duyệt */}
+              <Table.Summary.Cell index={8} align="left">-</Table.Summary.Cell>
+              {/* Thành tiền duyệt */}
               <Table.Summary.Cell index={9} align="right">
-                <span style={{ fontFamily: "monospace", color: "#008f89", fontSize: 13.5 }}>
+                <span style={{ fontFamily: "monospace", color: "#123443", fontWeight: 700, fontSize: 13.5 }}>
                   {totalApprAmount.toLocaleString("vi-VN")}
                 </span>
               </Table.Summary.Cell>
-              <Table.Summary.Cell index={10} />
+              {/* Quyết định */}
+              <Table.Summary.Cell index={10} align="center">-</Table.Summary.Cell>
+              {/* Ý kiến */}
+              <Table.Summary.Cell index={11} />
             </Table.Summary.Row>
           </Table.Summary>
         )}

@@ -8,7 +8,6 @@ import {
   IconDeviceFloppy,
   IconSearch,
   IconChevronDown,
-  IconFileSpreadsheet,
 } from "@tabler/icons-react";
 import { ErpPageContainer } from "@/components/layout/ErpPageContainer";
 import SubmissionApprovalTable from "./_components/SubmissionApprovalTable";
@@ -183,15 +182,14 @@ export default function SubmissionsPage() {
         Language: language || "vi",
       });
 
-      // Đảm bảo có danh sách trạng thái theo Role từ API get-processing-status-list (official_with_role)
-      let withRoleList = statusesWithRole;
-      if (!withRoleList || withRoleList.length === 0) {
-        withRoleList = await submissionsApi.getProcessingStatusListWithRole({
-          Language: language || "vi",
-        });
-        if (withRoleList && withRoleList.length > 0) {
-          setStatusesWithRole(withRoleList);
-        }
+      // Luôn tải danh sách trạng thái theo Role theo đúng ngôn ngữ hiện tại
+      let withRoleList = await submissionsApi.getProcessingStatusListWithRole({
+        Language: language || "vi",
+      });
+      if (withRoleList && withRoleList.length > 0) {
+        setStatusesWithRole(withRoleList);
+      } else {
+        withRoleList = statusesWithRole;
       }
 
       const mappedRows: SubmissionRow[] = rawItems.map((item: any, index: number) => {
@@ -227,7 +225,15 @@ export default function SubmissionsPage() {
             String(st.Status) === rawStatus
         );
 
-        // 2. Nếu chưa khớp theo Role hiện tại, tra cứu theo Alias của bất kỳ Role nào trong API
+        // 2. Tra cứu theo Alias chuẩn hóa (normalizeApprovalStatusAlias)
+        if (!matched) {
+          const normalized = normalizeApprovalStatusAlias(rawStatus).toLowerCase();
+          matched = roleStatuses.find(
+            (st) => st.Alias.trim().toLowerCase() === normalized
+          );
+        }
+
+        // 3. Nếu chưa khớp theo Role hiện tại, tra cứu theo Alias của bất kỳ Role nào trong API
         if (!matched) {
           const anyMatched = (withRoleList || []).find(
             (st) =>
@@ -241,9 +247,32 @@ export default function SubmissionsPage() {
           }
         }
 
-        // 3. Lấy item từ API: nếu không thấy thì fallback sang In-Progress hoặc item đầu tiên của Role
+        // 4. Nhận diện ngữ nghĩa an toàn đa ngôn ngữ
+        if (!matched) {
+          if (rawStatus.includes("chưa") || rawStatus.includes("not-started") || rawStatus.includes("pending")) {
+            matched = roleStatuses.find((st) => Number(st.Status) === 3);
+          } else if (rawStatus.includes("đang") || rawStatus.includes("progress")) {
+            matched = roleStatuses.find((st) => Number(st.Status) === 2);
+          } else if (
+            rawStatus.includes("đồng ý") ||
+            rawStatus.includes("approved") ||
+            rawStatus.includes("chấp thuận") ||
+            rawStatus.includes("duyệt")
+          ) {
+            matched = roleStatuses.find((st) => Number(st.Status) === 0);
+          } else if (
+            rawStatus.includes("không đồng ý") ||
+            rawStatus.includes("reject") ||
+            rawStatus.includes("từ chối") ||
+            rawStatus.includes("hủy")
+          ) {
+            matched = roleStatuses.find((st) => Number(st.Status) === -1);
+          }
+        }
+
+        // 5. Fallback: Status 2 hoặc item đầu tiên của Role
         const finalStatusItem =
-          matched || roleStatuses.find((st) => st.Status === 2) || roleStatuses[0];
+          matched || roleStatuses.find((st) => Number(st.Status) === 2) || roleStatuses[0];
 
         const resolvedAlias = finalStatusItem?.Alias || "In-Progress";
         const resolvedDescription = finalStatusItem?.Description || item.ApprovalStatus || "";
@@ -258,6 +287,7 @@ export default function SubmissionsPage() {
           wbsCode: item.WBS || "",
           submissionDate: subDateStr,
           itemName: item.SubmissionName || "",
+          workType: item.WorkType || item.workType || filters.workType || "",
           workCategory: item.SubmittedWorkCat ?? null,
           submittedWorkCat: item.SubmittedWorkCat ?? null,
           reviewedWorkCat: item.ReviewedWorkCat ?? null,
@@ -337,7 +367,7 @@ export default function SubmissionsPage() {
       );
       if (roleStatuses.length > 0) {
         return roleStatuses.map((st) => ({
-          key: st.Description,
+          key: st.Alias,
           alias: st.Alias,
           description: st.Description,
           dotColor: getStatusDotColor(normalizeApprovalStatusAlias(st.Alias || st.Description)),
@@ -346,21 +376,33 @@ export default function SubmissionsPage() {
     }
 
     // 2. Nếu chọn "Tất cả vai trò" (filters.role === "all"):
-    // Lấy động trực tiếp từ các quyết định thực tế đang có trong cột Quyết định của danh sách dữ liệu
+    // Lấy động từ các alias thực tế đang có trong rows, rồi map sang Description của ngôn ngữ hiện tại
     const statusMap = new Map<string, { key: string; alias: string; description: string; dotColor: string }>();
 
     rows.forEach((r) => {
-      const desc = (r.statusDescription || r.decision || "").trim();
       const alias = (r.statusAlias || r.decision || "").trim();
-      if (!desc && !alias) return;
+      if (!alias) return;
 
-      const mapKey = desc || alias;
+      const role = (r.role || "A").toUpperCase();
+      const roleStatuses = (statusesWithRole || []).filter(
+        (st) => String(st.Role || "").toUpperCase() === role
+      );
+      const matched =
+        roleStatuses.find((st) => st.Alias.toLowerCase() === alias.toLowerCase()) ||
+        roleStatuses.find(
+          (st) => st.Alias.toLowerCase() === normalizeApprovalStatusAlias(alias).toLowerCase()
+        ) ||
+        (statusesWithRole || []).find((st) => st.Alias.toLowerCase() === alias.toLowerCase());
+
+      const displayDesc = matched?.Description || r.statusDescription || alias;
+      const mapKey = matched?.Alias || alias;
+
       if (!statusMap.has(mapKey)) {
         statusMap.set(mapKey, {
           key: mapKey,
-          alias: alias || mapKey,
-          description: desc || alias,
-          dotColor: getStatusDotColor(normalizeApprovalStatusAlias(alias || desc)),
+          alias: mapKey,
+          description: displayDesc,
+          dotColor: getStatusDotColor(normalizeApprovalStatusAlias(mapKey)),
         });
       }
     });
@@ -377,6 +419,8 @@ export default function SubmissionsPage() {
     rows.forEach((r) => {
       const desc = (r.statusDescription || "").trim();
       const alias = (r.statusAlias || r.decision || "").trim();
+      const norm = normalizeApprovalStatusAlias(alias || desc);
+
       if (desc) {
         c[desc] = (c[desc] || 0) + 1;
         c[desc.toLowerCase()] = (c[desc.toLowerCase()] || 0) + 1;
@@ -384,6 +428,10 @@ export default function SubmissionsPage() {
       if (alias) {
         c[alias] = (c[alias] || 0) + 1;
         c[alias.toLowerCase()] = (c[alias.toLowerCase()] || 0) + 1;
+      }
+      if (norm) {
+        c[norm] = (c[norm] || 0) + 1;
+        c[norm.toLowerCase()] = (c[norm.toLowerCase()] || 0) + 1;
       }
     });
     return c;
@@ -477,10 +525,17 @@ export default function SubmissionsPage() {
         }
         const rowDesc = (r.statusDescription || "").trim().toLowerCase();
         const rowAlias = (r.statusAlias || r.decision || "").trim().toLowerCase();
+        const rowNorm = normalizeApprovalStatusAlias(rowAlias || rowDesc).toLowerCase();
 
         const matchStatus = selectedStatusKeys.some((stKey) => {
           const target = stKey.trim().toLowerCase();
-          return rowDesc === target || rowAlias === target;
+          const targetNorm = normalizeApprovalStatusAlias(target).toLowerCase();
+          return (
+            rowDesc === target ||
+            rowAlias === target ||
+            rowNorm === target ||
+            rowNorm === targetNorm
+          );
         });
 
         if (!matchStatus) {
@@ -551,45 +606,7 @@ export default function SubmissionsPage() {
 
   return (
     <ErpPageContainer style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      {/* 1. Header Trang */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          paddingBottom: 8,
-          borderBottom: "1px solid #e2e8f0",
-        }}
-      >
-        <div>
-          <div style={{ fontSize: 16, fontWeight: 700, color: "#008f89", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 8 }}>
-            <IconFileSpreadsheet size={20} strokeWidth={2.2} />
-            {isEn ? "Submission Approval" : "Phê duyệt đệ trình"}
-          </div>
-          <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>
-            {isEn
-              ? "Review, compare, and approve contractor submission items for quantities and costs"
-              : "Xem xét, đối chiếu và phê duyệt các hạng mục đệ trình khối lượng / chi phí từ Nhà thầu"}
-          </div>
-        </div>
-
-        <Space size={8}>
-          <Button icon={<IconRefresh size={15} />} onClick={handleRefresh}>
-            {isEn ? "Refresh" : "Làm mới"}
-          </Button>
-          <Button
-            type="primary"
-            icon={<IconDeviceFloppy size={15} />}
-            loading={saving}
-            onClick={handleSave}
-            style={{ background: "#008f89", borderColor: "#008f89" }}
-          >
-            {isEn ? "Save Changes" : "Lưu phê duyệt"}
-          </Button>
-        </Space>
-      </div>
-
-      {/* 2. Khung bộ lọc (Filter Card 2 hàng chuẩn) */}
+      {/* 1. Khung bộ lọc (Filter Card 2 hàng chuẩn) */}
       <div
         style={{
           padding: "12px 16px",
@@ -893,29 +910,47 @@ export default function SubmissionsPage() {
           </div>
 
           <div style={{ alignSelf: "flex-end" }}>
-            <Button
-              style={{ height: 32, color: "#64748b" }}
-              onClick={() => {
-                const initialWorkType = workTypes[0]?.Alias || "construction_work";
-                setFilters({
-                  contractId: "0",
-                  searchKeyword: "",
-                  status: "All",
-                  workType: initialWorkType,
-                  role: "all",
-                  dateRange: undefined,
-                });
-                setSelectedStatusKeys(["__ALL__"]);
-                setDateRange(null);
-              }}
-            >
-              {isEn ? "Clear Filter" : "Xóa bộ lọc"}
-            </Button>
+            <Space size={8}>
+              <Button
+                style={{ height: 32, color: "#64748b" }}
+                onClick={() => {
+                  const initialWorkType = workTypes[0]?.Alias || "construction_work";
+                  setFilters({
+                    contractId: "0",
+                    searchKeyword: "",
+                    status: "All",
+                    workType: initialWorkType,
+                    role: "all",
+                    dateRange: undefined,
+                  });
+                  setSelectedStatusKeys(["__ALL__"]);
+                  setDateRange(null);
+                }}
+              >
+                {isEn ? "Clear Filter" : "Xóa bộ lọc"}
+              </Button>
+              <Button
+                icon={<IconRefresh size={15} />}
+                onClick={handleRefresh}
+                style={{ height: 32 }}
+              >
+                {isEn ? "Refresh" : "Làm mới"}
+              </Button>
+              <Button
+                type="primary"
+                icon={<IconDeviceFloppy size={15} />}
+                loading={saving}
+                onClick={handleSave}
+                style={{ height: 32, background: "#008f89", borderColor: "#008f89" }}
+              >
+                {isEn ? "Save Changes" : "Lưu phê duyệt"}
+              </Button>
+            </Space>
           </div>
         </div>
       </div>
 
-      {/* 3. Bảng dữ liệu đệ trình */}
+      {/* 2. Bảng dữ liệu đệ trình */}
       <div style={{ flex: 1, minHeight: 0 }}>
         <SubmissionApprovalTable
           dataSource={filteredRows}

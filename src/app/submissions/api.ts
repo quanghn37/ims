@@ -146,6 +146,31 @@ export const submissionsApi = {
   },
 
   /**
+   * Lấy danh sách đệ trình cho người phê duyệt (Test Endpoint)
+   * Endpoint: api/get-submisson-for-reviewer-test
+   */
+  getSubmissionsForReviewerTest: async (params?: Record<string, any>): Promise<any[]> => {
+    try {
+      const response = await erpGet("api/get-submisson-for-reviewer-test", {
+        LogIn: "c@gmail.com",
+        SessionId: "83D43B9E-5C81-4F3F-BBFB-2420F2F0B1A9",
+        WorkType: "all",
+        FromDate: "",
+        ToDate: "",
+        Keyword: "",
+        PageNum: 1,
+        PageSize: 1000,
+        Language: "vi",
+        ...params,
+      });
+      return extractApiList(response);
+    } catch (error) {
+      console.error("Lỗi gọi API get-submisson-for-reviewer-test:", error);
+      return [];
+    }
+  },
+
+  /**
    * Cập nhật quyết định phê duyệt các dòng đệ trình
    */
   saveSubmissionReviews: async (rows: SubmissionRow[]): Promise<{ success: boolean; message?: string }> => {

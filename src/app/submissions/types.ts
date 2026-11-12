@@ -42,6 +42,19 @@ export function getStatusDotColor(aliasOrStatus: string | number): string {
   return "#94a3b8";
 }
 
+export function getWorkTypeDotColor(workType?: string): string {
+  const wt = String(workType || "").toLowerCase();
+  if (wt.includes("purchase") || wt.includes("order") || wt.includes("đơn hàng")) return "#0ea5e9";
+  if (wt.includes("construction") || wt.includes("thi công") || wt.includes("xây dựng")) return "#10b981";
+  if (wt.includes("price") || wt.includes("điều chỉnh") || wt.includes("giá")) return "#f59e0b";
+  if (wt.includes("subcontract") || wt.includes("phụ") || wt.includes("thầu")) return "#8b5cf6";
+  if (wt.includes("payment") || wt.includes("thanh toán")) return "#ec4899";
+  if (wt.includes("advance") || wt.includes("tạm ứng")) return "#06b6d4";
+  if (wt.includes("penalty") || wt.includes("phạt")) return "#ef4444";
+  if (wt.includes("backcharge")) return "#f97316";
+  return "#64748b";
+}
+
 export interface StatusOption {
   key: string;
   alias?: string;
@@ -70,6 +83,8 @@ export interface SubmissionRow {
   wbsCode: string;
   submissionDate: string;
   itemName: string;
+  workType?: string | null;
+  workTypeDesc?: string | null;
   workCategory?: string | null;
   submittedWorkCat?: string | null;
   reviewedWorkCat?: string | null;
