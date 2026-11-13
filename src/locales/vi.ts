@@ -51,6 +51,8 @@ export const viTranslations = {
     addItem: "Thêm vật tư",
   },
   menu: {
+    mainContracts: "Hợp đồng CĐT",
+    projectContracts: "Hợp đồng CĐT & Dự án",
     quotations: "Bảng giá NCC",
     contracts: "Hợp đồng NCC",
     purchaseOrders: "Đơn hàng",
@@ -65,6 +67,8 @@ export const viTranslations = {
     invoices: "Hóa đơn / IPC",
   },
   pageTitles: {
+    mainContracts: "Hợp đồng CĐT",
+    projectContracts: "Hợp đồng CĐT & Dự án",
     quotations: "Quản lý Bảng giá Nhà cung cấp",
     contracts: "Quản lý Hợp đồng Nhà cung cấp",
     purchaseOrders: "Quản lý Đơn hàng Mua sắm",

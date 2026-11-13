@@ -247,7 +247,7 @@ export default function ContractWorkflowDrawer({
                 {language === "en" ? "Contract Value" : "Giá trị hợp đồng"}
               </span>
               <div className="erp-summary-value amount">
-                {amount > 0 ? `${amount.toLocaleString("vi-VN")} VND` : "0 VND"}
+                {amount > 0 ? amount.toLocaleString("vi-VN") : "0"}
               </div>
             </div>
           </div>

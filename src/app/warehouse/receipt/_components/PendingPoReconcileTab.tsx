@@ -520,7 +520,7 @@ export default function PendingPoReconcileTab({
         width: 120,
         align: "right",
         render: (val: any) =>
-          val !== undefined && val !== null ? `${Number(val).toLocaleString("vi-VN")} ₫` : "---",
+          val !== undefined && val !== null ? `${Number(val).toLocaleString("vi-VN")}` : "---",
       },
       {
         title: "VAT",

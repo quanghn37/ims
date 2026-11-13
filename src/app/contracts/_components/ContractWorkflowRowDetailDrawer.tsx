@@ -159,7 +159,7 @@ export default function ContractWorkflowRowDetailDrawer({
                 {t("workflow.approvedAmount") || "Thành tiền duyệt"}
               </div>
               <div style={{ fontSize: 20, fontWeight: 700, color: "#008f89", letterSpacing: 0.2 }}>
-                {displayAmount.toLocaleString(numLocale)} ₫
+                {displayAmount.toLocaleString(numLocale)}
               </div>
             </div>
 

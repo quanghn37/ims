@@ -83,6 +83,7 @@ export default function ContractFormDrawer({
   onDeleteContract,
 }: ContractFormDrawerProps) {
   const isEditing = Boolean(editingContract);
+  const hasQuotationHeader = Boolean(editingContract?.ContractId);
   const isReadOnly = Boolean(
     editingContract && (editingContract.Editable === 0 || editingContract.Editable === "0")
   );
@@ -186,38 +187,40 @@ export default function ContractFormDrawer({
         </div>
 
         <Space size={8}>
-          <Button
-            icon={<IconPaperclip size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />}
-            onClick={() => setIsAttachmentModalOpen(true)}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              fontSize: 13,
-              fontWeight: 500,
-              height: 32,
-              borderRadius: 6,
-              borderColor: "#dce5e6",
-              background: "#FFFFFF",
-              color: "#334155",
-            }}
-          >
-            {t.quotation.attachments}
-            {attachments.length > 0 ? (
-              <span
-                style={{
-                  background: "#dce5e6",
-                  color: "#008f89",
-                  borderRadius: 10,
-                  padding: "1px 7px",
-                  fontSize: 11,
-                  fontWeight: 600,
-                  marginLeft: 5,
-                }}
-              >
-                {attachments.length}
-              </span>
-            ) : null}
-          </Button>
+          {hasQuotationHeader && (
+            <Button
+              icon={<IconPaperclip size={16} strokeWidth={1.8} style={{ color: "#008f89" }} />}
+              onClick={() => setIsAttachmentModalOpen(true)}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                fontSize: 13,
+                fontWeight: 500,
+                height: 32,
+                borderRadius: 6,
+                borderColor: "#dce5e6",
+                background: "#FFFFFF",
+                color: "#334155",
+              }}
+            >
+              {t.quotation.attachments}
+              {attachments.length > 0 ? (
+                <span
+                  style={{
+                    background: "#dce5e6",
+                    color: "#008f89",
+                    borderRadius: 10,
+                    padding: "1px 7px",
+                    fontSize: 11,
+                    fontWeight: 600,
+                    marginLeft: 5,
+                  }}
+                >
+                  {attachments.length}
+                </span>
+              ) : null}
+            </Button>
+          )}
 
           {/* Hiển thị button Xóa khi bảng giá đã được lưu (có ContractId) */}
           {isEditing && onDeleteContract && editingContract?.ContractId && (

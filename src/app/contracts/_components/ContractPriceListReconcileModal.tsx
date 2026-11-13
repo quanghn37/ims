@@ -471,7 +471,7 @@ export default function ContractPriceListReconcileModal({
               )}
               {totalSelectedAmount > 0 && (
                 <span style={{ marginLeft: 10, color: "#123443", fontWeight: 600 }}>
-                  | {language === "en" ? "Total: " : "Tổng tiền: "}{totalSelectedAmount.toLocaleString(language === "en" ? "en-US" : "vi-VN")} VND
+                  | {language === "en" ? "Total: " : "Tổng tiền: "}{totalSelectedAmount.toLocaleString(language === "en" ? "en-US" : "vi-VN")}
                 </span>
               )}
             </span>

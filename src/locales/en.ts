@@ -53,6 +53,8 @@ export const enTranslations: TranslationsType = {
     addItem: "Add Item",
   },
   menu: {
+    mainContracts: "Client Contracts",
+    projectContracts: "Client & Project Contracts",
     quotations: "Vendor Price Lists",
     contracts: "Vendor Contracts",
     purchaseOrders: "Purchase Orders",
@@ -67,6 +69,8 @@ export const enTranslations: TranslationsType = {
     invoices: "Invoices / IPC",
   },
   pageTitles: {
+    mainContracts: "Client Contracts",
+    projectContracts: "Client & Project Contracts",
     quotations: "Vendor Quotations & Price Lists",
     contracts: "Vendor Contracts Management",
     purchaseOrders: "Purchase Orders Management",

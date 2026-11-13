@@ -91,11 +91,18 @@ export const submissionsApi = {
    * Lấy khoảng ngày mặc định theo WorkType truyền vào
    * Endpoint: api/get-default-date?params={"WorkType": "..."}
    */
-  getDefaultDate: async (workType: string): Promise<DefaultDateResponse | null> => {
+  getDefaultDate: async (
+    workType: string,
+    options?: { skipCache?: boolean; ttlMs?: number; timeoutMs?: number }
+  ): Promise<DefaultDateResponse | null> => {
     try {
-      const response = await erpGet("api/get-default-date", {
-        WorkType: workType,
-      });
+      const response = await erpGet(
+        "api/get-default-date",
+        {
+          WorkType: workType,
+        },
+        options
+      );
       let data = response?.Data ?? response?.data ?? response;
       if (typeof data === "string") {
         try {
@@ -122,22 +129,29 @@ export const submissionsApi = {
    * Lấy danh sách đệ trình cho người phê duyệt
    * Endpoint: api/get-submisson-for-reviewer
    */
-  getSubmissionsForReviewer: async (params?: Record<string, any>): Promise<any[]> => {
+  getSubmissionsForReviewer: async (
+    params?: Record<string, any>,
+    options?: { skipCache?: boolean; ttlMs?: number; timeoutMs?: number }
+  ): Promise<any[]> => {
     try {
-      const response = await erpGet("api/get-submisson-for-reviewer", {
-        ContractId: 0,
-        DisplayMode: "to_be_approved_submission",
-        PageSize: 1000,
-        Keyword: "",
-        WorkType: "construction_work",
-        ApprovalStatus: "All",
-        Role: "All",
-        Stage: "All",
-        WorkCat: "All",
-        FromDate: "",
-        ToDate: "",
-        ...params,
-      });
+      const response = await erpGet(
+        "api/get-submisson-for-reviewer",
+        {
+          ContractId: 0,
+          DisplayMode: "to_be_approved_submission",
+          PageSize: 1000,
+          Keyword: "",
+          WorkType: "construction_work",
+          ApprovalStatus: "All",
+          Role: "All",
+          Stage: "All",
+          WorkCat: "All",
+          FromDate: "",
+          ToDate: "",
+          ...params,
+        },
+        options
+      );
       return extractApiList(response);
     } catch (error) {
       console.error("Lỗi gọi API get-submisson-for-reviewer:", error);
@@ -149,20 +163,25 @@ export const submissionsApi = {
    * Lấy danh sách đệ trình cho người phê duyệt (Test Endpoint)
    * Endpoint: api/get-submisson-for-reviewer-test
    */
-  getSubmissionsForReviewerTest: async (params?: Record<string, any>): Promise<any[]> => {
+  getSubmissionsForReviewerTest: async (
+    params?: Record<string, any>,
+    options?: { skipCache?: boolean; ttlMs?: number; timeoutMs?: number }
+  ): Promise<any[]> => {
     try {
-      const response = await erpGet("api/get-submisson-for-reviewer-test", {
-        LogIn: "c@gmail.com",
-        SessionId: "83D43B9E-5C81-4F3F-BBFB-2420F2F0B1A9",
-        WorkType: "all",
-        FromDate: "",
-        ToDate: "",
-        Keyword: "",
-        PageNum: 1,
-        PageSize: 1000,
-        Language: "vi",
-        ...params,
-      });
+      const response = await erpGet(
+        "api/get-submisson-for-reviewer-test",
+        {
+          WorkType: "all",
+          FromDate: "",
+          ToDate: "",
+          Keyword: "",
+          PageNum: 1,
+          PageSize: 1000,
+          Language: "vi",
+          ...params,
+        },
+        options
+      );
       return extractApiList(response);
     } catch (error) {
       console.error("Lỗi gọi API get-submisson-for-reviewer-test:", error);

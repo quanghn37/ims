@@ -384,7 +384,7 @@ export default function IpcPrintNoticePage() {
                     </span>
                   </th>
                   <th style={{ textAlign: "center" }}>Nội dung</th>
-                  <th style={{ width: 180, textAlign: "center" }}>Giá trị (VNĐ)</th>
+                  <th style={{ width: 180, textAlign: "center" }}>Giá trị</th>
                 </tr>
               </thead>
               <tbody>

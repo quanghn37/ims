@@ -120,7 +120,7 @@ export default function SubmissionsPage() {
     };
   }, []);
 
-  // Tải danh mục Loại công việc từ backend
+  // Tải danh mục Loại công việc từ backend & lấy ngày mặc định ban đầu
   useEffect(() => {
     let isMounted = true;
     const fetchWorkTypes = async () => {
@@ -133,11 +133,28 @@ export default function SubmissionsPage() {
         });
         if (isMounted && data.length > 0) {
           setWorkTypes(data);
-          // Tự động gán nếu giá trị hiện tại chưa có trong danh mục
-          setFilters((prev) => {
-            const exists = data.some((item) => item.Alias === prev.workType);
-            return exists ? prev : { ...prev, workType: data[0].Alias };
-          });
+          const currentExists = data.some((item) => item.Alias === filters.workType);
+          const defaultType = currentExists ? filters.workType : data[0].Alias;
+          if (!currentExists) {
+            setFilters((prev) => ({ ...prev, workType: defaultType }));
+          }
+
+          let initDates: [dayjs.Dayjs | null, dayjs.Dayjs | null] | null = null;
+          try {
+            const defDate = await submissionsApi.getDefaultDate(defaultType, { skipCache: true });
+            if (defDate?.FromDate && defDate?.ToDate) {
+              const start = dayjs(defDate.FromDate);
+              const end = dayjs(defDate.ToDate);
+              if (start.isValid() && end.isValid()) {
+                initDates = [start, end];
+                if (isMounted) setDateRange(initDates);
+              }
+            }
+          } catch (_) {}
+
+          if (isMounted) {
+            fetchSubmissions(defaultType, initDates);
+          }
         }
       } catch (err) {
         console.error("Lỗi tải danh mục Loại công việc:", err);
@@ -152,45 +169,67 @@ export default function SubmissionsPage() {
   }, [language]);
 
   // Tải danh sách đệ trình từ API get-submisson-for-reviewer
-  const fetchSubmissions = useCallback(async () => {
-    setLoadingRows(true);
-    try {
-      let contractIdParam = 0;
-      let selectedContract: ContractOptionItem | undefined;
-      if (filters.contractId && filters.contractId !== "0" && filters.contractId !== "all") {
-        selectedContract = contracts.find(
-          (c) => c.ContractCode === filters.contractId || String(c.ContractId) === String(filters.contractId)
-        );
-        if (selectedContract?.ContractId) {
-          contractIdParam = Number(selectedContract.ContractId);
+  const fetchSubmissions = useCallback(
+    async (
+      overrideWorkType?: string,
+      overrideDateRange?: [dayjs.Dayjs | null, dayjs.Dayjs | null] | null,
+      overrideContractId?: string,
+      overrideRole?: string
+    ) => {
+      setLoadingRows(true);
+      try {
+        const activeContractId = overrideContractId !== undefined ? overrideContractId : filters.contractId;
+        const activeRole = overrideRole !== undefined ? overrideRole : filters.role;
+        const activeWorkType = overrideWorkType !== undefined ? overrideWorkType : filters.workType;
+        const activeDateRange = overrideDateRange !== undefined ? overrideDateRange : dateRange;
+
+        let contractIdParam = 0;
+        let selectedContract: ContractOptionItem | undefined;
+        if (activeContractId && activeContractId !== "0" && activeContractId !== "all") {
+          selectedContract = contracts.find(
+            (c) => c.ContractCode === activeContractId || String(c.ContractId) === String(activeContractId)
+          );
+          if (selectedContract?.ContractId) {
+            contractIdParam = Number(selectedContract.ContractId);
+          }
         }
-      }
 
-      const fromDateParam = dateRange && dateRange[0] ? dateRange[0].format("YYYY-MM-DD") : "";
-      const toDateParam = dateRange && dateRange[1] ? dateRange[1].format("YYYY-MM-DD") : "";
+        const fromDateParam = activeDateRange && activeDateRange[0] ? activeDateRange[0].format("YYYY-MM-DD") : "";
+        const toDateParam = activeDateRange && activeDateRange[1] ? activeDateRange[1].format("YYYY-MM-DD") : "";
 
-      const rawItems = await submissionsApi.getSubmissionsForReviewer({
-        ContractId: contractIdParam,
-        Keyword: filters.searchKeyword.trim(),
-        WorkType: filters.workType || "construction_work",
-        ApprovalStatus: "All",
-        Role: filters.role === "all" ? "All" : filters.role,
-        Stage: "All",
-        WorkCat: "All",
-        FromDate: fromDateParam,
-        ToDate: toDateParam,
-        Language: language || "vi",
+        const rawItems = await submissionsApi.getSubmissionsForReviewer(
+          {
+            ContractId: contractIdParam,
+            Keyword: filters.searchKeyword.trim(),
+            WorkType: activeWorkType || "construction_work",
+            ApprovalStatus: "All",
+            Role: activeRole === "all" ? "All" : activeRole,
+            Stage: "All",
+            WorkCat: "All",
+            FromDate: fromDateParam,
+            ToDate: toDateParam,
+            Language: language || "vi",
+          },
+          { skipCache: true }
+        );
+
+        // Luôn tải danh sách trạng thái theo Role theo đúng ngôn ngữ hiện tại
+        let withRoleList = await submissionsApi.getProcessingStatusListWithRole({
+          Language: language || "vi",
+        });
+        if (withRoleList && withRoleList.length > 0) {
+          setStatusesWithRole(withRoleList);
+        } else {
+          withRoleList = statusesWithRole;
+        }
+
+      // Tạo bản đồ tra cứu nhanh trạng thái theo Role theo O(1)
+      const roleStatusMap = new Map<string, ProcessingStatusWithRoleItem[]>();
+      (withRoleList || []).forEach((st) => {
+        const r = String(st.Role || "").trim().toUpperCase();
+        if (!roleStatusMap.has(r)) roleStatusMap.set(r, []);
+        roleStatusMap.get(r)!.push(st);
       });
-
-      // Luôn tải danh sách trạng thái theo Role theo đúng ngôn ngữ hiện tại
-      let withRoleList = await submissionsApi.getProcessingStatusListWithRole({
-        Language: language || "vi",
-      });
-      if (withRoleList && withRoleList.length > 0) {
-        setStatusesWithRole(withRoleList);
-      } else {
-        withRoleList = statusesWithRole;
-      }
 
       const mappedRows: SubmissionRow[] = rawItems.map((item: any, index: number) => {
         let subDateStr = "";
@@ -213,9 +252,7 @@ export default function SubmissionsPage() {
         const roleUpper = String(item.Role || "A").trim().toUpperCase();
         const rawStatus = String(item.ApprovalStatus || "").trim().toLowerCase();
 
-        const roleStatuses = (withRoleList || []).filter(
-          (st) => String(st.Role || "").trim().toUpperCase() === roleUpper
-        );
+        const roleStatuses = roleStatusMap.get(roleUpper) || [];
 
         // 1. Tìm trực tiếp theo Role và Description / Alias / Status từ API
         let matched = roleStatuses.find(
@@ -320,11 +357,6 @@ export default function SubmissionsPage() {
     }
   }, [contracts, filters.contractId, filters.searchKeyword, filters.workType, filters.role, dateRange, language, isEn]);
 
-  // Gọi tải dữ liệu đệ trình khi bộ lọc Hợp đồng / Loại CV / Vai trò thay đổi
-  useEffect(() => {
-    fetchSubmissions();
-  }, [fetchSubmissions]);
-
   // Options hiển thị cho Select Hợp đồng
   const contractOptions = useMemo(() => {
     const list = [
@@ -347,15 +379,45 @@ export default function SubmissionsPage() {
   // Options hiển thị cho Select Loại công việc
   const workTypeOptions = useMemo(() => {
     if (workTypes.length > 0) {
-      return workTypes.map((item) => ({
-        value: item.Alias,
-        label: item.Description,
-      }));
+      return workTypes.map((item) => {
+        const val =
+          item.Alias ||
+          (item as any).alias ||
+          (item as any).Code ||
+          (item as any).code ||
+          item.Description;
+        return {
+          value: val,
+          label: item.Description,
+        };
+      });
     }
     return [
       { value: "construction_work", label: isEn ? "Construction Work" : "Xây dựng" },
     ];
   }, [workTypes, isEn]);
+
+  // Xử lý khi chọn Loại công việc: lấy khoảng ngày mặc định và gọi API tải đệ trình ngay lập tức
+  const handleWorkTypeChange = async (val: string) => {
+    setFilters((prev) => ({ ...prev, workType: val }));
+
+    let newDates: [dayjs.Dayjs | null, dayjs.Dayjs | null] | null = null;
+    try {
+      const defDate = await submissionsApi.getDefaultDate(val, { skipCache: true });
+      if (defDate?.FromDate && defDate?.ToDate) {
+        const start = dayjs(defDate.FromDate);
+        const end = dayjs(defDate.ToDate);
+        if (start.isValid() && end.isValid()) {
+          newDates = [start, end];
+          setDateRange(newDates);
+        }
+      }
+    } catch (e) {
+      console.error("Lỗi khi lấy default date cho workType:", e);
+    }
+
+    fetchSubmissions(val, newDates);
+  };
 
   // Danh sách trạng thái động theo cột Quyết định và Vai trò
   const availableStatuses = useMemo(() => {
@@ -410,32 +472,52 @@ export default function SubmissionsPage() {
     return Array.from(statusMap.values());
   }, [rows, filters.role, statusesWithRole]);
 
-  // Đếm số lượng theo trạng thái
+  // Đếm số lượng theo trạng thái: Mỗi dòng thuộc chính xác 1 trạng thái trong availableStatuses
   const counts = useMemo(() => {
     const c: Record<string, number> = {
       All: rows.length,
       all: rows.length,
     };
-    rows.forEach((r) => {
-      const desc = (r.statusDescription || "").trim();
-      const alias = (r.statusAlias || r.decision || "").trim();
-      const norm = normalizeApprovalStatusAlias(alias || desc);
 
-      if (desc) {
-        c[desc] = (c[desc] || 0) + 1;
-        c[desc.toLowerCase()] = (c[desc.toLowerCase()] || 0) + 1;
-      }
-      if (alias) {
-        c[alias] = (c[alias] || 0) + 1;
-        c[alias.toLowerCase()] = (c[alias.toLowerCase()] || 0) + 1;
-      }
-      if (norm) {
-        c[norm] = (c[norm] || 0) + 1;
-        c[norm.toLowerCase()] = (c[norm.toLowerCase()] || 0) + 1;
+    // Khởi tạo count = 0 cho tất cả trạng thái hiện có
+    availableStatuses.forEach((st) => {
+      c[st.key] = 0;
+      if (st.alias) c[st.alias] = 0;
+      if (st.description) c[st.description] = 0;
+    });
+
+    // Duyệt từng dòng và cộng đúng 1 lần cho trạng thái khớp
+    rows.forEach((r) => {
+      const rowDesc = (r.statusDescription || "").trim().toLowerCase();
+      const rowAlias = (r.statusAlias || r.decision || "").trim().toLowerCase();
+      const rowNorm = normalizeApprovalStatusAlias(rowAlias || rowDesc).toLowerCase();
+
+      const matched = availableStatuses.find((st) => {
+        const targetKey = st.key.trim().toLowerCase();
+        const targetDesc = st.description.trim().toLowerCase();
+        const targetAlias = st.alias.trim().toLowerCase();
+        const targetNorm = normalizeApprovalStatusAlias(st.key).toLowerCase();
+
+        return (
+          rowDesc === targetKey ||
+          rowDesc === targetDesc ||
+          rowAlias === targetKey ||
+          rowAlias === targetAlias ||
+          rowNorm === targetKey ||
+          rowNorm === targetNorm
+        );
+      });
+
+      if (matched) {
+        const current = (c[matched.key] || 0) + 1;
+        c[matched.key] = current;
+        if (matched.alias) c[matched.alias] = current;
+        if (matched.description) c[matched.description] = current;
       }
     });
+
     return c;
-  }, [rows]);
+  }, [rows, availableStatuses]);
 
   const isAllSelected =
     selectedStatusKeys.includes("__ALL__") ||
@@ -528,12 +610,18 @@ export default function SubmissionsPage() {
         const rowNorm = normalizeApprovalStatusAlias(rowAlias || rowDesc).toLowerCase();
 
         const matchStatus = selectedStatusKeys.some((stKey) => {
-          const target = stKey.trim().toLowerCase();
-          const targetNorm = normalizeApprovalStatusAlias(target).toLowerCase();
+          const foundSt = availableStatuses.find((s) => s.key === stKey);
+          const targetKey = stKey.trim().toLowerCase();
+          const targetDesc = foundSt ? foundSt.description.trim().toLowerCase() : targetKey;
+          const targetAlias = foundSt ? foundSt.alias.trim().toLowerCase() : targetKey;
+          const targetNorm = normalizeApprovalStatusAlias(targetKey).toLowerCase();
+
           return (
-            rowDesc === target ||
-            rowAlias === target ||
-            rowNorm === target ||
+            rowDesc === targetKey ||
+            rowDesc === targetDesc ||
+            rowAlias === targetKey ||
+            rowAlias === targetAlias ||
+            rowNorm === targetKey ||
             rowNorm === targetNorm
           );
         });
@@ -605,10 +693,11 @@ export default function SubmissionsPage() {
   };
 
   return (
-    <ErpPageContainer style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+    <ErpPageContainer style={{ display: "flex", flexDirection: "column", gap: 10, height: "calc(100vh - 48px)" }}>
       {/* 1. Khung bộ lọc (Filter Card 2 hàng chuẩn) */}
       <div
         style={{
+          flexShrink: 0,
           padding: "12px 16px",
           background: "#f8fafc",
           borderRadius: 6,
@@ -628,7 +717,10 @@ export default function SubmissionsPage() {
               showSearch
               loading={loadingContracts}
               value={filters.contractId}
-              onChange={(val) => setFilters((prev) => ({ ...prev, contractId: val }))}
+              onChange={(val) => {
+                setFilters((prev) => ({ ...prev, contractId: val }));
+                fetchSubmissions(undefined, undefined, val);
+              }}
               style={{ width: "100%", fontFamily: "monospace" }}
               optionFilterProp="label"
               filterOption={(input, option) =>
@@ -847,7 +939,7 @@ export default function SubmissionsPage() {
             <Button
               type="primary"
               style={{ height: 32, background: "#008f89", borderColor: "#008f89" }}
-              onClick={fetchSubmissions}
+              onClick={() => fetchSubmissions()}
               loading={loadingRows}
             >
               {isEn ? "Filter" : "Lọc"}
@@ -864,7 +956,7 @@ export default function SubmissionsPage() {
             <Select
               loading={loadingWorkTypes}
               value={filters.workType}
-              onChange={(val) => setFilters((prev) => ({ ...prev, workType: val }))}
+              onChange={handleWorkTypeChange}
               style={{ width: "100%" }}
               options={workTypeOptions}
             />
@@ -879,6 +971,7 @@ export default function SubmissionsPage() {
               onChange={(val) => {
                 setFilters((prev) => ({ ...prev, role: val, status: "All" }));
                 setSelectedStatusKeys(["__ALL__"]);
+                fetchSubmissions(undefined, undefined, undefined, val);
               }}
               style={{ width: "100%" }}
               options={[
@@ -900,11 +993,13 @@ export default function SubmissionsPage() {
               format="DD/MM/YYYY"
               value={dateRange}
               onChange={(dates, dateStrings) => {
-                setDateRange(dates as [dayjs.Dayjs | null, dayjs.Dayjs | null] | null);
+                const newRange = dates as [dayjs.Dayjs | null, dayjs.Dayjs | null] | null;
+                setDateRange(newRange);
                 setFilters((prev) => ({
                   ...prev,
                   dateRange: dates && dates[0] && dates[1] ? [dateStrings[0], dateStrings[1]] : undefined,
                 }));
+                fetchSubmissions(undefined, newRange);
               }}
             />
           </div>
@@ -925,6 +1020,7 @@ export default function SubmissionsPage() {
                   });
                   setSelectedStatusKeys(["__ALL__"]);
                   setDateRange(null);
+                  fetchSubmissions(initialWorkType, null);
                 }}
               >
                 {isEn ? "Clear Filter" : "Xóa bộ lọc"}
@@ -951,7 +1047,7 @@ export default function SubmissionsPage() {
       </div>
 
       {/* 2. Bảng dữ liệu đệ trình */}
-      <div style={{ flex: 1, minHeight: 0 }}>
+      <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
         <SubmissionApprovalTable
           dataSource={filteredRows}
           onDataChange={setRows}

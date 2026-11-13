@@ -179,6 +179,55 @@ export const AntdLocaleProvider: React.FC<AntdLocaleProviderProps> = ({ children
           background: #f7fbfa !important;
         }
 
+        /* 1.1b. Cấu hình bảng co giãn lấp đầy chiều cao toàn trang (Full Canvas Auto-stretch) */
+        .erp-page-container {
+          display: flex !important;
+          flex-direction: column !important;
+          height: calc(100vh - 48px) !important;
+          max-height: calc(100vh - 48px) !important;
+          overflow: hidden !important;
+          box-sizing: border-box !important;
+        }
+
+        .erp-full-table,
+        .erp-page-container .erp-full-table {
+          display: flex !important;
+          flex-direction: column !important;
+          flex: 1 1 0% !important;
+          min-height: 0 !important;
+          height: 100% !important;
+        }
+
+        .erp-full-table .ant-spin-nested-loading,
+        .erp-full-table .ant-spin-container,
+        .erp-full-table .ant-table,
+        .erp-full-table .ant-table-container {
+          display: flex !important;
+          flex-direction: column !important;
+          flex: 1 1 0% !important;
+          min-height: 0 !important;
+          height: 100% !important;
+        }
+
+        .erp-full-table .ant-table-header {
+          flex-shrink: 0 !important;
+        }
+
+        .erp-full-table .ant-table-body {
+          flex: 1 1 0% !important;
+          max-height: none !important;
+          overflow-y: auto !important;
+        }
+
+        .erp-full-table .ant-table-summary {
+          flex-shrink: 0 !important;
+        }
+
+        .erp-full-table .ant-pagination {
+          margin: 8px 0 0 0 !important;
+          flex-shrink: 0 !important;
+        }
+
         /* 1.2. Chuẩn Khung Thông Tin Chung Mục I (ERP General Info Box - In Đậm Label, Giá Trị Thanh Mảnh, Độ Cao Chuẩn 97px Thoáng Đẹp) */
         .erp-general-info-card {
           background: #FFFFFF !important;

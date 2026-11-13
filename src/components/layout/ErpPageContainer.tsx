@@ -22,11 +22,14 @@ export const ErpPageContainer: React.FC<ErpPageContainerProps> = ({
 }) => {
   return (
     <div
-      className={className}
+      className={className ? `erp-page-container ${className}` : "erp-page-container"}
       style={{
         margin: "-16px -20px -24px -20px",
         minHeight: "calc(100vh - 48px)",
         maxHeight: "calc(100vh - 48px)",
+        height: "calc(100vh - 48px)",
+        display: "flex",
+        flexDirection: "column",
         background: "#FFFFFF",
         padding,
         boxSizing: "border-box",

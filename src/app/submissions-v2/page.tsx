@@ -93,6 +93,14 @@ export default function SubmissionsV2Page() {
           withRoleList = statusesWithRole;
         }
 
+        // Tạo bản đồ tra cứu nhanh trạng thái theo Role theo O(1)
+        const roleStatusMap = new Map<string, ProcessingStatusWithRoleItem[]>();
+        (withRoleList || []).forEach((st) => {
+          const r = String(st.Role || "").trim().toUpperCase();
+          if (!roleStatusMap.has(r)) roleStatusMap.set(r, []);
+          roleStatusMap.get(r)!.push(st);
+        });
+
         const mappedRows: SubmissionRow[] = (rawItems || []).map(
           (item: any, index: number) => {
             let subDateStr = "";
@@ -112,9 +120,7 @@ export default function SubmissionsV2Page() {
             const roleUpper = String(item.Role || "A").trim().toUpperCase();
             const rawStatus = String(item.ApprovalStatus || "").trim().toLowerCase();
 
-            const roleStatuses = (withRoleList || []).filter(
-              (st) => String(st.Role || "").trim().toUpperCase() === roleUpper
-            );
+            const roleStatuses = roleStatusMap.get(roleUpper) || [];
 
             let matched = roleStatuses.find(
               (st) =>
@@ -289,6 +295,16 @@ export default function SubmissionsV2Page() {
     }
   };
 
+  // Bản đồ tra cứu nhanh Loại công việc theo O(1)
+  const workTypeLookup = useMemo(() => {
+    const map = new Map<string, WorkTypeItem>();
+    workTypes.forEach((w) => {
+      map.set(w.Alias.toLowerCase(), w);
+      map.set(w.Description.toLowerCase(), w);
+    });
+    return map;
+  }, [workTypes]);
+
   // Danh sách Tab Loại công việc chỉ lấy từ dữ liệu thực tế API trả ra (loại bỏ các tab count = 0)
   const activeWorkTypeTabs = useMemo(() => {
     const countMap = new Map<string, { label: string; count: number }>();
@@ -297,12 +313,9 @@ export default function SubmissionsV2Page() {
       const wt = (row.workType || "").trim();
       if (!wt) return;
 
-      const matched = workTypes.find(
-        (w) =>
-          w.Alias.toLowerCase() === wt.toLowerCase() ||
-          w.Description.toLowerCase() === wt.toLowerCase()
-      );
-      const aliasKey = matched ? matched.Alias.toLowerCase() : wt.toLowerCase();
+      const lower = wt.toLowerCase();
+      const matched = workTypeLookup.get(lower);
+      const aliasKey = matched ? matched.Alias.toLowerCase() : lower;
       const label = matched?.Description || row.workTypeDesc || wt;
 
       const existing = countMap.get(aliasKey);
@@ -319,12 +332,14 @@ export default function SubmissionsV2Page() {
     });
 
     return tabs;
-  }, [allRows, workTypes]);
+  }, [allRows, workTypeLookup]);
 
   // Lọc dữ liệu hiển thị theo tab Loại công việc đang chọn
   const displayedRows = useMemo(() => {
     if (workType === "all") return allRows;
     const target = workType.trim().toLowerCase();
+    const matchedTarget = workTypeLookup.get(target);
+    const targetAlias = matchedTarget ? matchedTarget.Alias.toLowerCase() : target;
 
     return allRows.filter((r) => {
       const rowWt = (r.workType || "").trim().toLowerCase();
@@ -332,38 +347,27 @@ export default function SubmissionsV2Page() {
 
       if (rowWt === target || rowDesc === target) return true;
 
-      const matchedRow = workTypes.find(
-        (w) =>
-          w.Alias.toLowerCase() === rowWt ||
-          w.Description.toLowerCase() === rowWt
-      );
-      const matchedTarget = workTypes.find(
-        (w) =>
-          w.Alias.toLowerCase() === target ||
-          w.Description.toLowerCase() === target
-      );
-
-      if (
-        matchedRow &&
-        matchedTarget &&
-        matchedRow.Alias.toLowerCase() === matchedTarget.Alias.toLowerCase()
-      ) {
+      const matchedRow = workTypeLookup.get(rowWt);
+      if (matchedRow && matchedRow.Alias.toLowerCase() === targetAlias) {
         return true;
       }
 
       return false;
     });
-  }, [allRows, workType, workTypes]);
+  }, [allRows, workType, workTypeLookup]);
 
   // Cập nhật khi dữ liệu trên ô thay đổi
-  const handleRowsChange = (newRows: SubmissionRow[]) => {
-    if (workType === "all") {
-      setAllRows(newRows);
-    } else {
-      const updatedMap = new Map(newRows.map((r) => [r.key, r]));
-      setAllRows((prev) => prev.map((r) => updatedMap.get(r.key) || r));
-    }
-  };
+  const handleRowsChange = useCallback(
+    (newRows: SubmissionRow[]) => {
+      if (workType === "all") {
+        setAllRows(newRows);
+      } else {
+        const updatedMap = new Map(newRows.map((r) => [r.key, r]));
+        setAllRows((prev) => prev.map((r) => updatedMap.get(r.key) || r));
+      }
+    },
+    [workType]
+  );
 
   // Xử lý Lọc
   const handleFilter = () => {
@@ -415,10 +419,11 @@ export default function SubmissionsV2Page() {
   };
 
   return (
-    <ErpPageContainer>
+    <ErpPageContainer style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 48px)" }}>
       {/* 1. KHUNG BỘ LỌC TÌM KIẾM (FILTER CARD V2 - GỌN GÀNG 1 HÀNG) */}
       <div
         style={{
+          flexShrink: 0,
           background: "#ffffff",
           borderRadius: 8,
           border: "1px solid #e2e8f0",
@@ -527,6 +532,7 @@ export default function SubmissionsV2Page() {
       {/* 2. THANH TAB LOẠI CÔNG VIỆC DẠNG PILLS & NÚT TÁC VỤ (CHỈ HIỂN THỊ CÁC LOẠI CV CÓ TRONG DỮ LIỆU) */}
       <div
         style={{
+          flexShrink: 0,
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
@@ -652,7 +658,7 @@ export default function SubmissionsV2Page() {
       </div>
 
       {/* 3. BẢNG DỮ LIỆU ĐỆ TRÌNH */}
-      <div style={{ flex: 1, minHeight: 0 }}>
+      <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
         <SubmissionApprovalTableV2
           dataSource={displayedRows}
           onDataChange={handleRowsChange}

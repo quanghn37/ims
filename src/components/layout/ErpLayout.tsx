@@ -91,6 +91,11 @@ export const ErpLayout: React.FC<ErpLayoutProps> = ({ children }) => {
 
   const menuItems: MenuProps["items"] = [
     {
+      key: "/project-contracts",
+      icon: <IconBuildingCommunity size={18} strokeWidth={1.8} />,
+      label: <Link href="/project-contracts" prefetch={false}>{t("menu.projectContracts")}</Link>,
+    },
+    {
       key: "/quotations",
       icon: <IconFileText size={18} strokeWidth={1.8} />,
       label: <Link href="/quotations" prefetch={false}>{t("menu.quotations")}</Link>,
@@ -277,6 +282,7 @@ export const ErpLayout: React.FC<ErpLayoutProps> = ({ children }) => {
           <Space size="middle">
             <IconLayoutDashboard size={18} strokeWidth={1.8} style={{ color: "#008f89" }} />
             <Text strong style={{ fontSize: 15, color: "#123443" }}>
+              {(activePath === "/project-contracts" || activePath === "/main-contracts") && t("pageTitles.projectContracts")}
               {activePath === "/quotations" && t("pageTitles.quotations")}
               {activePath === "/contracts" && t("pageTitles.contracts")}
               {activePath === "/purchase-orders" && t("pageTitles.purchaseOrders")}

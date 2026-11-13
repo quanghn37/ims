@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState, useCallback } from "react";
+import React, { useMemo, useState, useCallback, useRef, useEffect } from "react";
 import { Table, Dropdown, Input, InputNumber } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
@@ -23,6 +23,209 @@ interface SubmissionApprovalTableV2Props {
 
 const STORAGE_KEY = "SUBMISSION_APPROVAL_V2_COL_WIDTHS";
 
+// Component ô nhập Khối lượng duyệt (cô lập state gõ phím, tránh re-render toàn bảng)
+const EditableQtyCell = React.memo(function EditableQtyCell({
+  rowKey,
+  value,
+  onChange,
+}: {
+  rowKey: string;
+  value: number;
+  onChange: (key: string, field: "apprQty", val: number | null) => void;
+}) {
+  const [localVal, setLocalVal] = useState<number | null>(value);
+
+  useEffect(() => {
+    setLocalVal(value);
+  }, [value]);
+
+  const commit = useCallback(() => {
+    if (localVal !== value) {
+      onChange(rowKey, "apprQty", localVal);
+    }
+  }, [localVal, value, rowKey, onChange]);
+
+  return (
+    <InputNumber
+      size="small"
+      value={localVal}
+      min={0}
+      step={0.01}
+      precision={2}
+      style={{ width: "100%", textAlign: "left", fontFamily: "monospace", fontSize: 12 }}
+      onChange={(v) => setLocalVal(v)}
+      onBlur={commit}
+      onPressEnter={commit}
+    />
+  );
+});
+
+// Component ô nhập Đơn giá duyệt (cô lập state gõ phím, tránh re-render toàn bảng)
+const EditablePriceCell = React.memo(function EditablePriceCell({
+  rowKey,
+  value,
+  onChange,
+}: {
+  rowKey: string;
+  value: number;
+  onChange: (key: string, field: "apprPrice", val: number | null) => void;
+}) {
+  const [localVal, setLocalVal] = useState<number | null>(value);
+
+  useEffect(() => {
+    setLocalVal(value);
+  }, [value]);
+
+  const commit = useCallback(() => {
+    if (localVal !== value) {
+      onChange(rowKey, "apprPrice", localVal);
+    }
+  }, [localVal, value, rowKey, onChange]);
+
+  return (
+    <InputNumber
+      size="small"
+      value={localVal}
+      min={0}
+      step={1000}
+      formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ".")}
+      parser={(v) => (v ? Number(v.replace(/\./g, "")) : 0)}
+      style={{ width: "100%", textAlign: "left", fontFamily: "monospace", fontSize: 12 }}
+      onChange={(v) => setLocalVal(v)}
+      onBlur={commit}
+      onPressEnter={commit}
+    />
+  );
+});
+
+// Component ô nhập Ý kiến duyệt (cô lập state gõ phím, tránh re-render toàn bảng)
+const EditableRemarksCell = React.memo(function EditableRemarksCell({
+  rowKey,
+  value,
+  placeholder,
+  onChange,
+}: {
+  rowKey: string;
+  value: string;
+  placeholder?: string;
+  onChange: (key: string, field: "remarks", val: string) => void;
+}) {
+  const [localVal, setLocalVal] = useState<string>(value || "");
+
+  useEffect(() => {
+    setLocalVal(value || "");
+  }, [value]);
+
+  const commit = useCallback(() => {
+    if (localVal !== (value || "")) {
+      onChange(rowKey, "remarks", localVal);
+    }
+  }, [localVal, value, rowKey, onChange]);
+
+  return (
+    <Input
+      size="small"
+      value={localVal}
+      placeholder={placeholder}
+      style={{ fontSize: 12 }}
+      onChange={(e) => setLocalVal(e.target.value)}
+      onBlur={commit}
+      onPressEnter={commit}
+    />
+  );
+});
+
+// Component Dropdown Quyết định duyệt
+const DecisionDropdownCell = React.memo(function DecisionDropdownCell({
+  recordKey,
+  decisionVal,
+  statusDesc,
+  statusAlias,
+  role,
+  statusesWithRole,
+  isEn,
+  onChange,
+}: {
+  recordKey: string;
+  decisionVal: DecisionStatus;
+  statusDesc?: string;
+  statusAlias?: string;
+  role: string;
+  statusesWithRole?: ProcessingStatusWithRoleItem[];
+  isEn: boolean;
+  onChange: (key: string, field: "decision", val: any, extraDesc?: string) => void;
+}) {
+  const roleUpper = (role || "A").toUpperCase();
+  const roleStatuses = useMemo(() => {
+    return (statusesWithRole || []).filter(
+      (s) => s.Role.toUpperCase() === roleUpper
+    );
+  }, [statusesWithRole, roleUpper]);
+
+  const displayLabel = statusDesc || decisionVal || (isEn ? "Select..." : "Chọn...");
+  const dotColor = getStatusDotColor(statusAlias || String(decisionVal));
+
+  const menuItems = useMemo(() => {
+    return roleStatuses.map((opt) => ({
+      key: opt.Alias,
+      label: (
+        <div style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "3px 4px" }}>
+          <span
+            style={{
+              width: 7.5,
+              height: 7.5,
+              borderRadius: "50%",
+              background: getStatusDotColor(opt.Alias),
+              display: "inline-block",
+              flexShrink: 0,
+            }}
+          />
+          <span style={{ fontSize: 12 }}>{opt.Description}</span>
+        </div>
+      ),
+      onClick: () => onChange(recordKey, "decision", opt.Alias, opt.Description),
+    }));
+  }, [roleStatuses, recordKey, onChange]);
+
+  return (
+    <Dropdown menu={{ items: menuItems }} trigger={["click"]}>
+      <button
+        type="button"
+        style={{
+          height: 28,
+          padding: "0 8px",
+          borderRadius: 5,
+          border: "1px solid #cbd5e1",
+          fontSize: 12,
+          fontWeight: 500,
+          background: "#ffffff",
+          width: "100%",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 7,
+          cursor: "pointer",
+          outline: "none",
+          textAlign: "left",
+        }}
+      >
+        <span
+          style={{
+            width: 7.5,
+            height: 7.5,
+            borderRadius: "50%",
+            background: dotColor,
+            display: "inline-block",
+            flexShrink: 0,
+          }}
+        />
+        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {displayLabel}
+        </span>
+      </button>
+    </Dropdown>
+  );
+});
+
 export default function SubmissionApprovalTableV2({
   dataSource,
   onDataChange,
@@ -32,31 +235,38 @@ export default function SubmissionApprovalTableV2({
   const { language } = useTranslation();
   const isEn = language === "en";
 
-  // Thay đổi giá trị trên một ô của bảng
-  const handleCellChange = (
-    key: string,
-    field: keyof SubmissionRow,
-    value: any,
-    extraStatusDescription?: string
-  ) => {
-    const updated = dataSource.map((item) => {
-      if (item.key === key) {
-        const next = { ...item, [field]: value };
-        if (field === "decision" && extraStatusDescription) {
-          next.statusDescription = extraStatusDescription;
-          next.statusAlias = String(value);
+  const dataSourceRef = useRef(dataSource);
+  dataSourceRef.current = dataSource;
+
+  // Thay đổi giá trị trên một ô của bảng (dùng ref để không làm initialColumns phụ thuộc dataSource)
+  const handleCellChange = useCallback(
+    (
+      key: string,
+      field: keyof SubmissionRow,
+      value: any,
+      extraStatusDescription?: string
+    ) => {
+      const current = dataSourceRef.current;
+      const updated = current.map((item) => {
+        if (item.key === key) {
+          const next = { ...item, [field]: value };
+          if (field === "decision" && extraStatusDescription) {
+            next.statusDescription = extraStatusDescription;
+            next.statusAlias = String(value);
+          }
+          if (field === "apprQty" || field === "apprPrice") {
+            const q = field === "apprQty" ? Number(value) || 0 : Number(next.apprQty) || 0;
+            const p = field === "apprPrice" ? Number(value) || 0 : Number(next.apprPrice) || 0;
+            next.apprAmount = q * p;
+          }
+          return next;
         }
-        if (field === "apprQty" || field === "apprPrice") {
-          const q = field === "apprQty" ? Number(value) || 0 : Number(next.apprQty) || 0;
-          const p = field === "apprPrice" ? Number(value) || 0 : Number(next.apprPrice) || 0;
-          next.apprAmount = q * p;
-        }
-        return next;
-      }
-      return item;
-    });
-    onDataChange(updated);
-  };
+        return item;
+      });
+      onDataChange(updated);
+    },
+    [onDataChange]
+  );
 
   // Cấu hình các cột (2 tầng header) theo quy chuẩn ERP
   const initialColumns: ColumnsType<SubmissionRow> = useMemo(() => [
@@ -66,7 +276,7 @@ export default function SubmissionApprovalTableV2({
       key: "stt",
       width: 50,
       align: "center",
-      render: (_: any, __: any, index: number) => index + 1,
+      render: (_: any, record: SubmissionRow, index: number) => record.stt || index + 1,
     },
     {
       title: isEn ? "Doc No." : "Số chứng từ",
@@ -242,14 +452,10 @@ export default function SubmissionApprovalTableV2({
           width: 85,
           align: "left",
           render: (val: number, record: SubmissionRow) => (
-            <InputNumber
-              size="small"
+            <EditableQtyCell
+              rowKey={record.key}
               value={val}
-              min={0}
-              step={0.01}
-              precision={2}
-              style={{ width: "100%", textAlign: "left", fontFamily: "monospace", fontSize: 12 }}
-              onChange={(v) => handleCellChange(record.key, "apprQty", v)}
+              onChange={handleCellChange}
             />
           ),
         },
@@ -260,15 +466,10 @@ export default function SubmissionApprovalTableV2({
           width: 95,
           align: "left",
           render: (val: number, record: SubmissionRow) => (
-            <InputNumber
-              size="small"
+            <EditablePriceCell
+              rowKey={record.key}
               value={val}
-              min={0}
-              step={1000}
-              formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ".")}
-              parser={(v) => (v ? Number(v.replace(/\./g, "")) : 0)}
-              style={{ width: "100%", textAlign: "left", fontFamily: "monospace", fontSize: 12 }}
-              onChange={(v) => handleCellChange(record.key, "apprPrice", v)}
+              onChange={handleCellChange}
             />
           ),
         },
@@ -290,73 +491,18 @@ export default function SubmissionApprovalTableV2({
           key: "decision",
           width: 135,
           align: "left",
-          render: (decisionVal: DecisionStatus, record: SubmissionRow) => {
-            const role = (record.role || "A").toUpperCase();
-            const roleStatuses = (statusesWithRole || []).filter(
-              (s) => s.Role.toUpperCase() === role
-            );
-
-            const displayLabel = record.statusDescription || decisionVal || (isEn ? "Select..." : "Chọn...");
-            const dotColor = getStatusDotColor(record.statusAlias || String(decisionVal));
-
-            const menuItems = roleStatuses.map((opt) => ({
-              key: opt.Alias,
-              label: (
-                <div style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "3px 4px" }}>
-                  <span
-                    style={{
-                      width: 7.5,
-                      height: 7.5,
-                      borderRadius: "50%",
-                      background: getStatusDotColor(opt.Alias),
-                      display: "inline-block",
-                      flexShrink: 0,
-                    }}
-                  />
-                  <span style={{ fontSize: 12 }}>{opt.Description}</span>
-                </div>
-              ),
-              onClick: () => handleCellChange(record.key, "decision", opt.Alias, opt.Description),
-            }));
-
-            return (
-              <Dropdown menu={{ items: menuItems }} trigger={["click"]}>
-                <button
-                  type="button"
-                  style={{
-                    height: 28,
-                    padding: "0 8px",
-                    borderRadius: 5,
-                    border: "1px solid #cbd5e1",
-                    fontSize: 12,
-                    fontWeight: 500,
-                    background: "#ffffff",
-                    width: "100%",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 7,
-                    cursor: "pointer",
-                    outline: "none",
-                    textAlign: "left",
-                  }}
-                >
-                  <span
-                    style={{
-                      width: 7.5,
-                      height: 7.5,
-                      borderRadius: "50%",
-                      background: dotColor,
-                      display: "inline-block",
-                      flexShrink: 0,
-                    }}
-                  />
-                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {displayLabel}
-                  </span>
-                </button>
-              </Dropdown>
-            );
-          },
+          render: (decisionVal: DecisionStatus, record: SubmissionRow) => (
+            <DecisionDropdownCell
+              recordKey={record.key}
+              decisionVal={decisionVal}
+              statusDesc={record.statusDescription}
+              statusAlias={record.statusAlias}
+              role={record.role || "A"}
+              statusesWithRole={statusesWithRole}
+              isEn={isEn}
+              onChange={handleCellChange}
+            />
+          ),
         },
         {
           title: isEn ? "Comments" : "Ý kiến",
@@ -364,18 +510,17 @@ export default function SubmissionApprovalTableV2({
           key: "remarks",
           width: 150,
           render: (val: string, record: SubmissionRow) => (
-            <Input
-              size="small"
+            <EditableRemarksCell
+              rowKey={record.key}
               value={val}
               placeholder={isEn ? "Comments..." : "Ý kiến..."}
-              style={{ fontSize: 12 }}
-              onChange={(e) => handleCellChange(record.key, "remarks", e.target.value)}
+              onChange={handleCellChange}
             />
           ),
         },
       ],
     },
-  ], [isEn, dataSource, statusesWithRole]);
+  ], [isEn, statusesWithRole, handleCellChange]);
 
   // Quản lý độ rộng cột ResizableTitle & lưu localStorage
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>(() => {
@@ -469,12 +614,62 @@ export default function SubmissionApprovalTableV2({
   }, [dataSource]);
 
   return (
-    <div style={{ background: "#ffffff", borderRadius: 6, overflow: "hidden" }}>
+    <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", background: "#ffffff", borderRadius: 6, overflow: "hidden" }}>
       <style
         dangerouslySetInnerHTML={{
           __html: `
+            .submission-approval-table-v2 {
+              display: flex !important;
+              flex-direction: column !important;
+              height: 100% !important;
+              flex: 1 1 0% !important;
+              min-height: 0 !important;
+            }
+            .submission-approval-table-v2 .ant-spin-nested-loading {
+              display: flex !important;
+              flex-direction: column !important;
+              height: 100% !important;
+              flex: 1 1 0% !important;
+              min-height: 0 !important;
+            }
+            .submission-approval-table-v2 .ant-spin-container {
+              display: flex !important;
+              flex-direction: column !important;
+              height: 100% !important;
+              flex: 1 1 0% !important;
+              min-height: 0 !important;
+            }
+            .submission-approval-table-v2 .ant-table {
+              display: flex !important;
+              flex-direction: column !important;
+              height: 100% !important;
+              flex: 1 1 0% !important;
+              min-height: 0 !important;
+            }
+            .submission-approval-table-v2 .ant-table-container {
+              display: flex !important;
+              flex-direction: column !important;
+              height: 100% !important;
+              flex: 1 1 0% !important;
+              min-height: 0 !important;
+            }
+            .submission-approval-table-v2 .ant-table-header {
+              flex-shrink: 0 !important;
+            }
             .submission-approval-table-v2 .ant-table-thead > tr > th {
               text-align: center !important;
+            }
+            .submission-approval-table-v2 .ant-table-body {
+              flex: 1 1 0% !important;
+              max-height: none !important;
+              overflow-y: auto !important;
+            }
+            .submission-approval-table-v2 .ant-table-summary {
+              flex-shrink: 0 !important;
+            }
+            .submission-approval-table-v2 .ant-pagination {
+              margin: 8px 0 0 0 !important;
+              flex-shrink: 0 !important;
             }
           `,
         }}
@@ -483,14 +678,20 @@ export default function SubmissionApprovalTableV2({
         bordered
         size="small"
         tableLayout="fixed"
-        className="erp-detail-table submission-approval-table-v2"
+        className="erp-detail-table erp-full-table submission-approval-table-v2"
         components={components}
         columns={finalColumns as any}
         dataSource={dataSource}
         rowKey="key"
-        pagination={false}
+        pagination={{
+          defaultPageSize: 100,
+          pageSizeOptions: ["50", "100", "200", "500", "1000"],
+          showSizeChanger: true,
+          size: "small",
+          showTotal: (total, range) => `${range[0]}–${range[1]} / ${total} ${isEn ? "records" : "bản ghi"}`,
+        }}
         loading={loading}
-        scroll={{ x: scrollX, y: "calc(100vh - 355px)" }}
+        scroll={{ x: scrollX, y: "100%" }}
         summary={() => (
           <Table.Summary fixed="bottom">
             <Table.Summary.Row style={{ background: "#eef8f6", fontWeight: 700 }}>
@@ -499,38 +700,25 @@ export default function SubmissionApprovalTableV2({
                   {isEn ? "Σ TOTAL:" : "Σ TỔNG CỘNG:"}
                 </span>
               </Table.Summary.Cell>
-              {/* Nhóm 1: Thông tin Đệ trình */}
-              {/* Nhóm CV */}
-              <Table.Summary.Cell index={1} align="center">-</Table.Summary.Cell>
-              {/* Khối lượng */}
-              <Table.Summary.Cell index={2} align="left">-</Table.Summary.Cell>
-              {/* Đơn giá */}
-              <Table.Summary.Cell index={3} align="left">-</Table.Summary.Cell>
-              {/* Thành tiền */}
-              <Table.Summary.Cell index={4} align="right">
-                <span style={{ fontFamily: "monospace", color: "#123443", fontWeight: 700, fontSize: 13.5 }}>
+              <Table.Summary.Cell index={7} align="left">-</Table.Summary.Cell>
+              <Table.Summary.Cell index={8} align="left">-</Table.Summary.Cell>
+              <Table.Summary.Cell index={9} align="left">-</Table.Summary.Cell>
+              <Table.Summary.Cell index={10} align="right">
+                <span style={{ fontFamily: "monospace", color: "#123443", fontWeight: 700, fontSize: 12.5 }}>
                   {totalSubAmount.toLocaleString("vi-VN")}
                 </span>
               </Table.Summary.Cell>
-              {/* Vai trò */}
-              <Table.Summary.Cell index={5} align="center">-</Table.Summary.Cell>
-              {/* Nhóm 2: Quyết định & Phê duyệt */}
-              {/* Nhóm CV duyệt */}
-              <Table.Summary.Cell index={6} align="center">-</Table.Summary.Cell>
-              {/* KL duyệt */}
-              <Table.Summary.Cell index={7} align="left">-</Table.Summary.Cell>
-              {/* ĐG duyệt */}
-              <Table.Summary.Cell index={8} align="left">-</Table.Summary.Cell>
-              {/* Thành tiền duyệt */}
-              <Table.Summary.Cell index={9} align="right">
-                <span style={{ fontFamily: "monospace", color: "#123443", fontWeight: 700, fontSize: 13.5 }}>
+              <Table.Summary.Cell index={11} align="center">-</Table.Summary.Cell>
+              <Table.Summary.Cell index={12} align="left">-</Table.Summary.Cell>
+              <Table.Summary.Cell index={13} align="left">-</Table.Summary.Cell>
+              <Table.Summary.Cell index={14} align="left">-</Table.Summary.Cell>
+              <Table.Summary.Cell index={15} align="right">
+                <span style={{ fontFamily: "monospace", color: "#15803d", fontWeight: 700, fontSize: 12.5 }}>
                   {totalApprAmount.toLocaleString("vi-VN")}
                 </span>
               </Table.Summary.Cell>
-              {/* Quyết định */}
-              <Table.Summary.Cell index={10} align="center">-</Table.Summary.Cell>
-              {/* Ý kiến */}
-              <Table.Summary.Cell index={11} />
+              <Table.Summary.Cell index={16} align="left">-</Table.Summary.Cell>
+              <Table.Summary.Cell index={17} align="left">-</Table.Summary.Cell>
             </Table.Summary.Row>
           </Table.Summary>
         )}

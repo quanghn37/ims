@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState, useCallback } from "react";
+import React, { useMemo, useState, useCallback, useRef, useEffect } from "react";
 import { Table, Dropdown, Input, InputNumber } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
@@ -25,6 +25,280 @@ interface SubmissionApprovalTableProps {
 
 const STORAGE_KEY = "SUBMISSION_APPROVAL_DETAIL_COL_WIDTHS";
 
+// Component ô nhập Khối lượng duyệt (cô lập state gõ phím)
+const EditableQtyCell = React.memo(function EditableQtyCell({
+  rowKey,
+  value,
+  onChange,
+}: {
+  rowKey: string;
+  value: number;
+  onChange: (key: string, field: "apprQty", val: number | null) => void;
+}) {
+  const [localVal, setLocalVal] = useState<number | null>(value);
+
+  useEffect(() => {
+    setLocalVal(value);
+  }, [value]);
+
+  const commit = useCallback(() => {
+    if (localVal !== value) {
+      onChange(rowKey, "apprQty", localVal);
+    }
+  }, [localVal, value, rowKey, onChange]);
+
+  return (
+    <InputNumber
+      size="small"
+      value={localVal}
+      min={0}
+      step={0.01}
+      precision={2}
+      style={{ width: "100%", textAlign: "left", fontFamily: "monospace", fontSize: 12 }}
+      onChange={(v) => setLocalVal(v)}
+      onBlur={commit}
+      onPressEnter={commit}
+    />
+  );
+});
+
+// Component ô nhập Đơn giá duyệt (cô lập state gõ phím)
+const EditablePriceCell = React.memo(function EditablePriceCell({
+  rowKey,
+  value,
+  onChange,
+}: {
+  rowKey: string;
+  value: number;
+  onChange: (key: string, field: "apprPrice", val: number | null) => void;
+}) {
+  const [localVal, setLocalVal] = useState<number | null>(value);
+
+  useEffect(() => {
+    setLocalVal(value);
+  }, [value]);
+
+  const commit = useCallback(() => {
+    if (localVal !== value) {
+      onChange(rowKey, "apprPrice", localVal);
+    }
+  }, [localVal, value, rowKey, onChange]);
+
+  return (
+    <InputNumber
+      size="small"
+      value={localVal}
+      min={0}
+      step={1000}
+      formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ".")}
+      parser={(v) => (v ? Number(v.replace(/\./g, "")) : 0)}
+      style={{ width: "100%", textAlign: "left", fontFamily: "monospace", fontSize: 12 }}
+      onChange={(v) => setLocalVal(v)}
+      onBlur={commit}
+      onPressEnter={commit}
+    />
+  );
+});
+
+// Component ô nhập Ý kiến duyệt (cô lập state gõ phím)
+const EditableRemarksCell = React.memo(function EditableRemarksCell({
+  rowKey,
+  value,
+  placeholder,
+  onChange,
+}: {
+  rowKey: string;
+  value: string;
+  placeholder?: string;
+  onChange: (key: string, field: "remarks", val: string) => void;
+}) {
+  const [localVal, setLocalVal] = useState<string>(value || "");
+
+  useEffect(() => {
+    setLocalVal(value || "");
+  }, [value]);
+
+  const commit = useCallback(() => {
+    if (localVal !== (value || "")) {
+      onChange(rowKey, "remarks", localVal);
+    }
+  }, [localVal, value, rowKey, onChange]);
+
+  return (
+    <Input
+      size="small"
+      value={localVal}
+      placeholder={placeholder}
+      style={{ fontSize: 12 }}
+      onChange={(e) => setLocalVal(e.target.value)}
+      onBlur={commit}
+      onPressEnter={commit}
+    />
+  );
+});
+
+// Component Dropdown Quyết định duyệt
+const DecisionDropdownCell = React.memo(function DecisionDropdownCell({
+  recordKey,
+  decisionVal,
+  statusDesc,
+  statusAlias,
+  role,
+  statusesWithRole,
+  decisionOptions,
+  onChange,
+}: {
+  recordKey: string;
+  decisionVal: DecisionStatus;
+  statusDesc?: string;
+  statusAlias?: string;
+  role: string;
+  statusesWithRole?: ProcessingStatusWithRoleItem[];
+  decisionOptions: { key: string; alias: string; description: string; dotColor: string }[];
+  onChange: (key: string, field: "decision", val: any, extraDesc?: string) => void;
+}) {
+  const roleUpper = (role || "A").toUpperCase();
+  const roleStatuses = useMemo(() => {
+    return (statusesWithRole || []).filter(
+      (s) => s.Role.toUpperCase() === roleUpper
+    );
+  }, [statusesWithRole, roleUpper]);
+
+  let currentOpt: { alias: string; description: string; dotColor: string } | undefined;
+  if (roleStatuses.length > 0) {
+    const targetAlias = String(statusAlias || decisionVal || "").trim().toLowerCase();
+    const targetDesc = String(statusDesc || "").trim().toLowerCase();
+    const normalized = normalizeApprovalStatusAlias(targetAlias || targetDesc).toLowerCase();
+
+    const matched =
+      roleStatuses.find((s) => s.Alias.toLowerCase() === targetAlias) ||
+      roleStatuses.find((s) => s.Alias.toLowerCase() === normalized) ||
+      (targetDesc && roleStatuses.find((s) => s.Description.trim().toLowerCase() === targetDesc)) ||
+      (targetDesc.includes("chưa") || targetDesc.includes("pending") || targetDesc.includes("not-started")
+        ? roleStatuses.find((s) => Number(s.Status) === 3)
+        : undefined) ||
+      (targetDesc.includes("đang") || targetDesc.includes("progress")
+        ? roleStatuses.find((s) => Number(s.Status) === 2)
+        : undefined) ||
+      (targetDesc.includes("đồng ý") || targetDesc.includes("approved") || targetDesc.includes("duyệt") || targetDesc.includes("chấp thuận")
+        ? roleStatuses.find((s) => Number(s.Status) === 0)
+        : undefined) ||
+      (targetDesc.includes("không đồng ý") || targetDesc.includes("reject") || targetDesc.includes("từ chối") || targetDesc.includes("hủy")
+        ? roleStatuses.find((s) => Number(s.Status) === -1)
+        : undefined) ||
+      roleStatuses.find((s) => Number(s.Status) === 2) ||
+      roleStatuses[0];
+
+    currentOpt = {
+      alias: matched.Alias,
+      description: matched.Description,
+      dotColor: getStatusDotColor(matched.Alias),
+    };
+  } else {
+    currentOpt =
+      decisionOptions.find(
+        (s) =>
+          s.alias.toLowerCase() ===
+          String(statusAlias || decisionVal || "").toLowerCase()
+      ) || decisionOptions[0];
+  }
+
+  const optionsToUse = useMemo(() => {
+    return roleStatuses.length > 0
+      ? roleStatuses.map((opt) => ({
+          alias: opt.Alias,
+          description: opt.Description,
+          dotColor: getStatusDotColor(opt.Alias),
+        }))
+      : decisionOptions;
+  }, [roleStatuses, decisionOptions]);
+
+  const menuItems = useMemo(() => {
+    return optionsToUse.map((opt) => ({
+      key: opt.alias,
+      label: (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 8,
+            padding: "3px 4px",
+            minWidth: 120,
+          }}
+        >
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+            <span
+              style={{
+                width: 7.5,
+                height: 7.5,
+                borderRadius: "50%",
+                background: opt.dotColor,
+                display: "inline-block",
+                flexShrink: 0,
+              }}
+            />
+            <span
+              style={{
+                fontSize: 12,
+                fontWeight:
+                  opt.alias.toLowerCase() === currentOpt?.alias.toLowerCase() ? 600 : 400,
+              }}
+            >
+              {opt.description}
+            </span>
+          </div>
+          {opt.alias.toLowerCase() === currentOpt?.alias.toLowerCase() && (
+            <span style={{ color: "#008f89", fontWeight: 700, fontSize: 13, marginLeft: "auto" }}>
+              ✓
+            </span>
+          )}
+        </div>
+      ),
+      onClick: () => onChange(recordKey, "decision", opt.alias, opt.description),
+    }));
+  }, [optionsToUse, currentOpt?.alias, recordKey, onChange]);
+
+  return (
+    <Dropdown menu={{ items: menuItems }} trigger={["click"]}>
+      <button
+        type="button"
+        style={{
+          height: 28,
+          padding: "0 8px",
+          borderRadius: 5,
+          border: "1px solid #cbd5e1",
+          fontSize: 12,
+          fontWeight: 500,
+          background: "#ffffff",
+          width: "100%",
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "flex-start",
+          gap: 7,
+          cursor: "pointer",
+          outline: "none",
+          textAlign: "left",
+        }}
+      >
+        <span
+          style={{
+            width: 7.5,
+            height: 7.5,
+            borderRadius: "50%",
+            background: currentOpt?.dotColor || "#cbd5e1",
+            display: "inline-block",
+            flexShrink: 0,
+          }}
+        />
+        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {currentOpt?.description || "Select..."}
+        </span>
+      </button>
+    </Dropdown>
+  );
+});
+
 export default function SubmissionApprovalTable({
   dataSource,
   onDataChange,
@@ -34,6 +308,9 @@ export default function SubmissionApprovalTable({
 }: SubmissionApprovalTableProps) {
   const { language } = useTranslation();
   const isEn = language === "en";
+
+  const dataSourceRef = useRef(dataSource);
+  dataSourceRef.current = dataSource;
 
   // Danh mục quyết định duyệt từ API get-processing-status-list (bỏ mục "All")
   const decisionOptions = useMemo(() => {
@@ -55,42 +332,46 @@ export default function SubmissionApprovalTable({
     }));
   }, [processingStatuses, isEn]);
 
-  // Cập nhật giá trị ô trực tiếp trên từng dòng
-  const handleCellChange = (
-    key: string,
-    field: "apprQty" | "apprPrice" | "remarks" | "decision" | "reviewedWorkCat",
-    value: any,
-    customDescription?: string
-  ) => {
-    const updated = dataSource.map((item) => {
-      if (item.key === key) {
-        const next = { ...item, [field]: value };
-        if (field === "decision") {
-          next.statusAlias = value;
-          const role = (item.role || "A").toUpperCase();
-          const roleStatuses = (statusesWithRole || []).filter(
-            (s) => s.Role.toUpperCase() === role
-          );
-          const matched = roleStatuses.find(
-            (s) => s.Alias.toLowerCase() === String(value).toLowerCase()
-          );
-          if (matched) {
-            next.statusDescription = matched.Description;
-          } else if (customDescription) {
-            next.statusDescription = customDescription;
+  // Cập nhật giá trị ô trực tiếp trên từng dòng (dùng ref để không làm initialColumns phụ thuộc dataSource)
+  const handleCellChange = useCallback(
+    (
+      key: string,
+      field: "apprQty" | "apprPrice" | "remarks" | "decision" | "reviewedWorkCat",
+      value: any,
+      customDescription?: string
+    ) => {
+      const current = dataSourceRef.current;
+      const updated = current.map((item) => {
+        if (item.key === key) {
+          const next = { ...item, [field]: value };
+          if (field === "decision") {
+            next.statusAlias = value;
+            const role = (item.role || "A").toUpperCase();
+            const roleStatuses = (statusesWithRole || []).filter(
+              (s) => s.Role.toUpperCase() === role
+            );
+            const matched = roleStatuses.find(
+              (s) => s.Alias.toLowerCase() === String(value).toLowerCase()
+            );
+            if (matched) {
+              next.statusDescription = matched.Description;
+            } else if (customDescription) {
+              next.statusDescription = customDescription;
+            }
           }
+          if (field === "apprQty" || field === "apprPrice") {
+            const qty = Number(field === "apprQty" ? value : item.apprQty) || 0;
+            const price = Number(field === "apprPrice" ? value : item.apprPrice) || 0;
+            next.apprAmount = qty * price;
+          }
+          return next;
         }
-        if (field === "apprQty" || field === "apprPrice") {
-          const qty = Number(field === "apprQty" ? value : item.apprQty) || 0;
-          const price = Number(field === "apprPrice" ? value : item.apprPrice) || 0;
-          next.apprAmount = qty * price;
-        }
-        return next;
-      }
-      return item;
-    });
-    onDataChange(updated);
-  };
+        return item;
+      });
+      onDataChange(updated);
+    },
+    [onDataChange, statusesWithRole]
+  );
 
   // Cấu hình các cột (2 tầng header)
   const initialColumns: ColumnsType<SubmissionRow> = useMemo(() => [
@@ -100,7 +381,7 @@ export default function SubmissionApprovalTable({
       key: "stt",
       width: 50,
       align: "center",
-      render: (_: any, __: any, index: number) => index + 1,
+      render: (_: any, record: SubmissionRow, index: number) => record.stt || index + 1,
     },
     {
       title: isEn ? "Doc No." : "Số chứng từ",
@@ -276,14 +557,10 @@ export default function SubmissionApprovalTable({
           width: 85,
           align: "left",
           render: (val: number, record: SubmissionRow) => (
-            <InputNumber
-              size="small"
+            <EditableQtyCell
+              rowKey={record.key}
               value={val}
-              min={0}
-              step={0.01}
-              precision={2}
-              style={{ width: "100%", textAlign: "left", fontFamily: "monospace", fontSize: 12 }}
-              onChange={(v) => handleCellChange(record.key, "apprQty", v)}
+              onChange={handleCellChange}
             />
           ),
         },
@@ -294,15 +571,10 @@ export default function SubmissionApprovalTable({
           width: 95,
           align: "left",
           render: (val: number, record: SubmissionRow) => (
-            <InputNumber
-              size="small"
+            <EditablePriceCell
+              rowKey={record.key}
               value={val}
-              min={0}
-              step={1000}
-              formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ".")}
-              parser={(v) => (v ? Number(v.replace(/\./g, "")) : 0)}
-              style={{ width: "100%", textAlign: "left", fontFamily: "monospace", fontSize: 12 }}
-              onChange={(v) => handleCellChange(record.key, "apprPrice", v)}
+              onChange={handleCellChange}
             />
           ),
         },
@@ -324,149 +596,18 @@ export default function SubmissionApprovalTable({
           key: "decision",
           width: 135,
           align: "left",
-          render: (decisionVal: DecisionStatus, record: SubmissionRow) => {
-            const role = (record.role || "A").toUpperCase();
-            const roleStatuses = (statusesWithRole || []).filter(
-              (s) => s.Role.toUpperCase() === role
-            );
-
-            // Tìm option tương ứng với Role của dòng trực tiếp từ API
-            let currentOpt: { alias: string; description: string; dotColor: string } | undefined;
-            if (roleStatuses.length > 0) {
-              const targetAlias = String(record.statusAlias || decisionVal || "").trim().toLowerCase();
-              const targetDesc = String(record.statusDescription || "").trim().toLowerCase();
-              const normalized = normalizeApprovalStatusAlias(targetAlias || targetDesc).toLowerCase();
-
-              const matched =
-                // 1. Khớp theo Alias chuẩn (độc lập với ngôn ngữ)
-                roleStatuses.find((s) => s.Alias.toLowerCase() === targetAlias) ||
-                // 2. Khớp theo Normalized Alias
-                roleStatuses.find((s) => s.Alias.toLowerCase() === normalized) ||
-                // 3. Khớp theo Description hiện tại
-                (targetDesc && roleStatuses.find((s) => s.Description.trim().toLowerCase() === targetDesc)) ||
-                // 4. Nhận diện ngữ nghĩa an toàn đa ngôn ngữ
-                (targetDesc.includes("chưa") || targetDesc.includes("pending") || targetDesc.includes("not-started")
-                  ? roleStatuses.find((s) => Number(s.Status) === 3)
-                  : undefined) ||
-                (targetDesc.includes("đang") || targetDesc.includes("progress")
-                  ? roleStatuses.find((s) => Number(s.Status) === 2)
-                  : undefined) ||
-                (targetDesc.includes("đồng ý") || targetDesc.includes("approved") || targetDesc.includes("duyệt") || targetDesc.includes("chấp thuận")
-                  ? roleStatuses.find((s) => Number(s.Status) === 0)
-                  : undefined) ||
-                (targetDesc.includes("không đồng ý") || targetDesc.includes("reject") || targetDesc.includes("từ chối") || targetDesc.includes("hủy")
-                  ? roleStatuses.find((s) => Number(s.Status) === -1)
-                  : undefined) ||
-                roleStatuses.find((s) => Number(s.Status) === 2) ||
-                roleStatuses[0];
-
-              currentOpt = {
-                alias: matched.Alias,
-                description: matched.Description,
-                dotColor: getStatusDotColor(matched.Alias),
-              };
-            } else {
-              const fallback =
-                decisionOptions.find(
-                  (s) =>
-                    s.alias.toLowerCase() ===
-                    String(record.statusAlias || decisionVal || "").toLowerCase()
-                ) || decisionOptions[0];
-              currentOpt = fallback;
-            }
-
-            const optionsToUse =
-              roleStatuses.length > 0
-                ? roleStatuses.map((opt) => ({
-                    alias: opt.Alias,
-                    description: opt.Description,
-                    dotColor: getStatusDotColor(opt.Alias),
-                  }))
-                : decisionOptions;
-
-            const menuItems = optionsToUse.map((opt) => ({
-              key: opt.alias,
-              label: (
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: 8,
-                    padding: "3px 4px",
-                    minWidth: 120,
-                  }}
-                >
-                  <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                    <span
-                      style={{
-                        width: 7.5,
-                        height: 7.5,
-                        borderRadius: "50%",
-                        background: opt.dotColor,
-                        display: "inline-block",
-                        flexShrink: 0,
-                      }}
-                    />
-                    <span
-                      style={{
-                        fontSize: 12,
-                        fontWeight:
-                          opt.alias.toLowerCase() === currentOpt?.alias.toLowerCase() ? 600 : 400,
-                      }}
-                    >
-                      {opt.description}
-                    </span>
-                  </div>
-                  {opt.alias.toLowerCase() === currentOpt?.alias.toLowerCase() && (
-                    <span style={{ color: "#008f89", fontWeight: 700, fontSize: 13, marginLeft: "auto" }}>
-                      ✓
-                    </span>
-                  )}
-                </div>
-              ),
-              onClick: () => handleCellChange(record.key, "decision", opt.alias, opt.description),
-            }));
-
-            return (
-              <Dropdown menu={{ items: menuItems }} trigger={["click"]}>
-                <button
-                  type="button"
-                  style={{
-                    height: 28,
-                    padding: "0 8px",
-                    borderRadius: 5,
-                    border: "1px solid #cbd5e1",
-                    fontSize: 12,
-                    fontWeight: 500,
-                    background: "#ffffff",
-                    width: "100%",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "flex-start",
-                    gap: 7,
-                    cursor: "pointer",
-                    outline: "none",
-                    textAlign: "left",
-                  }}
-                >
-                  <span
-                    style={{
-                      width: 7.5,
-                      height: 7.5,
-                      borderRadius: "50%",
-                      background: currentOpt.dotColor,
-                      display: "inline-block",
-                      flexShrink: 0,
-                    }}
-                  />
-                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {currentOpt.description}
-                  </span>
-                </button>
-              </Dropdown>
-            );
-          },
+          render: (decisionVal: DecisionStatus, record: SubmissionRow) => (
+            <DecisionDropdownCell
+              recordKey={record.key}
+              decisionVal={decisionVal}
+              statusDesc={record.statusDescription}
+              statusAlias={record.statusAlias}
+              role={record.role || "A"}
+              statusesWithRole={statusesWithRole}
+              decisionOptions={decisionOptions}
+              onChange={handleCellChange}
+            />
+          ),
         },
         {
           title: isEn ? "Comments" : "Ý kiến",
@@ -474,18 +615,17 @@ export default function SubmissionApprovalTable({
           key: "remarks",
           width: 150,
           render: (val: string, record: SubmissionRow) => (
-            <Input
-              size="small"
+            <EditableRemarksCell
+              rowKey={record.key}
               value={val}
               placeholder={isEn ? "Comments..." : "Ý kiến..."}
-              style={{ fontSize: 12 }}
-              onChange={(e) => handleCellChange(record.key, "remarks", e.target.value)}
+              onChange={handleCellChange}
             />
           ),
         },
       ],
     },
-  ], [isEn, dataSource, decisionOptions, statusesWithRole]);
+  ], [isEn, decisionOptions, statusesWithRole, handleCellChange]);
 
   // Quản lý độ rộng cột ResizableTitle & lưu localStorage
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>(() => {
@@ -579,12 +719,62 @@ export default function SubmissionApprovalTable({
   }, [dataSource]);
 
   return (
-    <div style={{ background: "#ffffff", borderRadius: 6, overflow: "hidden" }}>
+    <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", background: "#ffffff", borderRadius: 6, overflow: "hidden" }}>
       <style
         dangerouslySetInnerHTML={{
           __html: `
+            .submission-approval-table {
+              display: flex !important;
+              flex-direction: column !important;
+              height: 100% !important;
+              flex: 1 1 0% !important;
+              min-height: 0 !important;
+            }
+            .submission-approval-table .ant-spin-nested-loading {
+              display: flex !important;
+              flex-direction: column !important;
+              height: 100% !important;
+              flex: 1 1 0% !important;
+              min-height: 0 !important;
+            }
+            .submission-approval-table .ant-spin-container {
+              display: flex !important;
+              flex-direction: column !important;
+              height: 100% !important;
+              flex: 1 1 0% !important;
+              min-height: 0 !important;
+            }
+            .submission-approval-table .ant-table {
+              display: flex !important;
+              flex-direction: column !important;
+              height: 100% !important;
+              flex: 1 1 0% !important;
+              min-height: 0 !important;
+            }
+            .submission-approval-table .ant-table-container {
+              display: flex !important;
+              flex-direction: column !important;
+              height: 100% !important;
+              flex: 1 1 0% !important;
+              min-height: 0 !important;
+            }
+            .submission-approval-table .ant-table-header {
+              flex-shrink: 0 !important;
+            }
             .submission-approval-table .ant-table-thead > tr > th {
               text-align: center !important;
+            }
+            .submission-approval-table .ant-table-body {
+              flex: 1 1 0% !important;
+              max-height: none !important;
+              overflow-y: auto !important;
+            }
+            .submission-approval-table .ant-table-summary {
+              flex-shrink: 0 !important;
+            }
+            .submission-approval-table .ant-pagination {
+              margin: 8px 0 0 0 !important;
+              flex-shrink: 0 !important;
             }
           `,
         }}
@@ -593,14 +783,20 @@ export default function SubmissionApprovalTable({
         bordered
         size="small"
         tableLayout="fixed"
-        className="erp-detail-table submission-approval-table"
+        className="erp-detail-table erp-full-table submission-approval-table"
         components={components}
         columns={finalColumns as any}
         dataSource={dataSource}
         rowKey="key"
-        pagination={false}
+        pagination={{
+          defaultPageSize: 100,
+          pageSizeOptions: ["50", "100", "200", "500", "1000"],
+          showSizeChanger: true,
+          size: "small",
+          showTotal: (total, range) => `${range[0]}–${range[1]} / ${total} ${isEn ? "records" : "bản ghi"}`,
+        }}
         loading={loading}
-        scroll={{ x: scrollX, y: "calc(100vh - 355px)" }}
+        scroll={{ x: scrollX, y: "100%" }}
         summary={() => (
           <Table.Summary fixed="bottom">
             <Table.Summary.Row style={{ background: "#eef8f6", fontWeight: 700 }}>

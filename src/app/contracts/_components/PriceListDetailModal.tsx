@@ -65,7 +65,7 @@ export default function PriceListDetailModal({ priceList, onClose }: PriceListDe
           {priceList.amount !== undefined && (
             <div>
               <span>{language === "en" ? "Total Value: " : "Giá trị: "}</span>
-              <span>{Number(priceList.amount || 0).toLocaleString(language === "en" ? "en-US" : "vi-VN")} VND</span>
+              <span>{Number(priceList.amount || 0).toLocaleString(language === "en" ? "en-US" : "vi-VN")}</span>
             </div>
           )}
         </div>
