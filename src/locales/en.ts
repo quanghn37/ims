@@ -67,11 +67,12 @@ export const enTranslations: TranslationsType = {
     inventory: "Stock Balance",
     periodReport: "Stock Movement Report",
     invoices: "Invoices / IPC",
+    replaceTaskAssignment: "Replace Approver",
   },
   pageTitles: {
     mainContracts: "Client Contracts",
     projectContracts: "Client & Project Contracts",
-    quotations: "Vendor Quotations & Price Lists",
+    quotations: "Vendor Price Lists",
     contracts: "Vendor Contracts Management",
     purchaseOrders: "Purchase Orders Management",
     submissions: "Submission Approval",
@@ -82,6 +83,7 @@ export const enTranslations: TranslationsType = {
     inventory: "Instant Stock Balance",
     periodReport: "Periodic Inventory Movement Report",
     invoices: "Invoices & IPC Management",
+    replaceTaskAssignment: "Replace Task Assignment Approver",
   },
   table: {
     stt: "No.",
@@ -300,6 +302,10 @@ export const enTranslations: TranslationsType = {
     notCreatedYet: "After creating the Price List, materials and Import Excel / Add Item features will be enabled here.",
     deleteItemConfirm: "Remove this item from the price list?",
     searchPlaceholder: "Search by price list no., name, vendor...",
+    contractDateBeforeEffectiveDateError: "Price list date must be earlier than or equal to Effective date",
+    effectiveDateAfterContractDateError: "Effective date must be later than or equal to Price list date",
+    expiryDateAfterEffectiveDateError: "Expiry date must be later than or equal to Effective date",
+    effectiveDateBeforeExpiryDateError: "Effective date must be earlier than or equal to Expiry date",
   },
   purchaseOrder: {
     mainContract: "Contract",
@@ -485,6 +491,8 @@ export const enTranslations: TranslationsType = {
     totalPrice: "Total Amount",
     unitPriceRequired: "Please enter unit price!",
     notes: "Notes",
+    effectiveDateBeforeExpiryDateError: "Effective date must be earlier than or equal to Expiry date",
+    expiryDateAfterEffectiveDateError: "Expiry date must be later than or equal to Effective date",
   },
   workflow: {
     title: "Approval Workflow",

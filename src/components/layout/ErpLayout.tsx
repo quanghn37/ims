@@ -13,6 +13,7 @@ import {
   IconBuildingCommunity,
   IconLogout,
   IconUser,
+  IconUserCheck,
   IconWorld,
   IconLayoutDashboard,
 } from "@tabler/icons-react";
@@ -151,6 +152,11 @@ export const ErpLayout: React.FC<ErpLayoutProps> = ({ children }) => {
       key: "/invoices",
       icon: <IconReceipt2 size={18} strokeWidth={1.8} />,
       label: <Link href="/invoices" prefetch={false}>{t("menu.invoices")}</Link>,
+    },
+    {
+      key: "/replace-task-assignment",
+      icon: <IconUserCheck size={18} strokeWidth={1.8} />,
+      label: <Link href="/replace-task-assignment" prefetch={false}>{t("menu.replaceTaskAssignment")}</Link>,
     },
   ];
 
@@ -293,6 +299,7 @@ export const ErpLayout: React.FC<ErpLayoutProps> = ({ children }) => {
               {activePath.startsWith("/warehouse/inventory") && t("pageTitles.inventory")}
               {activePath.startsWith("/warehouse/period-report") && t("pageTitles.periodReport")}
               {activePath.startsWith("/invoices") && t("pageTitles.invoices")}
+              {activePath.startsWith("/replace-task-assignment") && t("pageTitles.replaceTaskAssignment")}
             </Text>
             {isNavigating && <Spin size="small" />}
           </Space>

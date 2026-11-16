@@ -65,6 +65,7 @@ export const viTranslations = {
     inventory: "Tồn kho tức thời",
     periodReport: "Báo cáo Nhập - Xuất - Tồn",
     invoices: "Hóa đơn / IPC",
+    replaceTaskAssignment: "Thay thế người duyệt",
   },
   pageTitles: {
     mainContracts: "Hợp đồng CĐT",
@@ -80,6 +81,7 @@ export const viTranslations = {
     inventory: "Tồn kho tức thời",
     periodReport: "Báo cáo Nhập - Xuất - Tồn",
     invoices: "Quản lý Hóa đơn & IPC",
+    replaceTaskAssignment: "Cập nhật / Thay thế Người duyệt",
   },
   table: {
     stt: "STT",
@@ -298,6 +300,10 @@ export const viTranslations = {
     notCreatedYet: "Sau khi tạo Bảng giá thành công, danh mục vật tư hàng hóa và tính năng Import Excel / Thêm vật tư sẽ được kích hoạt tại đây.",
     deleteItemConfirm: "Xóa vật tư này khỏi bảng giá?",
     searchPlaceholder: "Tìm kiếm số hiệu, tên bảng giá, nhà cung cấp...",
+    contractDateBeforeEffectiveDateError: "Ngày bảng giá phải nhỏ hơn hoặc bằng Ngày hiệu lực",
+    effectiveDateAfterContractDateError: "Ngày hiệu lực phải lớn hơn hoặc bằng Ngày bảng giá",
+    expiryDateAfterEffectiveDateError: "Ngày hết hiệu lực phải lớn hơn hoặc bằng Ngày hiệu lực",
+    effectiveDateBeforeExpiryDateError: "Ngày hiệu lực phải nhỏ hơn hoặc bằng Ngày hết hiệu lực",
   },
   purchaseOrder: {
     mainContract: "Hợp đồng",
@@ -483,6 +489,8 @@ export const viTranslations = {
     totalPrice: "Thành tiền",
     unitPriceRequired: "Nhập đơn giá!",
     notes: "Ghi chú",
+    effectiveDateBeforeExpiryDateError: "Ngày hiệu lực phải nhỏ hơn hoặc bằng Ngày hết hiệu lực",
+    expiryDateAfterEffectiveDateError: "Ngày hết hiệu lực phải lớn hơn hoặc bằng Ngày hiệu lực",
   },
   workflow: {
     title: "Quy trình phê duyệt",
