@@ -11,6 +11,7 @@ import {
 } from "@tabler/icons-react";
 import { ErpPageContainer } from "@/components/layout/ErpPageContainer";
 import { extractApiList, extractTotalRows } from "@/lib/api-client";
+import { useTranslation } from "@/locales/LanguageContext";
 import { ClientUserItem, replaceTaskAssignmentApi } from "./api";
 import UserSelectField from "./_components/UserSelectField";
 import AssignmentReplaceCard, {
@@ -23,6 +24,7 @@ const MainContractLovModal = dynamic(
 );
 
 export default function ReplaceTaskAssignmentPage() {
+  const { t } = useTranslation();
   // Danh sách user khởi tạo dùng chung cho các dropdown
   const [initialUsers, setInitialUsers] = useState<ClientUserItem[]>([]);
 
@@ -90,12 +92,12 @@ export default function ReplaceTaskAssignmentPage() {
         });
       } catch (err) {
         console.error("Lỗi tải danh sách HĐ CĐT:", err);
-        message.error("Không thể tải danh sách Hợp đồng CĐT.");
+        message.error(t.replaceTaskAssignment.loadMainContractsError);
       } finally {
         setLoadingMainContracts(false);
       }
     },
-    []
+    [t.replaceTaskAssignment.loadMainContractsError]
   );
 
   const openMainContractLov = useCallback(
@@ -126,7 +128,7 @@ export default function ReplaceTaskAssignmentPage() {
 
   const handleApplyToBoth = () => {
     if (!quickSubconOfId && !quickOldUserId && !quickNewUserId) {
-      message.warning("Vui lòng chọn ít nhất một thông tin để áp dụng!");
+      message.warning(t.replaceTaskAssignment.applySelectAtLeastOne);
       return;
     }
     setSyncData((prev) => ({
@@ -138,7 +140,7 @@ export default function ReplaceTaskAssignmentPage() {
       newUserId: quickNewUserId,
       newUserObj: quickNewUserObj,
     }));
-    message.success("Đã áp dụng thông tin xuống cả 2 khung!");
+    message.success(t.replaceTaskAssignment.applySuccess);
   };
 
   const handleResetQuick = () => {
@@ -189,7 +191,7 @@ export default function ReplaceTaskAssignmentPage() {
                   marginBottom: 4,
                 }}
               >
-                HĐ CĐT / Dự án
+                {t.replaceTaskAssignment.mainContractLabel}
               </div>
               <div
                 onClick={() =>
@@ -223,7 +225,7 @@ export default function ReplaceTaskAssignmentPage() {
                       : "inherit",
                   }}
                 >
-                  {quickSubconOfDisplay || "Chọn HĐ CĐT / Dự án..."}
+                  {quickSubconOfDisplay || t.replaceTaskAssignment.selectMainContractPlaceholder}
                 </span>
                 <span
                   style={{
@@ -260,13 +262,13 @@ export default function ReplaceTaskAssignmentPage() {
                   marginBottom: 4,
                 }}
               >
-                Người duyệt cũ
+                {t.replaceTaskAssignment.oldApproverLabel}
               </div>
               <UserSelectField
                 value={quickOldUserId}
                 selectedUserHint={quickOldUserObj}
                 initialUsers={initialUsers}
-                placeholder="Chọn người duyệt cũ..."
+                placeholder={t.replaceTaskAssignment.selectOldApproverPlaceholder}
                 onChange={(id, obj) => {
                   setQuickOldUserId(id ?? null);
                   setQuickOldUserObj(obj ?? null);
@@ -283,13 +285,13 @@ export default function ReplaceTaskAssignmentPage() {
                   marginBottom: 4,
                 }}
               >
-                Người duyệt mới
+                {t.replaceTaskAssignment.newApproverLabel}
               </div>
               <UserSelectField
                 value={quickNewUserId}
                 selectedUserHint={quickNewUserObj}
                 initialUsers={initialUsers}
-                placeholder="Chọn người duyệt mới..."
+                placeholder={t.replaceTaskAssignment.selectNewApproverPlaceholder}
                 onChange={(id, obj) => {
                   setQuickNewUserId(id ?? null);
                   setQuickNewUserObj(obj ?? null);
@@ -303,7 +305,7 @@ export default function ReplaceTaskAssignmentPage() {
                 onClick={handleResetQuick}
                 style={{ borderColor: "#dce5e6", borderRadius: 6, height: 32 }}
               >
-                Xóa
+                {t.replaceTaskAssignment.clearBtn}
               </Button>
               <Button
                 type="primary"
@@ -318,7 +320,7 @@ export default function ReplaceTaskAssignmentPage() {
                   color: "#ffffff",
                 }}
               >
-                Áp dụng
+                {t.replaceTaskAssignment.applyBtn}
               </Button>
             </div>
           </div>
@@ -328,8 +330,8 @@ export default function ReplaceTaskAssignmentPage() {
         <Row gutter={[16, 16]} style={{ flex: 1 }}>
           <Col xs={24} lg={12} style={{ display: "flex", flexDirection: "column" }}>
             <AssignmentReplaceCard
-              title="QUY TRÌNH MẪU"
-              subtitle="Thay thế người duyệt trong cấu hình phân quyền / quy trình mẫu (Typical Assignment)"
+              title={t.replaceTaskAssignment.frame1Title}
+              subtitle={t.replaceTaskAssignment.frame1Subtitle}
               updateMode="TaskTypicalAssignment"
               badgeColor="cyan"
               initialUsers={initialUsers}
@@ -340,8 +342,8 @@ export default function ReplaceTaskAssignmentPage() {
 
           <Col xs={24} lg={12} style={{ display: "flex", flexDirection: "column" }}>
             <AssignmentReplaceCard
-              title="PHIẾU ĐANG DUYỆT"
-              subtitle="Thay thế người duyệt trên các phiếu / chứng từ đang thực thi (Task Assignment)"
+              title={t.replaceTaskAssignment.frame2Title}
+              subtitle={t.replaceTaskAssignment.frame2Subtitle}
               updateMode="Task_Assignment"
               badgeColor="blue"
               initialUsers={initialUsers}

@@ -12,6 +12,7 @@ import {
   IconExclamationCircle,
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
+import { useTranslation } from "@/locales/LanguageContext";
 import UserSelectField from "./UserSelectField";
 import {
   ClientUserItem,
@@ -65,6 +66,7 @@ export default function AssignmentReplaceCard({
   syncData,
   onRequestMainContractLov,
 }: AssignmentReplaceCardProps) {
+  const { t } = useTranslation();
   const [subconOfId, setSubconOfId] = useState<number | null>(null);
   const [subconOfDisplay, setSubconOfDisplay] = useState<string>("");
 
@@ -99,20 +101,21 @@ export default function AssignmentReplaceCard({
   };
 
   const handleSubmit = () => {
+    const rt = t.replaceTaskAssignment;
     if (!subconOfId) {
-      message.warning("Vui lòng chọn Hợp đồng CĐT / Dự án (SubconOf)!");
+      message.warning(rt.mainContractRequired);
       return;
     }
     if (!oldUserId) {
-      message.warning("Vui lòng chọn Người duyệt cũ (OldUserId)!");
+      message.warning(rt.oldApproverRequired);
       return;
     }
     if (!newUserId) {
-      message.warning("Vui lòng chọn Người duyệt mới (NewUserId)!");
+      message.warning(rt.newApproverRequired);
       return;
     }
     if (Number(oldUserId) === Number(newUserId)) {
-      message.error("Người duyệt mới phải khác Người duyệt cũ!");
+      message.error(rt.sameUserError);
       return;
     }
 
@@ -124,13 +127,13 @@ export default function AssignmentReplaceCard({
       : `#${newUserId}`;
 
     Modal.confirm({
-      title: `Xác nhận ${title}`,
+      title: `${rt.confirmTitlePrefix} ${title}`,
       icon: <IconAlertTriangle size={20} style={{ color: "#f59e0b", marginRight: 8 }} />,
       width: 520,
       content: (
         <div style={{ fontSize: 13, lineHeight: 1.7, marginTop: 8 }}>
           <div style={{ marginBottom: 6 }}>
-            Hệ thống sẽ thực hiện thay thế người duyệt với thông tin sau:
+            {rt.confirmDesc}
           </div>
           <div
             style={{
@@ -141,28 +144,28 @@ export default function AssignmentReplaceCard({
             }}
           >
             <div>
-              <strong>Chế độ (UpdateMode):</strong>{" "}
+              <strong>{rt.confirmModeLabel}</strong>{" "}
               <Tag color={badgeColor} style={{ marginLeft: 4 }}>
                 {updateMode}
               </Tag>
             </div>
             <div>
-              <strong>HĐ CĐT / Dự án (SubconOf):</strong>{" "}
+              <strong>{rt.confirmMainContractLabel}</strong>{" "}
               <span style={{ color: "#123443" }}>{subconOfDisplay || `#${subconOfId}`}</span>
             </div>
             <div>
-              <strong>Người duyệt cũ:</strong>{" "}
+              <strong>{rt.confirmOldApproverLabel}</strong>{" "}
               <span style={{ color: "#dc2626" }}>{oldLabel}</span>
             </div>
             <div>
-              <strong>Người duyệt mới:</strong>{" "}
+              <strong>{rt.confirmNewApproverLabel}</strong>{" "}
               <span style={{ color: "#008f89", fontWeight: 600 }}>{newLabel}</span>
             </div>
           </div>
         </div>
       ),
-      okText: "Xác nhận cập nhật",
-      cancelText: "Hủy",
+      okText: rt.confirmOkText,
+      cancelText: rt.confirmCancelText,
       okButtonProps: {
         style: { background: "#008f89", borderColor: "#008f89" },
       },
@@ -182,7 +185,7 @@ export default function AssignmentReplaceCard({
             res?.Message ||
             res?.message ||
             (Array.isArray(res) && res[0]?.Message) ||
-            "Cập nhật người duyệt thành công!";
+            rt.updateSuccessDefault;
 
           message.success(`[${updateMode}] ${apiMsg}`);
           setLastResult({
@@ -193,7 +196,7 @@ export default function AssignmentReplaceCard({
             rawResponse: res,
           });
         } catch (err: any) {
-          const errMsg = err?.message || "Cập nhật thất bại!";
+          const errMsg = err?.message || rt.updateErrorDefault;
           message.error(`[${updateMode}] ${errMsg}`);
           setLastResult({
             success: false,
@@ -248,7 +251,7 @@ export default function AssignmentReplaceCard({
         {/* 1. HĐ CĐT / Dự án (SubconOf) */}
         <div>
           <div style={{ fontSize: 12, fontWeight: 700, color: "#334155", marginBottom: 6 }}>
-            HĐ CĐT / Dự án <span style={{ color: "#ff4d4f" }}>*</span>
+            {t.replaceTaskAssignment.mainContractLabel} <span style={{ color: "#ff4d4f" }}>*</span>
           </div>
           <div
             onClick={() =>
@@ -283,7 +286,7 @@ export default function AssignmentReplaceCard({
                   : "inherit",
               }}
             >
-              {subconOfDisplay || "Nhấn để chọn HĐ CĐT / Dự án..."}
+              {subconOfDisplay || t.replaceTaskAssignment.clickToSelectMainContract}
             </span>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0, marginLeft: 8 }}>
               {subconOfId && !submitting && (
@@ -303,17 +306,17 @@ export default function AssignmentReplaceCard({
           </div>
         </div>
 
-        {/* 2. Người duyệt cũ (OldUserId) */}
+        {/* 2. Người duyệt cũ */}
         <div>
           <div style={{ fontSize: 12, fontWeight: 700, color: "#334155", marginBottom: 6 }}>
-            Người duyệt cũ <span style={{ color: "#ff4d4f" }}>*</span>
+            {t.replaceTaskAssignment.oldApproverLabel} <span style={{ color: "#ff4d4f" }}>*</span>
           </div>
           <UserSelectField
             value={oldUserId}
             selectedUserHint={oldUserObj}
             initialUsers={initialUsers}
             disabled={submitting}
-            placeholder="Tìm và chọn người duyệt cũ..."
+            placeholder={t.replaceTaskAssignment.searchOldApproverPlaceholder}
             onChange={(id, obj) => {
               setOldUserId(id ?? null);
               setOldUserObj(obj ?? null);
@@ -321,17 +324,17 @@ export default function AssignmentReplaceCard({
           />
         </div>
 
-        {/* 3. Người duyệt mới (NewUserId) */}
+        {/* 3. Người duyệt mới */}
         <div>
           <div style={{ fontSize: 12, fontWeight: 700, color: "#334155", marginBottom: 6 }}>
-            Người duyệt mới <span style={{ color: "#ff4d4f" }}>*</span>
+            {t.replaceTaskAssignment.newApproverLabel} <span style={{ color: "#ff4d4f" }}>*</span>
           </div>
           <UserSelectField
             value={newUserId}
             selectedUserHint={newUserObj}
             initialUsers={initialUsers}
             disabled={submitting}
-            placeholder="Tìm và chọn người duyệt mới..."
+            placeholder={t.replaceTaskAssignment.searchNewApproverPlaceholder}
             onChange={(id, obj) => {
               setNewUserId(id ?? null);
               setNewUserObj(obj ?? null);
@@ -339,7 +342,7 @@ export default function AssignmentReplaceCard({
           />
           {isSameUser && (
             <div style={{ color: "#ff4d4f", fontSize: 12, marginTop: 4 }}>
-              Người duyệt mới không được trùng với Người duyệt cũ.
+              {t.replaceTaskAssignment.sameUserError}
             </div>
           )}
         </div>
@@ -360,7 +363,7 @@ export default function AssignmentReplaceCard({
             disabled={submitting}
             style={{ borderColor: "#dce5e6", borderRadius: 6, height: 34 }}
           >
-            Làm mới
+            {t.replaceTaskAssignment.refreshBtn}
           </Button>
           <Button
             type="primary"
@@ -377,14 +380,14 @@ export default function AssignmentReplaceCard({
               color: "#ffffff",
             }}
           >
-            Cập nhật
+            {t.replaceTaskAssignment.updateBtn}
           </Button>
         </div>
 
         {/* Kết quả thực thi gần nhất */}
         <div style={{ marginTop: "auto" }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", marginBottom: 6, textTransform: "uppercase" }}>
-            Kết quả thực thi gần nhất
+            {t.replaceTaskAssignment.latestResultTitle}
           </div>
           {lastResult ? (
             <div
@@ -402,13 +405,13 @@ export default function AssignmentReplaceCard({
                 ) : (
                   <IconExclamationCircle size={16} strokeWidth={2} />
                 )}
-                <span>{lastResult.success ? "Thành công" : "Thất bại"}</span>
+                <span>{lastResult.success ? t.replaceTaskAssignment.statusSuccess : t.replaceTaskAssignment.statusFailed}</span>
                 <span style={{ marginLeft: "auto", fontWeight: 400, fontSize: 11.5, color: "#64748b" }}>
                   {lastResult.timestamp}
                 </span>
               </div>
               <div style={{ marginTop: 6, color: "#1e293b" }}>
-                <strong>Phản hồi:</strong> {lastResult.message}
+                <strong>{t.replaceTaskAssignment.responseLabel}</strong> {lastResult.message}
               </div>
               <div
                 style={{
@@ -435,7 +438,7 @@ export default function AssignmentReplaceCard({
               }}
             >
               <Text type="secondary" style={{ fontSize: 12 }}>
-                Chưa có thao tác nào được thực thi ở khung này.
+                {t.replaceTaskAssignment.noExecutionYet}
               </Text>
             </div>
           )}

@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { Select, Spin, Tag } from "antd";
 import { extractApiList } from "@/lib/api-client";
+import { useTranslation } from "@/locales/LanguageContext";
 import { ClientUserItem, replaceTaskAssignmentApi } from "../api";
 
 interface UserSelectFieldProps {
@@ -17,11 +18,12 @@ interface UserSelectFieldProps {
 export default function UserSelectField({
   value,
   onChange,
-  placeholder = "Tìm theo tên, email hoặc tài khoản...",
+  placeholder,
   selectedUserHint,
   disabled = false,
   initialUsers = [],
 }: UserSelectFieldProps) {
+  const { t } = useTranslation();
   const [users, setUsers] = useState<ClientUserItem[]>(initialUsers);
   const [loading, setLoading] = useState(false);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
@@ -107,11 +109,11 @@ export default function UserSelectField({
       notFoundContent={
         loading ? (
           <div style={{ padding: "8px 12px", textAlign: "center" }}>
-            <Spin size="small" /> <span style={{ marginLeft: 8, fontSize: 12 }}>Đang tìm...</span>
+            <Spin size="small" /> <span style={{ marginLeft: 8, fontSize: 12 }}>{t.replaceTaskAssignment.searchingUsers}</span>
           </div>
         ) : (
           <div style={{ padding: "8px 12px", color: "#94a3b8", fontSize: 12 }}>
-            Không tìm thấy nhân sự phù hợp
+            {t.replaceTaskAssignment.noUsersFound}
           </div>
         )
       }
@@ -127,7 +129,7 @@ export default function UserSelectField({
                 {u.FullName || u.Account}{" "}
                 {isInactive && (
                   <Tag color="default" style={{ fontSize: 10, marginLeft: 4, lineHeight: "14px" }}>
-                    Ngưng HĐ
+                    {t.replaceTaskAssignment.inactiveTag}
                   </Tag>
                 )}
               </div>
