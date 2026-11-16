@@ -12,6 +12,7 @@ import {
   Typography,
   Row,
   Col,
+  message,
 } from "antd";
 import {
   IconTrash,
@@ -136,6 +137,7 @@ export default function ContractFormDrawer({
           PaymentTerm: "DK03",
           FromDate: dayjs(),
           ContractDate: dayjs(),
+          ToDate: null,
         });
       }
     }
@@ -296,7 +298,18 @@ export default function ContractFormDrawer({
 
       {/* CARD THÔNG TIN CHUNG BẢNG GIÁ (COMPACT) */}
       <div style={{ width: "100%", marginBottom: 8 }}>
-        <Form form={form} layout="vertical" onFinish={onFinish}>
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={onFinish}
+          initialValues={{
+            Currency: "VND",
+            PaymentTerm: "DK03",
+            ContractDate: dayjs(),
+            FromDate: dayjs(),
+            ToDate: null,
+          }}
+        >
           <Form.Item name="ClientId" style={{ display: "none" }}><Input /></Form.Item>
           <Form.Item name="MainContractId" style={{ display: "none" }}><Input /></Form.Item>
           <Form.Item name="MainContractCode" style={{ display: "none" }}><Input /></Form.Item>
@@ -419,13 +432,42 @@ export default function ContractFormDrawer({
                 <span className="erp-info-label">
                   {t.quotation.date}
                 </span>
-                <Form.Item name="ContractDate" style={{ margin: 0 }}>
+                <Form.Item
+                  name="ContractDate"
+                  style={{ margin: 0 }}
+                  dependencies={["FromDate"]}
+                  rules={[
+                    ({ getFieldValue }) => ({
+                      validator(_, value) {
+                        const fromDate = parseDateSafe(getFieldValue("FromDate"));
+                        const contractDate = parseDateSafe(value);
+                        if (!contractDate || !fromDate) return Promise.resolve();
+                        if (contractDate.startOf("day").isAfter(fromDate.startOf("day"))) {
+                          return Promise.reject(new Error(t.quotation.contractDateBeforeEffectiveDateError));
+                        }
+                        return Promise.resolve();
+                      },
+                    }),
+                  ]}
+                >
                   <DatePicker
                     variant="borderless"
                     disabled={isReadOnly}
                     format="DD/MM/YYYY"
                     placeholder={t.quotation.selectDate}
                     style={{ padding: 0, width: "100%", fontWeight: 400, fontSize: 12.5, color: "#1e293b" }}
+                    disabledDate={(current) => {
+                      const fromDate = parseDateSafe(form.getFieldValue("FromDate"));
+                      return Boolean(current && fromDate && current.isAfter(fromDate, "day"));
+                    }}
+                    onChange={(date) => {
+                      if (date) {
+                        const fromDate = parseDateSafe(form.getFieldValue("FromDate"));
+                        if (fromDate && date.startOf("day").isAfter(fromDate.startOf("day"))) {
+                          message.warning(t.quotation.contractDateBeforeEffectiveDateError);
+                        }
+                      }
+                    }}
                   />
                 </Form.Item>
               </Col>
@@ -435,13 +477,55 @@ export default function ContractFormDrawer({
                 <span className="erp-info-label">
                   {t.quotation.effectiveDate}
                 </span>
-                <Form.Item name="FromDate" style={{ margin: 0 }}>
+                <Form.Item
+                  name="FromDate"
+                  style={{ margin: 0 }}
+                  dependencies={["ContractDate", "ToDate"]}
+                  rules={[
+                    ({ getFieldValue }) => ({
+                      validator(_, value) {
+                        if (!value) return Promise.resolve();
+                        const fromDate = parseDateSafe(value);
+                        if (!fromDate) return Promise.resolve();
+                        const contractDate = parseDateSafe(getFieldValue("ContractDate"));
+                        if (contractDate && fromDate.startOf("day").isBefore(contractDate.startOf("day"))) {
+                          return Promise.reject(new Error(t.quotation.effectiveDateAfterContractDateError));
+                        }
+                        const toDate = parseDateSafe(getFieldValue("ToDate"));
+                        if (toDate && fromDate.startOf("day").isAfter(toDate.startOf("day"))) {
+                          return Promise.reject(new Error(t.quotation.effectiveDateBeforeExpiryDateError));
+                        }
+                        return Promise.resolve();
+                      },
+                    }),
+                  ]}
+                >
                   <DatePicker
                     variant="borderless"
                     disabled={isReadOnly}
                     format="DD/MM/YYYY"
                     placeholder={t.quotation.selectDate}
                     style={{ padding: 0, width: "100%", fontWeight: 400, fontSize: 12.5, color: "#1e293b" }}
+                    disabledDate={(current) => {
+                      if (!current) return false;
+                      const contractDate = parseDateSafe(form.getFieldValue("ContractDate"));
+                      if (contractDate && current.isBefore(contractDate, "day")) return true;
+                      const toDate = parseDateSafe(form.getFieldValue("ToDate"));
+                      if (toDate && current.isAfter(toDate, "day")) return true;
+                      return false;
+                    }}
+                    onChange={(date) => {
+                      if (date) {
+                        const contractDate = parseDateSafe(form.getFieldValue("ContractDate"));
+                        if (contractDate && date.startOf("day").isBefore(contractDate.startOf("day"))) {
+                          message.warning(t.quotation.effectiveDateAfterContractDateError);
+                        }
+                        const toDate = parseDateSafe(form.getFieldValue("ToDate"));
+                        if (toDate && date.startOf("day").isAfter(toDate.startOf("day"))) {
+                          message.warning(t.quotation.effectiveDateBeforeExpiryDateError);
+                        }
+                      }
+                    }}
                   />
                 </Form.Item>
               </Col>
@@ -451,13 +535,42 @@ export default function ContractFormDrawer({
                 <span className="erp-info-label">
                   {t.quotation.expiryDate}
                 </span>
-                <Form.Item name="ToDate" style={{ margin: 0 }}>
+                <Form.Item
+                  name="ToDate"
+                  style={{ margin: 0 }}
+                  dependencies={["FromDate"]}
+                  rules={[
+                    ({ getFieldValue }) => ({
+                      validator(_, value) {
+                        const fromDate = parseDateSafe(getFieldValue("FromDate"));
+                        const toDate = parseDateSafe(value);
+                        if (!toDate || !fromDate) return Promise.resolve();
+                        if (toDate.startOf("day").isBefore(fromDate.startOf("day"))) {
+                          return Promise.reject(new Error(t.quotation.expiryDateAfterEffectiveDateError));
+                        }
+                        return Promise.resolve();
+                      },
+                    }),
+                  ]}
+                >
                   <DatePicker
                     variant="borderless"
                     disabled={isReadOnly}
                     format="DD/MM/YYYY"
                     placeholder={t.quotation.selectDate}
                     style={{ padding: 0, width: "100%", fontWeight: 400, fontSize: 12.5, color: "#1e293b" }}
+                    disabledDate={(current) => {
+                      const fromDate = parseDateSafe(form.getFieldValue("FromDate"));
+                      return Boolean(current && fromDate && current.isBefore(fromDate, "day"));
+                    }}
+                    onChange={(date) => {
+                      if (date) {
+                        const fromDate = parseDateSafe(form.getFieldValue("FromDate"));
+                        if (fromDate && date.startOf("day").isBefore(fromDate.startOf("day"))) {
+                          message.warning(t.quotation.expiryDateAfterEffectiveDateError);
+                        }
+                      }
+                    }}
                   />
                 </Form.Item>
               </Col>

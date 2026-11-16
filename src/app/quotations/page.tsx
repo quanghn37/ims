@@ -303,7 +303,7 @@ function QuotationsPageContent() {
       PaymentTerm: "DK03",
       ContractDate: dayjs(),
       FromDate: dayjs(),
-      ToDate: dayjs().add(1, "year"),
+      ToDate: null,
     });
     setAttachments([]);
     if (typeof window !== "undefined") {
@@ -370,7 +370,7 @@ function QuotationsPageContent() {
         PaymentTerm: "DK03",
         ContractDate: dayjs(),
         FromDate: dayjs(),
-        ToDate: dayjs().add(1, "year"),
+        ToDate: null,
       });
       setAttachments([]);
       if (typeof document !== "undefined") {
@@ -382,10 +382,26 @@ function QuotationsPageContent() {
   const handleSubmitContract = async (values: any) => {
     setSubmittingContract(true);
     try {
-      const fromDateFormatted = values.FromDate ? values.FromDate.format("YYYY-MM-DD") : null;
-      const toDateFormatted = values.ToDate ? values.ToDate.format("YYYY-MM-DD") : null;
-      const contractDateFormatted = values.ContractDate
-        ? values.ContractDate.format("YYYY-MM-DD")
+      const cDate = parseDateSafe(values.ContractDate);
+      const fDate = parseDateSafe(values.FromDate);
+      const tDate = parseDateSafe(values.ToDate);
+
+      if (cDate && fDate && cDate.startOf("day").isAfter(fDate.startOf("day"))) {
+        message.error("Ngày bảng giá phải nhỏ hơn hoặc bằng Ngày hiệu lực");
+        setSubmittingContract(false);
+        return;
+      }
+
+      if (fDate && tDate && tDate.startOf("day").isBefore(fDate.startOf("day"))) {
+        message.error("Ngày hết hiệu lực phải lớn hơn hoặc bằng Ngày hiệu lực");
+        setSubmittingContract(false);
+        return;
+      }
+
+      const fromDateFormatted = fDate ? fDate.format("YYYY-MM-DD") : null;
+      const toDateFormatted = tDate ? tDate.format("YYYY-MM-DD") : null;
+      const contractDateFormatted = cDate
+        ? cDate.format("YYYY-MM-DD")
         : dayjs().format("YYYY-MM-DD");
 
       if (editingContract) {
@@ -575,6 +591,7 @@ function QuotationsPageContent() {
     return (
       <ErpDetailContainer>
         <ContractFormDrawer
+          key={editingContract?.ContractId ? `edit_${editingContract.ContractId}` : "create_new"}
           open={true}
           onClose={handleCloseEditTab}
           editingContract={editingContract}

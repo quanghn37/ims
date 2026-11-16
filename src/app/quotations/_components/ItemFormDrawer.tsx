@@ -15,6 +15,7 @@ import {
   Space,
   Row,
   Col,
+  message,
 } from "antd";
 import {
   EditOutlined,
@@ -25,6 +26,7 @@ import {
   CloseCircleOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
+import { parseDateSafe } from "./types";
 import ItemLovModal from "./ItemLovModal";
 import { useTranslation } from "@/locales/LanguageContext";
 
@@ -448,7 +450,24 @@ export default function ItemFormDrawer({
                 <div style={{ fontSize: 11, color: "#718894", marginBottom: 2, fontWeight: 500, lineHeight: "14px" }}>
                   {t.itemDrawer.effectiveDate}
                 </div>
-                <Form.Item name="FromDate" style={{ margin: 0 }}>
+                <Form.Item
+                  name="FromDate"
+                  style={{ margin: 0 }}
+                  dependencies={["ToDate"]}
+                  rules={[
+                    ({ getFieldValue }) => ({
+                      validator(_, value) {
+                        const fromDate = parseDateSafe(value);
+                        if (!fromDate) return Promise.resolve();
+                        const toDate = parseDateSafe(getFieldValue("ToDate"));
+                        if (toDate && fromDate.startOf("day").isAfter(toDate.startOf("day"))) {
+                          return Promise.reject(new Error(t.itemDrawer.effectiveDateBeforeExpiryDateError));
+                        }
+                        return Promise.resolve();
+                      },
+                    }),
+                  ]}
+                >
                   <DatePicker
                     variant="borderless"
                     format="DD/MM/YYYY"
@@ -461,6 +480,18 @@ export default function ItemFormDrawer({
                       fontSize: 13,
                       color: "#123443",
                     }}
+                    disabledDate={(current) => {
+                      const toDate = parseDateSafe(form.getFieldValue("ToDate"));
+                      return Boolean(current && toDate && current.isAfter(toDate, "day"));
+                    }}
+                    onChange={(date) => {
+                      if (date) {
+                        const toDate = parseDateSafe(form.getFieldValue("ToDate"));
+                        if (toDate && date.startOf("day").isAfter(toDate.startOf("day"))) {
+                          message.warning(t.itemDrawer.effectiveDateBeforeExpiryDateError);
+                        }
+                      }
+                    }}
                   />
                 </Form.Item>
               </Col>
@@ -469,7 +500,24 @@ export default function ItemFormDrawer({
                 <div style={{ fontSize: 11, color: "#718894", marginBottom: 2, fontWeight: 500, lineHeight: "14px" }}>
                   {t.itemDrawer.expiryDate}
                 </div>
-                <Form.Item name="ToDate" style={{ margin: 0 }}>
+                <Form.Item
+                  name="ToDate"
+                  style={{ margin: 0 }}
+                  dependencies={["FromDate"]}
+                  rules={[
+                    ({ getFieldValue }) => ({
+                      validator(_, value) {
+                        const toDate = parseDateSafe(value);
+                        if (!toDate) return Promise.resolve();
+                        const fromDate = parseDateSafe(getFieldValue("FromDate"));
+                        if (fromDate && toDate.startOf("day").isBefore(fromDate.startOf("day"))) {
+                          return Promise.reject(new Error(t.itemDrawer.expiryDateAfterEffectiveDateError));
+                        }
+                        return Promise.resolve();
+                      },
+                    }),
+                  ]}
+                >
                   <DatePicker
                     variant="borderless"
                     format="DD/MM/YYYY"
@@ -481,6 +529,18 @@ export default function ItemFormDrawer({
                       fontWeight: 500,
                       fontSize: 13,
                       color: "#123443",
+                    }}
+                    disabledDate={(current) => {
+                      const fromDate = parseDateSafe(form.getFieldValue("FromDate"));
+                      return Boolean(current && fromDate && current.isBefore(fromDate, "day"));
+                    }}
+                    onChange={(date) => {
+                      if (date) {
+                        const fromDate = parseDateSafe(form.getFieldValue("FromDate"));
+                        if (fromDate && date.startOf("day").isBefore(fromDate.startOf("day"))) {
+                          message.warning(t.itemDrawer.expiryDateAfterEffectiveDateError);
+                        }
+                      }
                     }}
                   />
                 </Form.Item>

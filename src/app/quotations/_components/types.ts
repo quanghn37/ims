@@ -15,9 +15,20 @@ export interface AttachmentFile {
   fileSize?: string;
 }
 
-export function parseDateSafe(dateStr?: string) {
+export function parseDateSafe(dateStr?: any) {
   if (!dateStr || dateStr === "01-01-1900" || dateStr === "1900-01-01" || dateStr === "") return null;
-  const formats = ["DD-MM-YYYY", "DD/MM/YYYY", "YYYY-MM-DD", "YYYY/MM/DD"];
+  if (dayjs.isDayjs(dateStr)) return dateStr.isValid() ? dateStr : null;
+  const formats = [
+    "DD-MM-YYYY",
+    "DD/MM/YYYY",
+    "YYYY-MM-DD",
+    "YYYY/MM/DD",
+    "DD-MM-YYYY HH:mm:ss",
+    "DD/MM/YYYY HH:mm:ss",
+    "YYYY-MM-DDTHH:mm:ss",
+    "YYYY-MM-DDTHH:mm:ss.SSS",
+    "YYYY-MM-DDTHH:mm:ss.SSSZ",
+  ];
   for (const fmt of formats) {
     const d = dayjs(dateStr, fmt, true);
     if (d.isValid()) return d;

@@ -239,6 +239,14 @@ export function useQuotationItemsAndWorkflow(
           0
       );
 
+      const fromDateD = parseDateSafe(values.FromDate || values.ItemDate);
+      const toDateD = parseDateSafe(values.ToDate || values.EndDate);
+      if (fromDateD && toDateD && toDateD.startOf("day").isBefore(fromDateD.startOf("day"))) {
+        message.error("Ngày hết hiệu lực phải lớn hơn hoặc bằng Ngày hiệu lực");
+        setSubmittingItem(false);
+        return;
+      }
+
       const itemDateVal = values.FromDate || values.ItemDate;
       const itemDateFormatted = itemDateVal
         ? dayjs.isDayjs(itemDateVal)
