@@ -361,7 +361,10 @@ export default function ContractsTable({ filteredContracts, loading, searchKeywo
       style={{
         background: "#FFFFFF",
         padding: 0,
-        minHeight: "calc(100vh - 100px)",
+        flex: 1,
+        minHeight: 0,
+        display: "flex",
+        flexDirection: "column",
         boxSizing: "border-box",
       }}
     >
@@ -456,7 +459,7 @@ export default function ContractsTable({ filteredContracts, loading, searchKeywo
       </div>
 
       <Table
-        className="contract-main-table"
+        className="contract-main-table erp-full-table"
         size="small"
         tableLayout="fixed"
         components={{ header: { cell: ResizableTitle } }}
@@ -464,7 +467,7 @@ export default function ContractsTable({ filteredContracts, loading, searchKeywo
         columns={mergedColumns}
         rowKey={(record, index) => record.ContractId ?? record.ContractID ?? record.Id ?? record.ID ?? record.ContractCode ?? record.Code ?? `contract_${index}`}
         loading={loading}
-        scroll={{ x: scrollX, y: "calc(100vh - 215px)" }}
+        scroll={{ x: scrollX, y: "100%" }}
         onRow={(record) => ({
           onDoubleClick: () => onEdit(record),
         })}

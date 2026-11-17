@@ -756,10 +756,14 @@ export default function PendingPoReconcileTab({
           border: "1px solid #dce5e6",
           borderRadius: 8,
           overflow: "hidden",
+          flex: 1,
+          minHeight: 0,
+          display: "flex",
+          flexDirection: "column",
         }}
       >
         <Table
-          className="stockin-main-table"
+          className="stockin-main-table erp-full-table"
           components={{ header: { cell: ResizableTitle } }}
           rowKey={getPendingPoRowKey}
           size="middle"
@@ -778,7 +782,7 @@ export default function PendingPoReconcileTab({
             },
             showTotal: (total, range) => `${range[0]}–${range[1]} / ${total} ${isEn ? "items" : "dòng vật tư"}`,
           }}
-          scroll={{ x: scrollX, y: "calc(100vh - 250px)" }}
+          scroll={{ x: scrollX, y: "100%" }}
         />
       </div>
     </div>

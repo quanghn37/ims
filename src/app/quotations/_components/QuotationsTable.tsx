@@ -260,7 +260,10 @@ export default function QuotationsTable({
       style={{
         background: "#FFFFFF",
         padding: 0,
-        minHeight: "calc(100vh - 100px)",
+        flex: 1,
+        minHeight: 0,
+        display: "flex",
+        flexDirection: "column",
         boxSizing: "border-box",
       }}
     >
@@ -355,7 +358,7 @@ export default function QuotationsTable({
 
       {/* BẢNG DỮ LIỆU */}
       <Table
-        className="quotation-main-table"
+        className="quotation-main-table erp-full-table"
         size="small"
         tableLayout="fixed"
         components={{ header: { cell: ResizableTitle } }}
@@ -363,7 +366,7 @@ export default function QuotationsTable({
         columns={mergedColumns}
         rowKey={(record, index) => record.ContractId ?? record.ContractCode ?? `quotation_${index}`}
         loading={loading}
-        scroll={{ x: scrollX, y: "calc(100vh - 215px)" }}
+        scroll={{ x: scrollX, y: "100%" }}
         onRow={(record) => ({ onDoubleClick: () => onEdit(record) })}
         pagination={{
           current: pagination.current,

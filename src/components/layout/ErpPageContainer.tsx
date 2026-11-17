@@ -16,7 +16,7 @@ interface ErpPageContainerProps {
  */
 export const ErpPageContainer: React.FC<ErpPageContainerProps> = ({
   children,
-  padding = "14px 20px 14px 20px",
+  padding = "12px 20px 8px 20px",
   style,
   className,
 }) => {

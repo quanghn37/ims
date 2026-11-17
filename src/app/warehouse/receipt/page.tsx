@@ -772,10 +772,14 @@ export default function StockInPage() {
               border: "1px solid #dce5e6",
               borderRadius: 8,
               overflow: "hidden",
+              flex: 1,
+              minHeight: 0,
+              display: "flex",
+              flexDirection: "column",
             }}
           >
             <Table
-              className="stockin-main-table"
+              className="stockin-main-table erp-full-table"
               tableLayout="fixed"
               components={{ header: { cell: ResizableTitle } }}
               rowKey="id"
@@ -794,7 +798,7 @@ export default function StockInPage() {
                 },
                 showTotal: (total, range) => `${range[0]}–${range[1]} / ${total} ${t("receipt.receiptCount") || "phiếu"}`,
               }}
-              scroll={{ x: scrollX, y: "calc(100vh - 250px)" }}
+              scroll={{ x: scrollX, y: "100%" }}
               onRow={(record) => ({
                 onDoubleClick: () => handleOpenEdit(record),
               })}

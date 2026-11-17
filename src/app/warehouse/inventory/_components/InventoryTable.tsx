@@ -337,9 +337,14 @@ export default function InventoryTable({
           border: "1px solid #dce5e6",
           borderRadius: 8,
           overflow: "hidden",
+          flex: 1,
+          minHeight: 0,
+          display: "flex",
+          flexDirection: "column",
         }}
       >
         <Table
+          className="erp-full-table"
           tableLayout="fixed"
           components={{ header: { cell: ResizableTitle } }}
           size="middle"
@@ -347,7 +352,7 @@ export default function InventoryTable({
           dataSource={items}
           columns={mergedColumns as any}
           rowKey={(r) => `${r.BalanceId ?? r.MaterialId ?? r.ItemCode}_${r.WarehouseId}`}
-          scroll={{ x: scrollX, y: "calc(100vh - 215px)" }}
+          scroll={{ x: scrollX, y: "100%" }}
           pagination={{
             current: pagination.current,
             pageSize: pagination.pageSize,

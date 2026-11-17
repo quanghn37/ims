@@ -609,9 +609,14 @@ export default function InventoryPeriodReportPage() {
           border: "1px solid #dce5e6",
           borderRadius: 8,
           overflow: "hidden",
+          flex: 1,
+          minHeight: 0,
+          display: "flex",
+          flexDirection: "column",
         }}
       >
         <Table
+          className="erp-full-table"
           components={{ header: { cell: ResizableTitle } }}
           tableLayout="fixed"
           size="middle"
@@ -619,7 +624,7 @@ export default function InventoryPeriodReportPage() {
           dataSource={dataList}
           columns={resizableColumns}
           rowKey={(r) => `${r.PeriodId ?? r.Period}_${r.WarehouseId}_${r.MaterialId ?? r.ItemCode}`}
-          scroll={{ x: scrollX, y: "calc(100vh - 225px)" }}
+          scroll={{ x: scrollX, y: "100%" }}
           bordered
           pagination={{
             current: pagination.current,

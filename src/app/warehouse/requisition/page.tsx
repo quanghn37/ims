@@ -520,7 +520,7 @@ export default function MaterialRequisitionPage() {
 
       {/* Table */}
       <Table
-        className="requisition-main-table"
+        className="requisition-main-table erp-full-table"
         tableLayout="fixed"
         components={{ header: { cell: ResizableTitle } }}
         rowKey="id"
@@ -528,7 +528,7 @@ export default function MaterialRequisitionPage() {
         columns={tableColumns}
         dataSource={filteredRequisitions}
         loading={loading}
-        scroll={{ x: scrollX, y: "calc(100vh - 215px)" }}
+        scroll={{ x: scrollX, y: "100%" }}
         onRow={(record) => ({
           onDoubleClick: () => handleOpenEdit(record),
         })}

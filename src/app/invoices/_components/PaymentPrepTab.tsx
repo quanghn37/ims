@@ -909,9 +909,9 @@ export const PaymentPrepTab: React.FC<PaymentPrepTabProps> = ({
       </Row>
 
       {/* Selectable Table */}
-      <div style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
+      <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <Table<PaymentPrepItem>
-          className="erp-detail-table"
+          className="erp-detail-table erp-full-table"
           bordered
           components={{
             header: {
@@ -924,7 +924,7 @@ export const PaymentPrepTab: React.FC<PaymentPrepTabProps> = ({
           size="small"
           loading={loading || fetchingSubmissions}
           pagination={false}
-          scroll={{ x: totalScrollX, y: "calc(100vh - 280px)" }}
+          scroll={{ x: totalScrollX, y: "100%" }}
           summary={() => (
             <Table.Summary fixed>
               <Table.Summary.Row style={{ backgroundColor: "#f8fafc", fontWeight: 700 }}>

@@ -12,6 +12,36 @@ export const apiClient = axios.create({
   timeout: 60000, // Tăng lên 60s để các API truy vấn báo cáo / danh sách hợp đồng lớn không bị timeout 10s
 });
 
+function redirectToLoginIfNeeded() {
+  clearSession();
+  if (IS_BROWSER && window.location.pathname !== "/login") {
+    window.location.href = "/login";
+  }
+}
+
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error?.response?.status;
+    if (status === 401) {
+      redirectToLoginIfNeeded();
+      return Promise.reject(error);
+    }
+    const errData = error?.response?.data;
+    const errMsg =
+      errData?.Message ||
+      errData?.message ||
+      errData?.error ||
+      (Array.isArray(errData?.Errors)
+        ? errData.Errors.map((e: any) => e?.Explanation || e?.Message).filter(Boolean).join(" ")
+        : "");
+    if (errMsg) {
+      handleSessionError(errMsg);
+    }
+    return Promise.reject(error);
+  }
+);
+
 export const DEFAULT_SESSION: UserSession = {
   LogIn: "",
   SessionId: "",
@@ -350,22 +380,35 @@ export function clearErpCache() {
   erpInFlightRequests.clear();
 }
 
+function isPublicAuthEndpoint(cleanEndpoint: string) {
+  const lower = cleanEndpoint.toLowerCase();
+  return lower.startsWith("api/validate-user") || lower.startsWith("api/upsert-user");
+}
+
 function handleSessionError(msg?: string) {
   if (!msg || typeof msg !== "string") return;
   const lower = msg.toLowerCase();
   if (
     lower.includes("sessionid là bắt buộc") ||
     lower.includes("sessionid la bat buoc") ||
+    lower.includes("sessionid không hợp lệ") ||
+    lower.includes("sessionid khong hop le") ||
     lower.includes("cannot validate user") ||
     lower.includes("phiên hết hạn") ||
     lower.includes("phiên làm việc hết hạn") ||
+    lower.includes("phiên đăng nhập") ||
+    lower.includes("vui lòng đăng nhập lại") ||
     lower.includes("session expired") ||
-    lower.includes("invalid session")
+    lower.includes("session is expired") ||
+    lower.includes("invalid session") ||
+    lower.includes("not authorized") ||
+    lower.includes("please log in again") ||
+    lower.includes("unauthorized") ||
+    lower.includes("unauthenticated") ||
+    lower.includes("invalid token") ||
+    lower.includes("token expired")
   ) {
-    clearSession();
-    if (IS_BROWSER && window.location.pathname !== "/login") {
-      window.location.href = "/login";
-    }
+    redirectToLoginIfNeeded();
   }
 }
 
@@ -393,6 +436,15 @@ export async function erpGet<T = any>(
     SessionId: params.SessionId ?? session?.SessionId ?? "",
     ...params,
   };
+
+  if (
+    IS_BROWSER &&
+    !isPublicAuthEndpoint(cleanEndpoint) &&
+    (!mergedParams.SessionId || !mergedParams.LogIn)
+  ) {
+    redirectToLoginIfNeeded();
+    throw new Error("Phiên đăng nhập không tồn tại hoặc đã hết hạn.");
+  }
 
   const cacheKey = `${cleanEndpoint}?${JSON.stringify(mergedParams)}`;
   const now = Date.now();
@@ -491,6 +543,15 @@ export async function erpPost<T = any>(
     ...(updateMode ? { UpdateMode: updateMode } : {}),
     ...params,
   };
+
+  if (
+    IS_BROWSER &&
+    !isPublicAuthEndpoint(cleanEndpoint) &&
+    (!mergedParams.SessionId || !mergedParams.LogIn)
+  ) {
+    redirectToLoginIfNeeded();
+    throw new Error("Phiên đăng nhập không tồn tại hoặc đã hết hạn.");
+  }
 
   auditApiParams("POST", cleanEndpoint, mergedParams);
 

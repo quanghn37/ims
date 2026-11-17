@@ -618,9 +618,9 @@ export const IpcListTab: React.FC<IpcListTabProps> = ({
       </div>
 
       {/* Table */}
-      <div style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
+      <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <Table<IpcRecord>
-          className="erp-detail-table"
+          className="erp-detail-table erp-full-table"
           bordered
           components={{
             header: {
@@ -637,7 +637,7 @@ export const IpcListTab: React.FC<IpcListTabProps> = ({
             onClick: () => onSelectIpc(record),
             style: { cursor: "pointer" },
           })}
-          scroll={{ x: Math.max(totalScrollX, 1200), y: "calc(100vh - 250px)" }}
+          scroll={{ x: Math.max(totalScrollX, 1200), y: "100%" }}
         />
       </div>
 

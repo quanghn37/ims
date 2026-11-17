@@ -224,7 +224,7 @@ export const AntdLocaleProvider: React.FC<AntdLocaleProviderProps> = ({ children
         }
 
         .erp-full-table .ant-pagination {
-          margin: 8px 0 0 0 !important;
+          margin: 6px 0 0 0 !important;
           flex-shrink: 0 !important;
         }
 

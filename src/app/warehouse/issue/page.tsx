@@ -449,7 +449,7 @@ export default function StockOutPage() {
       {/* Main Table */}
       <Table
         loading={loading}
-        className="stockin-main-table"
+        className="stockin-main-table erp-full-table"
         tableLayout="fixed"
         components={{ header: { cell: ResizableTitle } }}
         rowKey="id"
@@ -465,7 +465,7 @@ export default function StockOutPage() {
           pageSizeOptions: ["20", "50", "100", "200"],
           showTotal: (total, range) => `${range[0]}–${range[1]} / ${total} ${t.table.receiptsCount}`,
         }}
-        scroll={{ x: scrollX, y: "calc(100vh - 215px)" }}
+        scroll={{ x: scrollX, y: "100%" }}
       />
     </ErpPageContainer>
   );
