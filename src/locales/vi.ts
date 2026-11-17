@@ -655,6 +655,21 @@ export const viTranslations = {
     loadMainContractsError: "Không thể tải danh sách Hợp đồng CĐT.",
     applySelectAtLeastOne: "Vui lòng chọn ít nhất một thông tin để áp dụng!",
     applySuccess: "Đã áp dụng thông tin xuống cả 2 khung!",
+    workTypeLabel: "Loại phiếu / Công việc",
+    selectWorkTypePlaceholder: "Tất cả (để trống = tất cả)",
+    allWorkTypesLabel: "Tất cả loại phiếu",
+    confirmWorkTypeLabel: "Loại phiếu (WorkType):",
+    workTypes: {
+      construction_work: "Công tác thi công (construction_work)",
+      deduction: "Khấu trừ (deduction)",
+      payment_order: "Đề nghị thanh toán (payment_order)",
+      budget: "Ngân sách (budget)",
+      budget_heading: "Hạng mục ngân sách (budget_heading)",
+      purchase_order: "Đơn hàng mua sắm (purchase_order)",
+      Inventory_request: "Yêu cầu xuất vật tư (Inventory_request)",
+      Inventory_receipt: "Phiếu nhập kho (Inventory_receipt)",
+      Inventory_issue: "Phiếu xuất kho (Inventory_issue)",
+    },
   },
 };
 

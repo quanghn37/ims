@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Row, Col, Button, message } from "antd";
+import { Row, Col, Button, Select, message } from "antd";
 import dynamic from "next/dynamic";
 import {
   IconCopyCheck,
@@ -12,7 +12,7 @@ import {
 import { ErpPageContainer } from "@/components/layout/ErpPageContainer";
 import { extractApiList, extractTotalRows } from "@/lib/api-client";
 import { useTranslation } from "@/locales/LanguageContext";
-import { ClientUserItem, replaceTaskAssignmentApi } from "./api";
+import { ClientUserItem, WORK_TYPE_KEYS, replaceTaskAssignmentApi } from "./api";
 import UserSelectField from "./_components/UserSelectField";
 import AssignmentReplaceCard, {
   SyncPayload,
@@ -31,6 +31,7 @@ export default function ReplaceTaskAssignmentPage() {
   // State thanh điền nhanh dùng chung
   const [quickSubconOfId, setQuickSubconOfId] = useState<number | null>(null);
   const [quickSubconOfDisplay, setQuickSubconOfDisplay] = useState<string>("");
+  const [quickWorkType, setQuickWorkType] = useState<string | null>(null);
   const [quickOldUserId, setQuickOldUserId] = useState<number | null>(null);
   const [quickOldUserObj, setQuickOldUserObj] = useState<ClientUserItem | null>(null);
   const [quickNewUserId, setQuickNewUserId] = useState<number | null>(null);
@@ -127,7 +128,7 @@ export default function ReplaceTaskAssignmentPage() {
   };
 
   const handleApplyToBoth = () => {
-    if (!quickSubconOfId && !quickOldUserId && !quickNewUserId) {
+    if (!quickSubconOfId && !quickWorkType && !quickOldUserId && !quickNewUserId) {
       message.warning(t.replaceTaskAssignment.applySelectAtLeastOne);
       return;
     }
@@ -135,6 +136,7 @@ export default function ReplaceTaskAssignmentPage() {
       version: (prev?.version ?? 0) + 1,
       subconOfId: quickSubconOfId,
       subconOfDisplay: quickSubconOfDisplay,
+      workType: quickWorkType,
       oldUserId: quickOldUserId,
       oldUserObj: quickOldUserObj,
       newUserId: quickNewUserId,
@@ -146,6 +148,7 @@ export default function ReplaceTaskAssignmentPage() {
   const handleResetQuick = () => {
     setQuickSubconOfId(null);
     setQuickSubconOfDisplay("");
+    setQuickWorkType(null);
     setQuickOldUserId(null);
     setQuickOldUserObj(null);
     setQuickNewUserId(null);
@@ -251,6 +254,32 @@ export default function ReplaceTaskAssignmentPage() {
                   <IconSearch size={14} strokeWidth={1.8} style={{ color: "#008f89" }} />
                 </span>
               </div>
+            </div>
+
+            <div style={{ flex: 1, minWidth: 190 }}>
+              <div
+                style={{
+                  fontSize: 11.5,
+                  fontWeight: 700,
+                  color: "#334155",
+                  marginBottom: 4,
+                }}
+              >
+                {t.replaceTaskAssignment.workTypeLabel}
+              </div>
+              <Select
+                allowClear
+                showSearch
+                value={quickWorkType ?? undefined}
+                placeholder={t.replaceTaskAssignment.selectWorkTypePlaceholder}
+                optionFilterProp="label"
+                style={{ width: "100%" }}
+                onChange={(val) => setQuickWorkType(val ?? null)}
+                options={WORK_TYPE_KEYS.map((key) => ({
+                  value: key,
+                  label: (t.replaceTaskAssignment.workTypes as Record<string, string>)[key] || key,
+                }))}
+              />
             </div>
 
             <div style={{ flex: 1, minWidth: 220 }}>

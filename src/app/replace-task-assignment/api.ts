@@ -13,10 +13,25 @@ export interface ClientUserItem {
 
 export type ReplaceTaskUpdateMode = "TaskTypicalAssignment" | "Task_Assignment";
 
+export const WORK_TYPE_KEYS = [
+  "construction_work",
+  "deduction",
+  "payment_order",
+  "budget",
+  "budget_heading",
+  "purchase_order",
+  "Inventory_request",
+  "Inventory_receipt",
+  "Inventory_issue",
+] as const;
+
+export type WorkTypeKey = (typeof WORK_TYPE_KEYS)[number];
+
 export interface ReplaceTaskAssignmentPayload {
   OldUserId: number;
   NewUserId: number;
   SubconOf: number;
+  WorkType?: string | null;
 }
 
 export const replaceTaskAssignmentApi = {
