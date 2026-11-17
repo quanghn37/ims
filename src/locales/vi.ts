@@ -314,6 +314,7 @@ export const viTranslations = {
     selectPriceList: "Chọn Bảng giá...",
     deliveryWarehouse: "Kho giao hàng",
     selectWarehouse: "Chọn kho...",
+    warehouseRequired: "Vui lòng chọn Kho giao hàng!",
     orderCode: "Số đơn hàng",
     orderDate: "Ngày đặt hàng",
     deliveryDate: "Ngày giao hàng",

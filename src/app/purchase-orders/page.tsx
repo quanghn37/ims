@@ -556,6 +556,10 @@ function PurchaseOrdersPageContent() {
   };
 
   const handleSubmitOrder = async (values: any) => {
+    if (!values.WarehouseId) {
+      message.warning("Vui lòng chọn Kho giao hàng!");
+      return;
+    }
     setSubmittingOrder(true);
     try {
       const orderDateVal = values.ContractDate || values.FromDate;

@@ -316,6 +316,7 @@ export const enTranslations: TranslationsType = {
     selectPriceList: "Select Price List...",
     deliveryWarehouse: "Delivery Warehouse",
     selectWarehouse: "Select warehouse...",
+    warehouseRequired: "Please select Delivery Warehouse!",
     orderCode: "PO Number",
     orderDate: "Order Date",
     deliveryDate: "Delivery Date",

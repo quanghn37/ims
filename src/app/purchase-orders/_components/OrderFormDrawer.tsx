@@ -153,6 +153,12 @@ export default function OrderFormDrawer({
       return;
     }
 
+    const currentWarehouseId = form.getFieldValue("WarehouseId") || editingOrder?.WarehouseId;
+    if (!currentWarehouseId) {
+      message.warning(t.purchaseOrder.warehouseRequired);
+      return;
+    }
+
     try {
       setSubmittingApproval(true);
       const res: any = await purchaseOrdersApi.submitOrderApproval({
@@ -402,13 +408,29 @@ export default function OrderFormDrawer({
       </div>
 
       <div style={{ width: "100%", marginBottom: 8 }}>
-        <Form form={form} layout="vertical" onFinish={onFinish}>
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={onFinish}
+          onFinishFailed={(errorInfo) => {
+            const firstErr = errorInfo?.errorFields?.[0]?.errors?.[0];
+            if (firstErr) {
+              message.warning(firstErr);
+            }
+          }}
+        >
           {/* Hidden fields */}
           <Form.Item name="ClientId" style={{ display: "none" }}><Input /></Form.Item>
           <Form.Item name="ParentId" style={{ display: "none" }}><Input /></Form.Item>
           <Form.Item name="SubconOf" style={{ display: "none" }}><Input /></Form.Item>
           <Form.Item name="SourceId" style={{ display: "none" }}><Input /></Form.Item>
-          <Form.Item name="WarehouseId" style={{ display: "none" }}><Input /></Form.Item>
+          <Form.Item
+            name="WarehouseId"
+            style={{ display: "none" }}
+            rules={[{ required: true, message: t.purchaseOrder.warehouseRequired }]}
+          >
+            <Input />
+          </Form.Item>
           <Form.Item name="FromDate" style={{ display: "none" }}><Input /></Form.Item>
           <Form.Item name="ToDate" style={{ display: "none" }}><Input /></Form.Item>
 
@@ -479,7 +501,7 @@ export default function OrderFormDrawer({
               {/* Cột 4: Kho nhận hàng */}
               <Col span={6} className="erp-info-cell">
                 <span className="erp-info-label">
-                  {t.purchaseOrder.deliveryWarehouse}
+                  {t.purchaseOrder.deliveryWarehouse} <span style={{ color: "#ff4d4f" }}>*</span>
                 </span>
                 <div
                   onClick={onOpenWarehouseLov}
