@@ -670,6 +670,26 @@ export const viTranslations = {
       Inventory_receipt: "Phiếu nhập kho (Inventory_receipt)",
       Inventory_issue: "Phiếu xuất kho (Inventory_issue)",
     },
+    roleLabel: "Vai trò (RACI)",
+    selectRolePlaceholder: "Tất cả (để trống = tất cả)",
+    allRolesLabel: "Tất cả vai trò",
+    confirmRoleLabel: "Vai trò (Role):",
+    roles: {
+      R: "R - Người thực hiện (Responsible)",
+      A: "A - Người phê duyệt (Accountable)",
+      C: "C - Người tham vấn (Consulted)",
+      I: "I - Người nhận thông báo (Informed)",
+    },
+    typeLabel: "Loại (Type)",
+    selectTypePlaceholder: "Tất cả (SS / XD / MEP)",
+    typeOnlyForHint: "Chỉ áp dụng cho Thi công / Khấu trừ / ĐNTT",
+    allTypesLabel: "Tất cả",
+    confirmTypeLabel: "Loại (Type):",
+    types: {
+      SS: "SS",
+      XD: "XD",
+      MEP: "MEP",
+    },
   },
 };
 

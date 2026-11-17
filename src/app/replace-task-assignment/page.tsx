@@ -12,7 +12,7 @@ import {
 import { ErpPageContainer } from "@/components/layout/ErpPageContainer";
 import { extractApiList, extractTotalRows } from "@/lib/api-client";
 import { useTranslation } from "@/locales/LanguageContext";
-import { ClientUserItem, WORK_TYPE_KEYS, replaceTaskAssignmentApi } from "./api";
+import { ClientUserItem, ROLE_KEYS, TYPE_KEYS, WORK_TYPE_KEYS, isTypeApplicableWorkType, replaceTaskAssignmentApi } from "./api";
 import UserSelectField from "./_components/UserSelectField";
 import AssignmentReplaceCard, {
   SyncPayload,
@@ -32,6 +32,8 @@ export default function ReplaceTaskAssignmentPage() {
   const [quickSubconOfId, setQuickSubconOfId] = useState<number | null>(null);
   const [quickSubconOfDisplay, setQuickSubconOfDisplay] = useState<string>("");
   const [quickWorkType, setQuickWorkType] = useState<string | null>(null);
+  const [quickRole, setQuickRole] = useState<string | null>(null);
+  const [quickType, setQuickType] = useState<string | null>(null);
   const [quickOldUserId, setQuickOldUserId] = useState<number | null>(null);
   const [quickOldUserObj, setQuickOldUserObj] = useState<ClientUserItem | null>(null);
   const [quickNewUserId, setQuickNewUserId] = useState<number | null>(null);
@@ -128,7 +130,7 @@ export default function ReplaceTaskAssignmentPage() {
   };
 
   const handleApplyToBoth = () => {
-    if (!quickSubconOfId && !quickWorkType && !quickOldUserId && !quickNewUserId) {
+    if (!quickSubconOfId && !quickWorkType && !quickRole && !quickType && !quickOldUserId && !quickNewUserId) {
       message.warning(t.replaceTaskAssignment.applySelectAtLeastOne);
       return;
     }
@@ -137,6 +139,8 @@ export default function ReplaceTaskAssignmentPage() {
       subconOfId: quickSubconOfId,
       subconOfDisplay: quickSubconOfDisplay,
       workType: quickWorkType,
+      role: quickRole,
+      type: isTypeApplicableWorkType(quickWorkType) ? quickType : null,
       oldUserId: quickOldUserId,
       oldUserObj: quickOldUserObj,
       newUserId: quickNewUserId,
@@ -149,6 +153,8 @@ export default function ReplaceTaskAssignmentPage() {
     setQuickSubconOfId(null);
     setQuickSubconOfDisplay("");
     setQuickWorkType(null);
+    setQuickRole(null);
+    setQuickType(null);
     setQuickOldUserId(null);
     setQuickOldUserObj(null);
     setQuickNewUserId(null);
@@ -274,10 +280,70 @@ export default function ReplaceTaskAssignmentPage() {
                 placeholder={t.replaceTaskAssignment.selectWorkTypePlaceholder}
                 optionFilterProp="label"
                 style={{ width: "100%" }}
-                onChange={(val) => setQuickWorkType(val ?? null)}
+                onChange={(val) => {
+                  const nextWorkType = val ?? null;
+                  setQuickWorkType(nextWorkType);
+                  if (!isTypeApplicableWorkType(nextWorkType)) {
+                    setQuickType(null);
+                  }
+                }}
                 options={WORK_TYPE_KEYS.map((key) => ({
                   value: key,
                   label: (t.replaceTaskAssignment.workTypes as Record<string, string>)[key] || key,
+                }))}
+              />
+            </div>
+
+            <div style={{ flex: 0.75, minWidth: 140 }}>
+              <div
+                style={{
+                  fontSize: 11.5,
+                  fontWeight: 700,
+                  color: "#334155",
+                  marginBottom: 4,
+                }}
+              >
+                {t.replaceTaskAssignment.roleLabel}
+              </div>
+              <Select
+                allowClear
+                value={quickRole ?? undefined}
+                placeholder={t.replaceTaskAssignment.selectRolePlaceholder}
+                style={{ width: "100%" }}
+                onChange={(val) => setQuickRole(val ?? null)}
+                options={ROLE_KEYS.map((key) => ({
+                  value: key,
+                  label: (t.replaceTaskAssignment.roles as Record<string, string>)[key] || key,
+                }))}
+              />
+            </div>
+
+            <div style={{ flex: 0.7, minWidth: 130 }}>
+              <div
+                style={{
+                  fontSize: 11.5,
+                  fontWeight: 700,
+                  color: "#334155",
+                  marginBottom: 4,
+                }}
+                title={t.replaceTaskAssignment.typeOnlyForHint}
+              >
+                {t.replaceTaskAssignment.typeLabel}
+              </div>
+              <Select
+                allowClear
+                disabled={!isTypeApplicableWorkType(quickWorkType)}
+                value={quickType ?? undefined}
+                placeholder={
+                  isTypeApplicableWorkType(quickWorkType)
+                    ? t.replaceTaskAssignment.selectTypePlaceholder
+                    : t.replaceTaskAssignment.typeOnlyForHint
+                }
+                style={{ width: "100%" }}
+                onChange={(val) => setQuickType(val ?? null)}
+                options={TYPE_KEYS.map((key) => ({
+                  value: key,
+                  label: (t.replaceTaskAssignment.types as Record<string, string>)[key] || key,
                 }))}
               />
             </div>
@@ -328,7 +394,7 @@ export default function ReplaceTaskAssignmentPage() {
               />
             </div>
 
-            <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+            <div style={{ display: "flex", gap: 8, flexShrink: 0, marginLeft: "auto" }}>
               <Button
                 icon={<IconRefresh size={14} strokeWidth={1.8} />}
                 onClick={handleResetQuick}

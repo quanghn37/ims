@@ -27,11 +27,34 @@ export const WORK_TYPE_KEYS = [
 
 export type WorkTypeKey = (typeof WORK_TYPE_KEYS)[number];
 
+export const ROLE_KEYS = ["R", "A", "C", "I"] as const;
+
+export type RoleKey = (typeof ROLE_KEYS)[number];
+
+export const TYPE_KEYS = ["SS", "XD", "MEP"] as const;
+
+export type TypeKey = (typeof TYPE_KEYS)[number];
+
+export const TYPE_APPLICABLE_WORK_TYPES = [
+  "construction_work",
+  "deduction",
+  "payment_order",
+] as const;
+
+export function isTypeApplicableWorkType(workType?: string | null): boolean {
+  return Boolean(
+    workType &&
+      (TYPE_APPLICABLE_WORK_TYPES as readonly string[]).includes(workType)
+  );
+}
+
 export interface ReplaceTaskAssignmentPayload {
   OldUserId: number;
   NewUserId: number;
   SubconOf: number;
   WorkType?: string | null;
+  Role?: string | null;
+  Type?: string | null;
 }
 
 export const replaceTaskAssignmentApi = {

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Button, Modal, Select, Tag, Typography, message } from "antd";
+import { Button, Col, Modal, Row, Select, Tag, Typography, message } from "antd";
 import {
   IconRefresh,
   IconCheck,
@@ -17,7 +17,10 @@ import UserSelectField from "./UserSelectField";
 import {
   ClientUserItem,
   ReplaceTaskUpdateMode,
+  ROLE_KEYS,
+  TYPE_KEYS,
   WORK_TYPE_KEYS,
+  isTypeApplicableWorkType,
   replaceTaskAssignmentApi,
 } from "../api";
 
@@ -28,6 +31,8 @@ export interface SyncPayload {
   subconOfId: number | null;
   subconOfDisplay: string;
   workType: string | null;
+  role: string | null;
+  type: string | null;
   oldUserId: number | null;
   oldUserObj: ClientUserItem | null;
   newUserId: number | null;
@@ -41,6 +46,8 @@ interface ExecutionResult {
   payload: {
     SubconOf: number;
     WorkType: string | null;
+    Role: string | null;
+    Type: string | null;
     OldUserId: number;
     NewUserId: number;
     UpdateMode: ReplaceTaskUpdateMode;
@@ -73,6 +80,8 @@ export default function AssignmentReplaceCard({
   const [subconOfId, setSubconOfId] = useState<number | null>(null);
   const [subconOfDisplay, setSubconOfDisplay] = useState<string>("");
   const [workType, setWorkType] = useState<string | null>(null);
+  const [role, setRole] = useState<string | null>(null);
+  const [type, setType] = useState<string | null>(null);
 
   const [oldUserId, setOldUserId] = useState<number | null>(null);
   const [oldUserObj, setOldUserObj] = useState<ClientUserItem | null>(null);
@@ -89,6 +98,8 @@ export default function AssignmentReplaceCard({
     setSubconOfId(syncData.subconOfId);
     setSubconOfDisplay(syncData.subconOfDisplay);
     setWorkType(syncData.workType ?? null);
+    setRole(syncData.role ?? null);
+    setType(isTypeApplicableWorkType(syncData.workType) ? syncData.type ?? null : null);
     setOldUserId(syncData.oldUserId);
     setOldUserObj(syncData.oldUserObj);
     setNewUserId(syncData.newUserId);
@@ -99,6 +110,8 @@ export default function AssignmentReplaceCard({
     setSubconOfId(null);
     setSubconOfDisplay("");
     setWorkType(null);
+    setRole(null);
+    setType(null);
     setOldUserId(null);
     setOldUserObj(null);
     setNewUserId(null);
@@ -135,6 +148,15 @@ export default function AssignmentReplaceCard({
     const workTypeDisplay = workType
       ? (rt.workTypes as Record<string, string>)[workType] || workType
       : rt.allWorkTypesLabel;
+    const roleDisplay = role
+      ? (rt.roles as Record<string, string>)[role] || role
+      : rt.allRolesLabel;
+
+    const typeApplicable = isTypeApplicableWorkType(workType);
+    const effectiveType = typeApplicable ? type || null : null;
+    const typeDisplay = effectiveType
+      ? (rt.types as Record<string, string>)[effectiveType] || effectiveType
+      : rt.allTypesLabel;
 
     Modal.confirm({
       title: `${rt.confirmTitlePrefix} ${title}`,
@@ -168,6 +190,16 @@ export default function AssignmentReplaceCard({
               <span style={{ color: "#123443" }}>{workTypeDisplay}</span>
             </div>
             <div>
+              <strong>{rt.confirmRoleLabel}</strong>{" "}
+              <span style={{ color: "#123443" }}>{roleDisplay}</span>
+            </div>
+            {typeApplicable && (
+              <div>
+                <strong>{rt.confirmTypeLabel}</strong>{" "}
+                <span style={{ color: "#123443" }}>{typeDisplay}</span>
+              </div>
+            )}
+            <div>
               <strong>{rt.confirmOldApproverLabel}</strong>{" "}
               <span style={{ color: "#dc2626" }}>{oldLabel}</span>
             </div>
@@ -190,6 +222,8 @@ export default function AssignmentReplaceCard({
           NewUserId: Number(newUserId),
           SubconOf: Number(subconOfId),
           WorkType: workType || null,
+          Role: role || null,
+          Type: effectiveType,
         };
         try {
           const res: any = await replaceTaskAssignmentApi.replaceTaskAssignment(
@@ -321,26 +355,75 @@ export default function AssignmentReplaceCard({
           </div>
         </div>
 
-        {/* 2. Loại phiếu / Công việc (WorkType - tùy chọn) */}
-        <div>
-          <div style={{ fontSize: 12, fontWeight: 700, color: "#334155", marginBottom: 6 }}>
-            {t.replaceTaskAssignment.workTypeLabel}
-          </div>
-          <Select
-            allowClear
-            showSearch
-            disabled={submitting}
-            value={workType ?? undefined}
-            placeholder={t.replaceTaskAssignment.selectWorkTypePlaceholder}
-            optionFilterProp="label"
-            style={{ width: "100%" }}
-            onChange={(val) => setWorkType(val ?? null)}
-            options={WORK_TYPE_KEYS.map((key) => ({
-              value: key,
-              label: (t.replaceTaskAssignment.workTypes as Record<string, string>)[key] || key,
-            }))}
-          />
-        </div>
+        {/* 2. Loại phiếu / Công việc (WorkType), Vai trò (Role) & Loại (Type) - tùy chọn */}
+        <Row gutter={10}>
+          <Col span={10}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#334155", marginBottom: 6 }}>
+              {t.replaceTaskAssignment.workTypeLabel}
+            </div>
+            <Select
+              allowClear
+              showSearch
+              disabled={submitting}
+              value={workType ?? undefined}
+              placeholder={t.replaceTaskAssignment.selectWorkTypePlaceholder}
+              optionFilterProp="label"
+              style={{ width: "100%" }}
+              onChange={(val) => {
+                const nextWorkType = val ?? null;
+                setWorkType(nextWorkType);
+                if (!isTypeApplicableWorkType(nextWorkType)) {
+                  setType(null);
+                }
+              }}
+              options={WORK_TYPE_KEYS.map((key) => ({
+                value: key,
+                label: (t.replaceTaskAssignment.workTypes as Record<string, string>)[key] || key,
+              }))}
+            />
+          </Col>
+          <Col span={7}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#334155", marginBottom: 6 }}>
+              {t.replaceTaskAssignment.roleLabel}
+            </div>
+            <Select
+              allowClear
+              disabled={submitting}
+              value={role ?? undefined}
+              placeholder={t.replaceTaskAssignment.selectRolePlaceholder}
+              style={{ width: "100%" }}
+              onChange={(val) => setRole(val ?? null)}
+              options={ROLE_KEYS.map((key) => ({
+                value: key,
+                label: (t.replaceTaskAssignment.roles as Record<string, string>)[key] || key,
+              }))}
+            />
+          </Col>
+          <Col span={7}>
+            <div
+              style={{ fontSize: 12, fontWeight: 700, color: "#334155", marginBottom: 6 }}
+              title={t.replaceTaskAssignment.typeOnlyForHint}
+            >
+              {t.replaceTaskAssignment.typeLabel}
+            </div>
+            <Select
+              allowClear
+              disabled={submitting || !isTypeApplicableWorkType(workType)}
+              value={type ?? undefined}
+              placeholder={
+                isTypeApplicableWorkType(workType)
+                  ? t.replaceTaskAssignment.selectTypePlaceholder
+                  : t.replaceTaskAssignment.typeOnlyForHint
+              }
+              style={{ width: "100%" }}
+              onChange={(val) => setType(val ?? null)}
+              options={TYPE_KEYS.map((key) => ({
+                value: key,
+                label: (t.replaceTaskAssignment.types as Record<string, string>)[key] || key,
+              }))}
+            />
+          </Col>
+        </Row>
 
         {/* 3. Người duyệt cũ */}
         <div>
@@ -457,7 +540,7 @@ export default function AssignmentReplaceCard({
                   fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
                 }}
               >
-                SubconOf: {lastResult.payload.SubconOf} | WorkType: {lastResult.payload.WorkType ?? "null"} | OldUserId: {lastResult.payload.OldUserId} → NewUserId:{" "}
+                SubconOf: {lastResult.payload.SubconOf} | WorkType: {lastResult.payload.WorkType ?? "null"} | Role: {lastResult.payload.Role ?? "null"} | Type: {lastResult.payload.Type ?? "null"} | OldUserId: {lastResult.payload.OldUserId} → NewUserId:{" "}
                 {lastResult.payload.NewUserId}
               </div>
             </div>
