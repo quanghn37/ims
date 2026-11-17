@@ -579,7 +579,7 @@ export const enTranslations: TranslationsType = {
       receiptCode: "Receipt Note",
       poCode: "PO Code",
       totalAmount: "Total Amount:",
-      totalSummary: "Σ Total",
+      totalSummary: "Total",
     },
     drawer: {
       title: "Invoice / IPC Dossier:",
@@ -683,7 +683,8 @@ export const enTranslations: TranslationsType = {
       I: "I - Informed",
     },
     typeLabel: "Type",
-    selectTypePlaceholder: "All (SS / XD / MEP)",
+    selectTypePlaceholder: "Select SS / XD / MEP...",
+    typeRequired: "Please select Type (SS / XD / MEP)!",
     typeOnlyForHint: "Only for Construction / Deduction / Payment Order",
     allTypesLabel: "All",
     confirmTypeLabel: "Type:",

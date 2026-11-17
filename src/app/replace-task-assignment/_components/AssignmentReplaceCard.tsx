@@ -125,6 +125,11 @@ export default function AssignmentReplaceCard({
       message.warning(rt.mainContractRequired);
       return;
     }
+    const typeApplicable = isTypeApplicableWorkType(workType);
+    if (typeApplicable && !type) {
+      message.warning(rt.typeRequired);
+      return;
+    }
     if (!oldUserId) {
       message.warning(rt.oldApproverRequired);
       return;
@@ -152,7 +157,6 @@ export default function AssignmentReplaceCard({
       ? (rt.roles as Record<string, string>)[role] || role
       : rt.allRolesLabel;
 
-    const typeApplicable = isTypeApplicableWorkType(workType);
     const effectiveType = typeApplicable ? type || null : null;
     const typeDisplay = effectiveType
       ? (rt.types as Record<string, string>)[effectiveType] || effectiveType
@@ -404,7 +408,10 @@ export default function AssignmentReplaceCard({
               style={{ fontSize: 12, fontWeight: 700, color: "#334155", marginBottom: 6 }}
               title={t.replaceTaskAssignment.typeOnlyForHint}
             >
-              {t.replaceTaskAssignment.typeLabel}
+              {t.replaceTaskAssignment.typeLabel}{" "}
+              {isTypeApplicableWorkType(workType) && (
+                <span style={{ color: "#ff4d4f" }}>*</span>
+              )}
             </div>
             <Select
               allowClear

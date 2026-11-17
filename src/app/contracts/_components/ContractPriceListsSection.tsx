@@ -724,7 +724,7 @@ export default function ContractPriceListsSection({
                           return (
                             <Table.Summary.Cell key={key} index={index} align="left" {...fixedProps}>
                               <span style={{ color: "#123443", fontWeight: 700 }}>
-                                &Sigma; {t.common.total || (isEn ? "Total" : "Tổng cộng")} ({materialItems.length} {t.table.itemsCount || (isEn ? "items" : "vật tư")})
+                                {t.common.total || (isEn ? "Total" : "Tổng cộng")}
                               </span>
                             </Table.Summary.Cell>
                           );

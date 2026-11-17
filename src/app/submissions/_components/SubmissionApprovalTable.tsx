@@ -802,7 +802,7 @@ export default function SubmissionApprovalTable({
             <Table.Summary.Row style={{ background: "#eef8f6", fontWeight: 700 }}>
               <Table.Summary.Cell index={0} colSpan={7} align="right">
                 <span style={{ fontSize: 13, color: "#123443" }}>
-                  {isEn ? "Σ TOTAL:" : "Σ TỔNG CỘNG:"}
+                  {isEn ? "TOTAL:" : "TỔNG CỘNG:"}
                 </span>
               </Table.Summary.Cell>
               {/* Nhóm 1: Thông tin Đệ trình */}

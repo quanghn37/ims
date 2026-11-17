@@ -1142,7 +1142,7 @@ export const IpcDetailDrawer: React.FC<IpcDetailDrawerProps> = ({
                       <Table.Summary.Row style={{ background: "#f8fafc", fontWeight: 600 }}>
                         <Table.Summary.Cell index={0} colSpan={8} align="left">
                           <span style={{ color: "#123443", fontWeight: 700 }}>
-                            {t("invoices.table.totalSummary") || "Σ Tổng cộng"}
+                            {t("invoices.table.totalSummary") || "Tổng cộng"}
                           </span>
                         </Table.Summary.Cell>
                         <Table.Summary.Cell index={1} align="right">
@@ -1187,7 +1187,7 @@ export const IpcDetailDrawer: React.FC<IpcDetailDrawerProps> = ({
                       <Table.Summary.Row style={{ background: "#f8fafc", fontWeight: 600 }}>
                         <Table.Summary.Cell index={0} colSpan={2} align="left">
                           <span style={{ color: "#123443", fontWeight: 700 }}>
-                            {t("invoices.table.totalSummary") || "Σ Tổng cộng"}
+                            {t("invoices.table.totalSummary") || "Tổng cộng"}
                           </span>
                         </Table.Summary.Cell>
                         <Table.Summary.Cell index={1} align="right">

@@ -929,7 +929,7 @@ export const PaymentPrepTab: React.FC<PaymentPrepTabProps> = ({
             <Table.Summary fixed>
               <Table.Summary.Row style={{ backgroundColor: "#f8fafc", fontWeight: 700 }}>
                 <Table.Summary.Cell index={0} colSpan={7} align="left">
-                  <span style={{ color: "#008f89", fontWeight: 700 }}>Σ Tổng cộng</span>
+                  <span style={{ color: "#008f89", fontWeight: 700 }}>Tổng cộng</span>
                 </Table.Summary.Cell>
                 <Table.Summary.Cell index={1} align="right">
                   <span style={{ color: "#123443", fontWeight: 700 }}>{formatNumber(totalSubmittedQnty)}</span>

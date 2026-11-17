@@ -577,7 +577,7 @@ export const viTranslations = {
       receiptCode: "Phiếu nhập",
       poCode: "Đơn hàng",
       totalAmount: "Tổng cộng tiền hàng:",
-      totalSummary: "Σ Tổng cộng",
+      totalSummary: "Tổng cộng",
     },
     drawer: {
       title: "Chi tiết Hóa đơn / IPC:",
@@ -681,7 +681,8 @@ export const viTranslations = {
       I: "I - Người nhận thông báo (Informed)",
     },
     typeLabel: "Loại (Type)",
-    selectTypePlaceholder: "Tất cả (SS / XD / MEP)",
+    selectTypePlaceholder: "Chọn SS / XD / MEP...",
+    typeRequired: "Vui lòng chọn Loại (SS / XD / MEP)!",
     typeOnlyForHint: "Chỉ áp dụng cho Thi công / Khấu trừ / ĐNTT",
     allTypesLabel: "Tất cả",
     confirmTypeLabel: "Loại (Type):",

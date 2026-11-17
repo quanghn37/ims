@@ -134,6 +134,10 @@ export default function ReplaceTaskAssignmentPage() {
       message.warning(t.replaceTaskAssignment.applySelectAtLeastOne);
       return;
     }
+    if (isTypeApplicableWorkType(quickWorkType) && !quickType) {
+      message.warning(t.replaceTaskAssignment.typeRequired);
+      return;
+    }
     setSyncData((prev) => ({
       version: (prev?.version ?? 0) + 1,
       subconOfId: quickSubconOfId,
@@ -328,7 +332,10 @@ export default function ReplaceTaskAssignmentPage() {
                 }}
                 title={t.replaceTaskAssignment.typeOnlyForHint}
               >
-                {t.replaceTaskAssignment.typeLabel}
+                {t.replaceTaskAssignment.typeLabel}{" "}
+                {isTypeApplicableWorkType(quickWorkType) && (
+                  <span style={{ color: "#ff4d4f" }}>*</span>
+                )}
               </div>
               <Select
                 allowClear
