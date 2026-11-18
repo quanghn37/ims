@@ -25,6 +25,7 @@ import {
   IconSend,
   IconGitBranch,
   IconTrash,
+  IconArrowBackUp,
 } from "@tabler/icons-react";
 import { CaretDownOutlined } from "@ant-design/icons";
 import { AttachmentFile, PriceListItem } from "../types";
@@ -85,6 +86,7 @@ export default function ContractFormDrawer({
   const { t } = useTranslation();
   const [isAttachmentModalOpen, setIsAttachmentModalOpen] = useState(false);
   const [submittingApproval, setSubmittingApproval] = useState(false);
+  const [cancellingApproval, setCancellingApproval] = useState(false);
   const [isWorkflowDrawerOpen, setIsWorkflowDrawerOpen] = useState(false);
   const [workflowData, setWorkflowData] = useState<any[]>([]);
   const [loadingWorkflow, setLoadingWorkflow] = useState(false);
@@ -222,6 +224,49 @@ export default function ContractFormDrawer({
       message.warning(errMsg);
     } finally {
       setSubmittingApproval(false);
+    }
+  };
+
+  const handleCancelApproval = async () => {
+    const rawContractId =
+      editingContract?.ContractId ??
+      editingContract?.ContractID ??
+      editingContract?.Id ??
+      editingContract?.ID ??
+      form.getFieldValue("ContractId");
+
+    const contractId = rawContractId && !isNaN(Number(rawContractId)) ? Number(rawContractId) : rawContractId;
+
+    if (!contractId) {
+      message.error("Không tìm thấy thông tin mã hợp đồng để gỡ trình duyệt.");
+      return;
+    }
+
+    try {
+      setCancellingApproval(true);
+      const res: any = await contractsApi.submitContractApproval(contractId, {}, "cancel_approval");
+      message.success(res?.Message || res?.message || t.contract.cancelApprovalSuccess);
+
+      const nextStatus = res?.Data?.Status ?? 0;
+      const nextStatusName = res?.Data?.StatusName || "Đang lập";
+      setCurrentStatusCode(nextStatus);
+      setCurrentStatusName(nextStatusName);
+      if (editingContract) {
+        editingContract.StatusCode = nextStatus;
+        editingContract.StatusName = nextStatusName;
+        editingContract.TaskAssign = "N";
+      }
+
+      try {
+        localStorage.setItem("consims_contract_updated", String(Date.now()));
+      } catch (e) {}
+
+      onRefreshContracts?.();
+    } catch (err: any) {
+      const errMsg = err?.message || err?.Message || "Gỡ trình duyệt hợp đồng không thành công.";
+      message.warning(errMsg);
+    } finally {
+      setCancellingApproval(false);
     }
   };
 
@@ -527,6 +572,36 @@ export default function ContractFormDrawer({
                     </Button>
                   </Popconfirm>
                 )}
+
+                {activeStatusCode !== undefined &&
+                  activeStatusCode !== null &&
+                  String(activeStatusCode).trim() !== "" &&
+                  Number(activeStatusCode) === 1 && (
+                    <Popconfirm
+                      title={t.contract.cancelApprovalConfirm}
+                      onConfirm={handleCancelApproval}
+                      okText={t.common.confirm}
+                      cancelText={t.common.cancel}
+                      okButtonProps={{ loading: cancellingApproval }}
+                    >
+                      <Button
+                        icon={<IconArrowBackUp size={15} strokeWidth={1.8} style={{ color: "#d97706" }} />}
+                        loading={cancellingApproval}
+                        style={{
+                          height: 32,
+                          fontSize: 13,
+                          fontWeight: 500,
+                          borderRadius: 6,
+                          border: "1px solid #dce5e6",
+                          borderColor: "#dce5e6",
+                          background: "#FFFFFF",
+                          color: "#334155",
+                        }}
+                      >
+                        {t.contract.cancelApproval}
+                      </Button>
+                    </Popconfirm>
+                  )}
 
                 {isTaskAssigned && (
                   <Button

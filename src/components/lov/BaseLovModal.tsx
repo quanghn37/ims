@@ -1,9 +1,11 @@
 ﻿"use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import { Modal, Table, Input, Button, Space, Typography } from "antd";
 import { IconSearch, IconRefresh } from "@tabler/icons-react";
 import { useTranslation } from "@/locales/LanguageContext";
+import { ResizableTitle } from "@/components/table/ResizableTitle";
+import { usePersistedTableColumns } from "@/components/table/usePersistedTableColumns";
 
 const { Text } = Typography;
 
@@ -25,6 +27,7 @@ export interface BaseLovModalProps<T = any> {
   primaryColor?: string;
   pagination?: any;
   zIndex?: number;
+  tableKey?: string;
 }
 
 export function BaseLovModal<T = any>({
@@ -41,13 +44,29 @@ export function BaseLovModal<T = any>({
   loading,
   columns,
   rowKey,
-  width = 850,
+  width = 1100,
   primaryColor = "#008f89",
   pagination,
   zIndex = 1300,
+  tableKey,
 }: BaseLovModalProps<T>) {
   const { t } = useTranslation();
   const effectivePlaceholder = searchPlaceholder || t.lov.defaultSearchPlaceholder;
+
+  const resolvedTableKey = useMemo(() => {
+    if (tableKey) return tableKey;
+    const colSignature = columns
+      .map((c: any, idx: number) => String(c?.key ?? c?.dataIndex ?? `c${idx}`))
+      .join("_");
+    return `lov_${colSignature}`;
+  }, [tableKey, columns]);
+
+  const { tableColumns, scrollX } = usePersistedTableColumns({
+    tableKey: resolvedTableKey,
+    columns,
+    defaultScrollX: Math.max(width - 48, 700),
+    minColumnWidth: 60,
+  });
 
   const defaultRowKey = (record: any, index?: number): React.Key => {
     if (typeof rowKey === "function") {
@@ -79,6 +98,8 @@ export function BaseLovModal<T = any>({
       open={open}
       onCancel={onClose}
       width={width}
+      centered
+      style={{ maxWidth: "calc(100vw - 48px)" }}
       footer={null}
       destroyOnClose
       zIndex={zIndex}
@@ -120,9 +141,12 @@ export function BaseLovModal<T = any>({
 
         <Table
           size="small"
+          tableLayout="fixed"
+          components={{ header: { cell: ResizableTitle } }}
           loading={loading}
           dataSource={dataSource}
           rowKey={defaultRowKey}
+          scroll={{ x: scrollX }}
           pagination={pagination ?? { pageSize: 8, showSizeChanger: false }}
           onRow={(record) => ({
             onClick: (e) => {
@@ -135,7 +159,7 @@ export function BaseLovModal<T = any>({
             },
             style: { cursor: "pointer" },
           })}
-          columns={columns}
+          columns={tableColumns}
         />
 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #f0f0f0", paddingTop: 10 }}>

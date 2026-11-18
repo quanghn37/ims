@@ -114,7 +114,7 @@ export default function MainContractLovModal({
       loading={loadingMainContracts}
       columns={columns}
       rowKey={(r, index) => r.MainContractId ?? r.ContractId ?? r.Id ?? `main_contract_${index}`}
-      width={900}
+      width={1160}
       primaryColor="#008f89"
       pagination={
         pagination && pagination.total > pagination.pageSize

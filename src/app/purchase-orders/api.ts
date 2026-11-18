@@ -40,14 +40,13 @@ export const purchaseOrdersApi = {
     SessionId?: string;
     Language?: string;
     [key: string]: any;
-  }) =>
+  }, mode?: string) =>
     postFeatureData<T>("api/submit-purchaserorder-approval", {
       WorkType: "purchase_order",
       WSId: "",
-      Language: "vi",
       ...params,
       ContractId: !isNaN(Number(params.ContractId)) ? Number(params.ContractId) : params.ContractId,
-    }),
+    }, mode),
   getApprovedBudgetList: <T = any>(params: BaseApiParams) =>
     getFeatureData<T>("api/get-approvedbudget-list", {
       WSId: "",

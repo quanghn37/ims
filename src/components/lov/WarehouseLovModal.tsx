@@ -108,7 +108,7 @@ export default function WarehouseLovModal({
       loading={loadingWarehouses}
       columns={columns}
       rowKey={(r, index) => r.Id ?? r.id ?? `wh_${index}`}
-      width={750}
+      width={960}
       primaryColor="#008f89"
     />
   );

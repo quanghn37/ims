@@ -21,6 +21,7 @@ import {
   IconX,
   IconTrash,
   IconSend,
+  IconArrowBackUp,
 } from "@tabler/icons-react";
 import { CaretDownOutlined } from "@ant-design/icons";
 import { AttachmentFile } from "./types";
@@ -46,10 +47,10 @@ interface OrderFormDrawerProps {
   selectedContractDisplay: string;
   onOpenContractLov: () => void;
   onClearContract: () => void;
-  // PriceList LOV
-  selectedPriceListDisplay: string;
-  onOpenPriceListLov: () => void;
-  onClearPriceList: () => void;
+  // PriceList LOV (tùy chọn giữ tương thích)
+  selectedPriceListDisplay?: string;
+  onOpenPriceListLov?: () => void;
+  onClearPriceList?: () => void;
   // Warehouse LOV
   selectedWarehouseDisplay: string;
   onOpenWarehouseLov: () => void;
@@ -86,8 +87,6 @@ export default function OrderFormDrawer({
   selectedClientDisplay,
   onOpenContractLov,
   selectedContractDisplay,
-  selectedPriceListDisplay,
-  onOpenPriceListLov,
   selectedWarehouseDisplay,
   onOpenWarehouseLov,
   items = [],
@@ -130,6 +129,7 @@ export default function OrderFormDrawer({
   const isDraft = isStatusZero;
 
   const [submittingApproval, setSubmittingApproval] = useState(false);
+  const [cancellingApproval, setCancellingApproval] = useState(false);
 
   const handleSubmitApproval = async () => {
     const rawContractId =
@@ -196,8 +196,67 @@ export default function OrderFormDrawer({
     }
   };
 
-  const watchedOrderClientId = Form.useWatch("ClientId", form);
-  const watchedOrderParentId = Form.useWatch("ParentId", form);
+  const handleCancelApproval = async () => {
+    const rawContractId =
+      editingOrder?.ContractId ??
+      editingOrder?.ContractID ??
+      editingOrder?.Id ??
+      editingOrder?.ID;
+
+    const contractId =
+      rawContractId && !isNaN(Number(rawContractId))
+        ? Number(rawContractId)
+        : rawContractId;
+
+    if (!contractId) {
+      message.error("Không tìm thấy mã đơn hàng để gỡ trình duyệt.");
+      return;
+    }
+
+    try {
+      setCancellingApproval(true);
+      const res: any = await purchaseOrdersApi.submitOrderApproval(
+        { ContractId: Number(contractId) },
+        "cancel_approval"
+      );
+
+      message.success(
+        res?.Message ||
+          res?.message ||
+          t.contract?.cancelApprovalSuccess ||
+          (language === "en"
+            ? "Cancelled purchase order approval submission!"
+            : "Đã gỡ trình duyệt đơn hàng thành công!")
+      );
+
+      const nextStatus = res?.Data?.Status ?? 0;
+      const nextStatusName = res?.Data?.StatusName || "Đang lập";
+      if (editingOrder) {
+        editingOrder.StatusCode = nextStatus;
+        editingOrder.StatusName = nextStatusName;
+        editingOrder.Status = nextStatusName;
+        editingOrder.TaskAssign = "N";
+      }
+
+      try {
+        localStorage.setItem("consims_po_updated", String(Date.now()));
+      } catch (e) {}
+
+      if (onRefreshItems) {
+        onRefreshItems();
+      }
+      if (onRefreshOrder) {
+        await onRefreshOrder();
+      }
+    } catch (err: any) {
+      console.error("Lỗi gỡ trình duyệt đơn hàng:", err);
+      message.error(err?.message || "Gỡ trình duyệt đơn hàng thất bại.");
+    } finally {
+      setCancellingApproval(false);
+    }
+  };
+
+
 
   // Tự động đồng bộ Giá trị đơn hàng (Amount) bằng tổng thành tiền có VAT của chi tiết vật tư khi chưa trình duyệt hoặc khi Amount đang là 0
   const isTaskAssigned =
@@ -301,6 +360,43 @@ export default function OrderFormDrawer({
               </Button>
             </Popconfirm>
           )}
+
+          {isEditing &&
+            rawStatus !== undefined &&
+            rawStatus !== null &&
+            String(rawStatus).trim() !== "" &&
+            Number(rawStatus) === 1 && (
+              <Popconfirm
+                title={
+                  t.contract?.cancelApprovalConfirm ||
+                  (language === "en"
+                    ? "Are you sure you want to cancel approval submission for this order?"
+                    : "Bạn có chắc chắn muốn gỡ trình duyệt đơn hàng này?")
+                }
+                onConfirm={handleCancelApproval}
+                okText={t.common.confirm}
+                cancelText={t.common.cancel}
+                okButtonProps={{ loading: cancellingApproval }}
+              >
+                <Button
+                  icon={<IconArrowBackUp size={15} strokeWidth={1.8} style={{ color: "#d97706" }} />}
+                  loading={cancellingApproval}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    fontSize: 13,
+                    fontWeight: 500,
+                    height: 32,
+                    borderRadius: 6,
+                    borderColor: "#dce5e6",
+                    background: "#FFFFFF",
+                    color: "#334155",
+                  }}
+                >
+                  {t.contract?.cancelApproval || (language === "en" ? "Cancel Approval" : "Gỡ Trình duyệt")}
+                </Button>
+              </Popconfirm>
+            )}
 
           {hasOrderHeader && (
             <Button
@@ -435,10 +531,10 @@ export default function OrderFormDrawer({
           <Form.Item name="ToDate" style={{ display: "none" }}><Input /></Form.Item>
 
           <div className="erp-general-info-card">
-            {/* Hàng 1: 4 Cột */}
+            {/* Hàng 1: 3 Cột */}
             <Row gutter={[0, 0]} align="middle">
               {/* Cột 1: Hợp đồng */}
-              <Col span={6} className="erp-info-cell">
+              <Col span={8} className="erp-info-cell">
                 <span className="erp-info-label">
                   {t.purchaseOrder.mainContract} <span style={{ color: "#ff4d4f" }}>*</span>
                 </span>
@@ -459,7 +555,7 @@ export default function OrderFormDrawer({
               </Col>
 
               {/* Cột 2: Nhà Cung Cấp */}
-              <Col span={6} className="erp-info-cell">
+              <Col span={8} className="erp-info-cell">
                 <span className="erp-info-label">
                   {t.purchaseOrder.vendor}
                 </span>
@@ -474,32 +570,8 @@ export default function OrderFormDrawer({
                 </div>
               </Col>
 
-              {/* Cột 3: Bảng giá */}
-              <Col span={6} className="erp-info-cell">
-                <span className="erp-info-label">
-                  {t.purchaseOrder.priceList}
-                </span>
-                <div
-                  onClick={() => {
-                    const hasContract = Boolean(watchedOrderParentId || watchedOrderClientId);
-                    if (hasContract && !editingOrder) onOpenPriceListLov();
-                  }}
-                  className="erp-info-value mono"
-                  style={{
-                    cursor: !(watchedOrderParentId || watchedOrderClientId) || editingOrder ? "default" : "pointer",
-                    color: selectedPriceListDisplay ? "#1e293b" : "#94A3B8",
-                    justifyContent: "space-between",
-                  }}
-                  title={selectedPriceListDisplay}
-                >
-                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {selectedPriceListDisplay || (watchedOrderParentId || watchedOrderClientId ? t.purchaseOrder.selectPriceList : t.purchaseOrder.selectContract)}
-                  </span>
-                </div>
-              </Col>
-
-              {/* Cột 4: Kho nhận hàng */}
-              <Col span={6} className="erp-info-cell">
+              {/* Cột 3: Kho nhận hàng */}
+              <Col span={8} className="erp-info-cell">
                 <span className="erp-info-label">
                   {t.purchaseOrder.deliveryWarehouse} <span style={{ color: "#ff4d4f" }}>*</span>
                 </span>

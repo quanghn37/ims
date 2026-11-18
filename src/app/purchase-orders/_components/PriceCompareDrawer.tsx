@@ -16,7 +16,7 @@ import { AuditOutlined, PlusOutlined, SearchOutlined } from "@ant-design/icons";
 import ResizableTitle from "@/components/table/ResizableTitle";
 import { useTranslation } from "@/locales/LanguageContext";
 
-const STORAGE_KEY_PRICE_COMPARE = "PRICE_COMPARE_COL_WIDTHS";
+const STORAGE_KEY_PRICE_COMPARE = "PRICE_COMPARE_COL_WIDTHS_V2";
 const { Text } = Typography;
 
 interface PriceCompareDrawerProps {
@@ -74,7 +74,7 @@ export default function PriceCompareDrawer({
 
   const defaultColWidths: Record<string, number> = useMemo(
     () => ({
-      ItemName: 280,
+      ItemName: 380,
       UomCode: 80,
       Qnty: 100,
       UnitPrice: 120,
@@ -86,6 +86,7 @@ export default function PriceCompareDrawer({
   );
 
   const [searchText, setSearchText] = useState("");
+  const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>([]);
 
   const [colWidths, setColWidths] = useState<Record<string, number>>(() => {
     if (typeof window === "undefined") return defaultColWidths;
@@ -121,9 +122,29 @@ export default function PriceCompareDrawer({
     return (priceCompareItems || []).filter((item: any) => {
       const name = String(item.ItemName || item.Description || "").toLowerCase();
       const code = String(item.ItemCode || item.MaterialId || item.ItemId || "").toLowerCase();
-      return name.includes(term) || code.includes(term);
+      const contractCode = String(item.ContractCode || "").toLowerCase();
+      return name.includes(term) || code.includes(term) || contractCode.includes(term);
     });
   }, [priceCompareItems, searchText]);
+
+  const groupedData = useMemo(() => {
+    const groups = new Map<string, any[]>();
+    for (const item of filteredItems) {
+      const code = String(item.ContractCode || "").trim() || (language === "en" ? "Other" : "Khác");
+      if (!groups.has(code)) groups.set(code, []);
+      groups.get(code)!.push(item);
+    }
+    return Array.from(groups.entries()).map(([contractCode, children]) => ({
+      _rowKey: `group_${contractCode}`,
+      _isGroup: true,
+      ContractCode: contractCode,
+      children,
+    }));
+  }, [filteredItems, language]);
+
+  useEffect(() => {
+    setExpandedRowKeys(groupedData.map((g) => g._rowKey));
+  }, [groupedData]);
 
   const handleResizeColumn = (colKey: string) => (_: any, { size }: { size: { width: number } }) => {
     setColWidths((prev) => {
@@ -143,21 +164,39 @@ export default function PriceCompareDrawer({
   const basePriceCompareColumns = useMemo(
     () => [
       {
-        title: t.lov.colItemName,
+        title: language === "en" ? "Contract / Material Name" : "Hợp đồng / Tên vật tư",
         dataIndex: "ItemName",
         key: "ItemName",
-        width: 280,
-        fixed: "left" as const,
+        width: 380,
         render: (val: string, r: any) => {
+          if (r._isGroup) {
+            return (
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  minWidth: 0,
+                  overflow: "hidden",
+                  whiteSpace: "nowrap",
+                  verticalAlign: "middle",
+                }}
+              >
+                <strong style={{ color: "#008f89", fontSize: 13, fontFamily: "monospace", flexShrink: 0 }}>
+                  {r.ContractCode}
+                </strong>
+              </span>
+            );
+          }
           const rId = String(r.MaterialId ?? r.ItemId ?? r.ItemCode ?? "");
           const isAlreadyAdded = existingItemIds?.has(rId);
           const itemCode = r.ItemCode || (r.MaterialId ? `#${r.MaterialId}` : "");
           return (
-            <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            <div style={{ lineHeight: "16px", margin: 0, padding: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                <Text strong style={{ color: "#123443" }}>
+                <span style={{ fontWeight: 500, color: "#123443", fontSize: 12 }}>
                   {val || r.Description || "---"}
-                </Text>
+                </span>
                 {isAlreadyAdded && (
                   <Tag color="orange" style={{ fontSize: 11, padding: "0 6px", lineHeight: "18px", margin: 0 }}>
                     {language === "en" ? "Already in Order" : "Đã có trong ĐH"}
@@ -165,9 +204,9 @@ export default function PriceCompareDrawer({
                 )}
               </div>
               {itemCode && (
-                <Text type="secondary" style={{ fontSize: 12, color: "#718894" }}>
-                  {itemCode}
-                </Text>
+                <div style={{ fontSize: 11, color: "#718894", fontFamily: "monospace", marginTop: 1 }}>
+                  ({itemCode})
+                </div>
               )}
             </div>
           );
@@ -178,9 +217,8 @@ export default function PriceCompareDrawer({
         dataIndex: "UomCode",
         key: "UomCode",
         width: 80,
-        fixed: "left" as const,
         align: "center" as const,
-        render: (val: string, r: any) => val || r.Unit || "---",
+        render: (val: string, r: any) => (r._isGroup ? null : val || r.Unit || "---"),
       },
       {
         title: language === "en" ? "Quantity" : "Số lượng",
@@ -188,7 +226,8 @@ export default function PriceCompareDrawer({
         key: "Qnty",
         align: "right" as const,
         width: 100,
-        render: (val: number) => Number(val || 0).toLocaleString(language === "en" ? "en-US" : "vi-VN"),
+        render: (val: number, r: any) =>
+          r._isGroup ? null : Number(val || 0).toLocaleString(language === "en" ? "en-US" : "vi-VN"),
       },
       {
         title: t.itemDrawer.unitPrice,
@@ -196,7 +235,8 @@ export default function PriceCompareDrawer({
         key: "UnitPrice",
         align: "right" as const,
         width: 120,
-        render: (val: number) => Number(val || 0).toLocaleString(language === "en" ? "en-US" : "vi-VN"),
+        render: (val: number, r: any) =>
+          r._isGroup ? null : Number(val || 0).toLocaleString(language === "en" ? "en-US" : "vi-VN"),
       },
       {
         title: (
@@ -208,6 +248,7 @@ export default function PriceCompareDrawer({
         key: "Orgcode",
         width: 220,
         render: (_: any, record: any) => {
+          if (record._isGroup) return null;
           const id = record._rowKey ?? record.ContractSubmissionId ?? record.SourceId ?? record.MaterialId ?? record.ItemId;
           const isSelected = selectedPriceCompareKeys.some((k) => String(k) === String(id));
           const hasError = isSelected && !record.Orgcode;
@@ -244,6 +285,7 @@ export default function PriceCompareDrawer({
         align: "right" as const,
         width: 130,
         render: (_: any, record: any) => {
+          if (record._isGroup) return null;
           const id = record._rowKey ?? record.ContractSubmissionId ?? record.SourceId ?? record.MaterialId ?? record.ItemId;
           return (
             <InputNumber
@@ -263,6 +305,7 @@ export default function PriceCompareDrawer({
         align: "right" as const,
         width: 130,
         render: (_: any, record: any) => {
+          if (record._isGroup) return null;
           const total = Number(record.UnitPrice || 0) * Number(record.OrderQnty || 0);
           return <Text strong>{total.toLocaleString(language === "en" ? "en-US" : "vi-VN")}</Text>;
         },
@@ -336,45 +379,143 @@ export default function PriceCompareDrawer({
           justifyContent: "space-between",
           alignItems: "center",
           marginBottom: 12,
+          gap: 12,
         }}
       >
-        <Input
-          placeholder={language === "en" ? "Search item name, code..." : "Tìm tên, mã vật tư..."}
-          prefix={<SearchOutlined style={{ color: "#94A3B8", fontSize: 16 }} />}
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-          allowClear
-          style={{
-            width: 320,
-            height: 36,
-            borderRadius: 8,
-            borderColor: "#dce5e6",
-            fontSize: 14,
-            color: "#123443",
-          }}
-        />
-        {searchText.trim() && (
-          <Text type="secondary" style={{ fontSize: 13 }}>
-            {language === "en" ? "Found " : "Tìm thấy "}
-            <Text strong style={{ color: "#008f89" }}>{filteredItems.length}</Text> / {priceCompareItems.length} {language === "en" ? "materials" : "vật tư"}
-          </Text>
+        <Space size={12}>
+          <Input
+            placeholder={language === "en" ? "Search contract code, item name, code..." : "Tìm số HĐ, tên, mã vật tư..."}
+            prefix={<SearchOutlined style={{ color: "#94A3B8", fontSize: 16 }} />}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            allowClear
+            style={{
+              width: 340,
+              height: 36,
+              borderRadius: 8,
+              borderColor: "#dce5e6",
+              fontSize: 14,
+              color: "#123443",
+            }}
+          />
+          {searchText.trim() && (
+            <Text type="secondary" style={{ fontSize: 13 }}>
+              {language === "en" ? "Found " : "Tìm thấy "}
+              <Text strong style={{ color: "#008f89" }}>{filteredItems.length}</Text> / {priceCompareItems.length} {language === "en" ? "materials" : "vật tư"}
+            </Text>
+          )}
+        </Space>
+
+        {groupedData.length > 0 && (
+          <Button
+            size="small"
+            onClick={() => {
+              if (expandedRowKeys.length >= groupedData.length) {
+                setExpandedRowKeys([]);
+              } else {
+                setExpandedRowKeys(groupedData.map((g) => g._rowKey));
+              }
+            }}
+            style={{ borderColor: "#dce5e6", borderRadius: 6, height: 32, color: "#334155" }}
+          >
+            {expandedRowKeys.length >= groupedData.length
+              ? (language === "en" ? "Collapse All" : "Thu gọn tất cả")
+              : (language === "en" ? "Expand All" : "Mở rộng tất cả")}
+          </Button>
         )}
       </div>
+      <style>{`
+        .price-compare-tree-table .ant-table-cell-with-append {
+          display: flex !important;
+          align-items: center !important;
+        }
+        .price-compare-tree-table .ant-table-row-level-0 td {
+          background: #FAF5FF !important;
+          font-weight: 600 !important;
+          padding: 5px 8px !important;
+          white-space: nowrap !important;
+        }
+        .price-compare-tree-table .ant-table-row-level-0:hover td {
+          background: #F3E8FF !important;
+        }
+        .price-compare-tree-table .ant-table-row-indent,
+        .price-compare-tree-table .ant-table-row-expand-icon-spaced {
+          display: none !important;
+          width: 0 !important;
+          min-width: 0 !important;
+          max-width: 0 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+      `}</style>
       <Table
+        className="price-compare-tree-table erp-detail-table"
+        tableLayout="fixed"
         bordered
         components={{ header: { cell: ResizableTitle } }}
-        dataSource={filteredItems}
+        dataSource={groupedData}
         columns={mergedColumns}
-        rowKey={(r) => String(r._rowKey ?? r.ContractSubmissionId ?? r.SourceId ?? r.MaterialId ?? r.ItemId)}
+        rowKey={(r: any) => String(r._rowKey ?? r.ContractSubmissionId ?? r.SourceId ?? r.MaterialId ?? r.ItemId)}
         loading={loadingPriceCompare}
         pagination={false}
         size="small"
         scroll={{ x: totalWidth, y: 420 }}
+        expandable={{
+          indentSize: 0,
+          expandedRowKeys,
+          onExpandedRowsChange: (keys) => setExpandedRowKeys([...keys]),
+          expandRowByClick: false,
+          expandIcon: ({ expanded, onExpand, record }: any) => {
+            if (!record._isGroup) return null;
+            return (
+              <span
+                role="button"
+                tabIndex={0}
+                onClick={(e) => onExpand(record, e)}
+                style={{
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: 18,
+                  height: 18,
+                  minWidth: 18,
+                  borderRadius: 4,
+                  backgroundColor: expanded ? "#dce5e6" : "#f7fbfa",
+                  border: `1px solid ${expanded ? "#008f89" : "#CBD5E1"}`,
+                  color: expanded ? "#008f89" : "#718894",
+                  fontSize: 13,
+                  fontWeight: 700,
+                  lineHeight: 1,
+                  marginRight: 8,
+                  userSelect: "none",
+                  flexShrink: 0,
+                  verticalAlign: "middle",
+                }}
+              >
+                {expanded ? "−" : "+"}
+              </span>
+            );
+          },
+        }}
         rowSelection={{
-          fixed: true,
+          checkStrictly: false,
           selectedRowKeys: selectedPriceCompareKeys,
-          onChange: (keys) => setSelectedPriceCompareKeys(keys),
-          getCheckboxProps: (record) => {
+          onChange: (keys) =>
+            setSelectedPriceCompareKeys(
+              keys.filter((k) => !String(k).startsWith("group_"))
+            ),
+          getCheckboxProps: (record: any) => {
+            if (record._isGroup) {
+              const children = record.children || [];
+              const allChildrenDisabled =
+                children.length > 0 &&
+                children.every((c: any) => {
+                  const rId = String(c.MaterialId ?? c.ItemId ?? c.ItemCode ?? "");
+                  return existingItemIds?.has(rId);
+                });
+              return { disabled: allChildrenDisabled };
+            }
             const rId = String(record.MaterialId ?? record.ItemId ?? record.ItemCode ?? "");
             const isAlreadyAdded = existingItemIds?.has(rId);
             return {

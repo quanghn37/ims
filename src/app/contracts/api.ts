@@ -29,13 +29,13 @@ export const contractsApi = {
       },
       "Delete_MatequipSubmission"
     ),
-  submitContractApproval: <T = any>(contractId: number | string, params?: Record<string, any>) =>
+  submitContractApproval: <T = any>(contractId: number | string, params?: Record<string, any>, mode?: string) =>
     postFeatureData<T>("api/submit-contract-approval", {
       ContractId: !isNaN(Number(contractId)) ? Number(contractId) : contractId,
       WorkType: "mat_equip",
       WSId: "",
       ...params,
-    }),
+    }, mode),
   getContractStatus: <T = any>(params: { ContractId: number | string; PageNum?: number; PageSize?: number; WorkType?: string; [key: string]: any }) => {
     const workType = params.WorkType || params["@WorkType"] || "mat_equip";
     return getFeatureData<T>("api/get-contract-status", {

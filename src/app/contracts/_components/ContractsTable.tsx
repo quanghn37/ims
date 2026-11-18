@@ -235,14 +235,25 @@ export default function ContractsTable({ filteredContracts, loading, searchKeywo
         align: "center" as const,
         fixed: "right" as const,
         onCell: () => ({ style: { padding: "4px 2px", whiteSpace: "nowrap" } }),
-        render: (_: any, record: ContractItem) => (
-          <ActionIconButton
-            action="add"
-            tooltip={t.contract.createAddendumTooltip}
-            size="small"
-            onClick={() => onCreateAddendum(record)}
-          />
-        ),
+        render: (_: any, record: ContractItem) => {
+          const statusCode = (record as any).StatusCode ?? (record as any).Status;
+          const isApproved =
+            statusCode !== undefined &&
+            statusCode !== null &&
+            String(statusCode).trim() !== "" &&
+            Number(statusCode) === 3;
+          const isNotAddendum =
+            String((record as any).IsAddendum ?? "").trim().toUpperCase() === "N";
+          if (!isApproved || !isNotAddendum) return null;
+          return (
+            <ActionIconButton
+              action="add"
+              tooltip={t.contract.createAddendumTooltip}
+              size="small"
+              onClick={() => onCreateAddendum(record)}
+            />
+          );
+        },
       },
     ],
     [onEdit, onCreateAddendum, t]

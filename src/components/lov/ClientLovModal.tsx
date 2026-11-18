@@ -35,6 +35,8 @@ export default function ClientLovModal({
         title: t.lov.colVendorName,
         dataIndex: "CompanyName",
         key: "CompanyName",
+        width: 240,
+        ellipsis: true,
         render: (val: any, r: any) => (
           <div>
             <span style={{ color: "#262626", fontWeight: 400 }}>
@@ -135,7 +137,7 @@ export default function ClientLovModal({
       loading={loadingClients}
       columns={columns}
       rowKey={(r, index) => r.ClientId ?? r.CompanyId ?? r.Id ?? `client_${index}`}
-      width={880}
+      width={1160}
       primaryColor="#008f89"
     />
   );

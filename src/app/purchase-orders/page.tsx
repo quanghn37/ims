@@ -593,28 +593,17 @@ function PurchaseOrdersPageContent() {
         }, "update_purchase_order");
       } else {
         const createRes: any = await purchaseOrdersApi.updateContractInfo({
-          ClientId: values.ClientId || "5081",
-          ContractType: "purchase_order",
-          Description: values.Description,
-          Amount: Number(values.Amount || 0),
-          ContractedAmount: Number(values.Amount || 0),
-          Currency: values.Currency || "VND",
-          FromDate: orderDateFormatted,
-          StartDate: orderDateFormatted,
-          ContractDate: orderDateFormatted,
-          Contractdate: orderDateFormatted,
-          ToDate: deliveryDateFormatted,
-          EndDate: deliveryDateFormatted,
-          DeliveryDate: deliveryDateFormatted,
-          Deliverydate: deliveryDateFormatted,
-          MatequipId: values.ParentId ? String(values.ParentId) : "",
-          SourceId: values.SourceId ? String(values.SourceId) : "",
-          PaytermId: values.PaymentTerm || undefined,
-          PaymentTerm: values.PaymentTerm || undefined,
-          PayTerms: values.PaymentTerm || undefined,
-          WarehouseId: values.WarehouseId || undefined,
           WSId: "",
-          Attachments: attachments,
+          MatequipId: values.ParentId ? Number(values.ParentId) : undefined,
+          WarehouseId: Number(values.WarehouseId),
+          ContractDate: orderDateFormatted,
+          FromDate: deliveryDateFormatted || orderDateFormatted,
+          Description: values.Description,
+          Currency: values.Currency || "VND",
+          PaytermId:
+            values.PaymentTerm && !isNaN(Number(values.PaymentTerm))
+              ? Number(values.PaymentTerm)
+              : 1,
         }, "create_purchase_order");
         targetContractId = Number(
           createRes?.ContractId ||

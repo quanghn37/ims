@@ -127,25 +127,6 @@ export default function PurchaseOrdersTable({
       },
     },
     {
-      title: t.purchaseOrder.priceList,
-      dataIndex: "SourceId",
-      key: "SourceId",
-      width: 180,
-      render: (_: any, record: any) => {
-        const text =
-          record.SourceContractCode ||
-          record.SourceCode ||
-          record.QuotationCode ||
-          (record.SourceId ? String(record.SourceId) : "");
-        const clean = text ? String(text).replace(/^#+/, "").trim() : "";
-        return clean ? (
-          <span style={{ color: "#123443", fontSize: 13 }}>{clean}</span>
-        ) : (
-          <span style={{ color: "#94A3B8", fontSize: 13 }}>---</span>
-        );
-      },
-    },
-    {
       title: t.purchaseOrder.deliveryWarehouse,
       dataIndex: "WarehouseName",
       key: "WarehouseName",
