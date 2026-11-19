@@ -23,6 +23,7 @@ import {
   IconScale,
   IconTrash,
   IconSend,
+  IconArrowBackUp,
 } from "@tabler/icons-react";
 import ActionIconButton from "@/components/common/ActionIconButton";
 import dayjs from "dayjs";
@@ -36,7 +37,6 @@ import ResizableTitle from "@/components/table/ResizableTitle";
 import { usePersistedTableColumns } from "@/components/table/usePersistedTableColumns";
 import ErpDetailCard from "@/components/common/ErpDetailCard";
 import ApprovalBadge, { renderApprovalBadge } from "@/components/common/ApprovalBadge";
-import UnconfirmTransactionButton, { isTransactionApprovedOrRejected } from "../../_components/UnconfirmTransactionButton";
 import StockInReconcileModal from "./StockInReconcileModal";
 import StockInItemEditDrawer from "./StockInItemEditDrawer";
 import { extractApiList } from "@/lib/api-client";
@@ -78,7 +78,21 @@ export default function StockInEditTab({
   const isEditing = Boolean(editingReceipt);
   const [submitting, setSubmitting] = useState(false);
   const [submittingApproval, setSubmittingApproval] = useState(false);
+  const [cancellingApproval, setCancellingApproval] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const isPendingApproval = useMemo(() => {
+    if (!editingReceipt) return false;
+    const rawStatus =
+      editingReceipt.Status !== undefined && editingReceipt.Status !== null && editingReceipt.Status !== ""
+        ? editingReceipt.Status
+        : editingReceipt.StatusCode !== undefined && editingReceipt.StatusCode !== null && editingReceipt.StatusCode !== ""
+        ? editingReceipt.StatusCode
+        : editingReceipt.ApprovalStatus !== undefined && editingReceipt.ApprovalStatus !== null && editingReceipt.ApprovalStatus !== ""
+        ? editingReceipt.ApprovalStatus
+        : editingReceipt.status;
+    return rawStatus !== undefined && rawStatus !== null && String(rawStatus).trim() !== "" && Number(rawStatus) === 2;
+  }, [editingReceipt]);
 
   const isApprovalStatusZero = useMemo(() => {
     if (!editingReceipt) return true;
@@ -161,55 +175,55 @@ export default function StockInEditTab({
     }
   };
 
-  const [unconfirming, setUnconfirming] = useState(false);
-
-  const handleUnconfirm = async () => {
+  const handleCancelApproval = async () => {
     const rawId =
       editingReceipt?.TransactionId ??
       editingReceipt?.Id ??
       (!isNaN(Number(editingReceipt?.id)) ? Number(editingReceipt?.id) : undefined);
 
     if (!rawId) {
-      message.error("Không tìm thấy TransactionId để gỡ xác nhận phiếu nhập.");
+      message.error("Không tìm thấy TransactionId để gỡ trình duyệt phiếu nhập.");
       return;
     }
 
     try {
-      setUnconfirming(true);
-      const res: any = await warehouseApi.unconfirmInventoryApproval({
-        TransactionId: Number(rawId),
-      });
+      setCancellingApproval(true);
+      const res: any = await warehouseApi.submitInventoryApproval(
+        { TransactionId: Number(rawId) },
+        "cancel_approval"
+      );
 
-      if (res?.Success === false || String(res?.Success).toLowerCase() === "false") {
-        message.error(res?.Message || "Gỡ xác nhận phiếu nhập kho thất bại!");
+      if (res?.Success === false || res?.Success === "false") {
+        message.error(res?.Message || "Gỡ trình duyệt phiếu nhập kho thất bại!");
         return;
       }
 
       message.success(
-        res?.Message || "Đã gỡ xác nhận phiếu nhập kho! Trạng thái chuyển về Đang lập."
+        res?.Message || "Đã gỡ trình duyệt phiếu nhập kho thành công! Trạng thái chuyển về Đang lập."
       );
+
+      const approvalStatus = res?.Data?.ApprovalStatus ?? 0;
+      const approvalStatusName = res?.Data?.ApprovalStatusName ?? "Đang lập";
+      const status = res?.Data?.Status ?? 0;
+      const statusName = res?.Data?.StatusName ?? "Đang lập";
 
       const updatedReceipt: StockInReceipt = {
         ...editingReceipt!,
-        ApprovalStatus: 0,
-        ApprovalStatusName: "Đang lập",
-        Status: 0,
-        StatusName: "Đang lập",
-        StatusCode: "0",
-        status: "DRAFT",
+        ApprovalStatus: approvalStatus,
+        ApprovalStatusName: approvalStatusName,
+        Status: status,
+        StatusName: statusName,
+        StatusCode: String(status),
       };
 
       if (onUpdateEditingReceipt) {
         onUpdateEditingReceipt(updatedReceipt);
       }
-      if (onRefreshItems) {
-        onRefreshItems();
-      }
     } catch (err: any) {
-      console.error("Lỗi gỡ xác nhận phiếu nhập kho:", err);
-      message.error(err?.message || "Gỡ xác nhận phiếu nhập kho thất bại!");
+      console.error("Lỗi gỡ trình duyệt phiếu nhập kho:", err);
+      message.error(err?.message || "Gỡ trình duyệt phiếu nhập kho thất bại!");
     } finally {
-      setUnconfirming(false);
+      setCancellingApproval(false);
     }
   };
 
@@ -799,18 +813,37 @@ export default function StockInEditTab({
             </Popconfirm>
           )}
 
-          {/* Nút Gỡ xác nhận: dùng chung cho Nhập/Xuất, chỉ hiển thị khi trạng thái Đã duyệt */}
-          {isEditing && (
-            <UnconfirmTransactionButton
-              record={editingReceipt}
-              loading={unconfirming}
-              onConfirm={handleUnconfirm}
-              transactionType="receipt"
-            />
+          {isEditing && resolvedTransactionId && isPendingApproval && (
+            <Popconfirm
+              title="Xác nhận gỡ trình duyệt phiếu nhập kho này?"
+              description="Sau khi gỡ trình duyệt, phiếu nhập sẽ quay về trạng thái Đang lập."
+              onConfirm={handleCancelApproval}
+              okText="Xác nhận"
+              cancelText="Hủy"
+              okButtonProps={{ loading: cancellingApproval }}
+            >
+              <Button
+                icon={<IconArrowBackUp size={15} strokeWidth={1.8} style={{ color: "#d97706" }} />}
+                loading={cancellingApproval}
+                style={{
+                  height: 32,
+                  fontSize: 13,
+                  fontWeight: 500,
+                  borderRadius: 6,
+                  borderColor: "#dce5e6",
+                  background: "#FFFFFF",
+                  color: "#334155",
+                  display: "inline-flex",
+                  alignItems: "center",
+                }}
+              >
+                Gỡ Trình Duyệt
+              </Button>
+            </Popconfirm>
           )}
 
-          {/* Button Lưu & Xóa: Ẩn khi phiếu đã duyệt hoặc từ chối */}
-          {!isTransactionApprovedOrRejected(editingReceipt) && (
+          {/* Button Lưu & Xóa: Chỉ hiển thị khi tạo mới hoặc phiếu ở trạng thái Status = 0 */}
+          {(!isEditing || isApprovalStatusZero) && (
             <Button
               type="primary"
               icon={<IconDeviceFloppy size={16} strokeWidth={2} />}
@@ -832,7 +865,7 @@ export default function StockInEditTab({
             </Button>
           )}
 
-          {isEditing && onDeleteReceipt && editingReceipt && !isTransactionApprovedOrRejected(editingReceipt) && (
+          {isEditing && onDeleteReceipt && editingReceipt && isApprovalStatusZero && (
             <Popconfirm
               title={t.common.deleteConfirmTitle || "Xác nhận xóa phiếu này?"}
               description={t.common.confirmDelete || "Hành động này sẽ xóa phiếu nhập kho và không thể hoàn tác."}

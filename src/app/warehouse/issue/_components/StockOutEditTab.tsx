@@ -18,7 +18,7 @@ import {
 } from "antd";
 import type { ColumnType } from "antd/es/table";
 import { PlusOutlined } from "@ant-design/icons";
-import { IconDeviceFloppy, IconTrash, IconSend, IconRefresh } from "@tabler/icons-react";
+import { IconDeviceFloppy, IconTrash, IconSend, IconRefresh, IconArrowBackUp } from "@tabler/icons-react";
 import ActionIconButton from "@/components/common/ActionIconButton";
 import dayjs from "dayjs";
 import {
@@ -34,7 +34,6 @@ import StockOutItemModal from "./StockOutItemModal";
 import { useTranslation } from "@/locales/LanguageContext";
 import InventoryWorkflowDrawer from "../../receipt/_components/InventoryWorkflowDrawer";
 import ApprovalBadge, { renderApprovalBadge } from "@/components/common/ApprovalBadge";
-import UnconfirmTransactionButton, { isTransactionApprovedOrRejected } from "../../_components/UnconfirmTransactionButton";
 
 const { Text } = Typography;
 
@@ -291,6 +290,20 @@ export default function StockOutEditTab({
   }, [items]);
 
   const [submittingApproval, setSubmittingApproval] = useState(false);
+  const [cancellingApproval, setCancellingApproval] = useState(false);
+
+  const isPendingApproval = useMemo(() => {
+    if (!editingIssue) return false;
+    const rawStatus =
+      editingIssue.Status !== undefined && editingIssue.Status !== null && editingIssue.Status !== ""
+        ? editingIssue.Status
+        : editingIssue.StatusCode !== undefined && editingIssue.StatusCode !== null && editingIssue.StatusCode !== ""
+        ? editingIssue.StatusCode
+        : editingIssue.ApprovalStatus !== undefined && editingIssue.ApprovalStatus !== null && editingIssue.ApprovalStatus !== ""
+        ? editingIssue.ApprovalStatus
+        : editingIssue.status;
+    return rawStatus !== undefined && rawStatus !== null && String(rawStatus).trim() !== "" && Number(rawStatus) === 2;
+  }, [editingIssue]);
 
   // Xác định trạng thái "Đang lập" dựa vào Status = 0 để hiển thị nút Trình duyệt
   const isApprovalStatusZero = useMemo(() => {
@@ -377,41 +390,45 @@ export default function StockOutEditTab({
     }
   };
 
-  const [unconfirming, setUnconfirming] = useState(false);
-
-  const handleUnconfirm = async () => {
+  const handleCancelApproval = async () => {
     const rawId =
       editingIssue?.TransactionId ??
       (editingIssue as any)?.Id ??
       (!isNaN(Number(editingIssue?.id)) ? Number(editingIssue?.id) : undefined);
 
     if (!rawId) {
-      message.error("Không tìm thấy TransactionId để gỡ xác nhận phiếu xuất.");
+      message.error("Không tìm thấy TransactionId để gỡ trình duyệt phiếu xuất.");
       return;
     }
 
     try {
-      setUnconfirming(true);
-      const res: any = await warehouseApi.unconfirmInventoryApproval({
-        TransactionId: Number(rawId),
-      });
+      setCancellingApproval(true);
+      const res: any = await warehouseApi.submitInventoryApproval(
+        { TransactionId: Number(rawId) },
+        "cancel_approval"
+      );
 
-      if (res?.Success === false || String(res?.Success).toLowerCase() === "false") {
-        message.error(res?.Message || "Gỡ xác nhận phiếu xuất kho thất bại!");
+      if (res?.Success === false || res?.Success === "false") {
+        message.error(res?.Message || "Gỡ trình duyệt phiếu xuất kho thất bại!");
         return;
       }
 
       message.success(
-        res?.Message || "Đã gỡ xác nhận phiếu xuất kho! Trạng thái chuyển về Đang lập."
+        res?.Message || "Đã gỡ trình duyệt phiếu xuất kho thành công! Trạng thái chuyển về Đang lập."
       );
+
+      const approvalStatus = res?.Data?.ApprovalStatus ?? 0;
+      const approvalStatusName = res?.Data?.ApprovalStatusName ?? "Đang lập";
+      const status = res?.Data?.Status ?? 0;
+      const statusName = res?.Data?.StatusName ?? "Đang lập";
 
       const updatedIssue: StockOutIssue = {
         ...editingIssue!,
-        ApprovalStatus: 0,
-        ApprovalStatusName: "Đang lập",
-        Status: 0,
-        StatusName: "Đang lập",
-        StatusCode: "0",
+        ApprovalStatus: approvalStatus,
+        ApprovalStatusName: approvalStatusName,
+        Status: status,
+        StatusName: statusName,
+        StatusCode: String(status),
         status: "DRAFT",
       };
 
@@ -421,10 +438,10 @@ export default function StockOutEditTab({
 
       fetchSubmissions(Number(rawId));
     } catch (err: any) {
-      console.error("Lỗi gỡ xác nhận phiếu xuất kho:", err);
-      message.error(err?.message || "Gỡ xác nhận phiếu xuất kho thất bại!");
+      console.error("Lỗi gỡ trình duyệt phiếu xuất kho:", err);
+      message.error(err?.message || "Gỡ trình duyệt phiếu xuất kho thất bại!");
     } finally {
-      setUnconfirming(false);
+      setCancellingApproval(false);
     }
   };
 
@@ -854,17 +871,37 @@ export default function StockOutEditTab({
             </Popconfirm>
           )}
 
-          {/* Nút Gỡ xác nhận: dùng chung cho Nhập/Xuất, chỉ hiển thị khi trạng thái Đã duyệt */}
-          {isEditing && (
-            <UnconfirmTransactionButton
-              record={editingIssue}
-              loading={unconfirming}
-              onConfirm={handleUnconfirm}
-              transactionType="issue"
-            />
+          {isEditing && isPendingApproval && (
+            <Popconfirm
+              title="Xác nhận gỡ trình duyệt phiếu xuất kho này?"
+              description="Sau khi gỡ trình duyệt, phiếu xuất sẽ quay về trạng thái Đang lập."
+              onConfirm={handleCancelApproval}
+              okText="Xác nhận"
+              cancelText={t.common.cancel || "Hủy"}
+              okButtonProps={{ loading: cancellingApproval }}
+            >
+              <Button
+                icon={<IconArrowBackUp size={15} strokeWidth={1.8} style={{ color: "#d97706" }} />}
+                loading={cancellingApproval}
+                style={{
+                  height: 32,
+                  padding: "0 14px",
+                  borderRadius: 6,
+                  fontWeight: 500,
+                  fontSize: 13,
+                  borderColor: "#dce5e6",
+                  background: "#FFFFFF",
+                  color: "#334155",
+                  display: "inline-flex",
+                  alignItems: "center",
+                }}
+              >
+                Gỡ Trình Duyệt
+              </Button>
+            </Popconfirm>
           )}
 
-          {isEditing && onDelete && editingIssue && !isTransactionApprovedOrRejected(editingIssue) && (
+          {isEditing && onDelete && editingIssue && isApprovalStatusZero && (
             <Popconfirm
               title={t.common.deleteConfirmTitle || "Xác nhận xóa phiếu này?"}
               description={t.common.deleteConfirmDesc || "Hành động này sẽ xóa phiếu xuất kho và không thể hoàn tác."}
@@ -900,7 +937,7 @@ export default function StockOutEditTab({
           >
             {t.common.close}
           </Button>
-          {!isTransactionApprovedOrRejected(editingIssue) && (
+          {(!isEditing || isApprovalStatusZero) && (
             <Button
               type="primary"
               icon={<IconDeviceFloppy size={16} strokeWidth={2} />}

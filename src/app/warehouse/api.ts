@@ -124,13 +124,12 @@ export const warehouseApi = {
     SessionId?: string;
     Language?: string;
     [key: string]: any;
-  }) =>
+  }, mode?: string) =>
     postFeatureData<T>("api/submit-inventory-approval", {
       WSId: "",
-      Language: "vi",
       ...params,
       TransactionId: !isNaN(Number(params.TransactionId)) ? Number(params.TransactionId) : params.TransactionId,
-    }),
+    }, mode),
 
   unconfirmInventoryApproval: <T = any>(params: {
     TransactionId: number | string;

@@ -213,14 +213,27 @@ export default function PendingPoReconcileTab({
     fetchPendingItems(pagination.current, pagination.pageSize, selectedWarehouseFilter, searchKeyword);
   };
 
-  // Cập nhật giá trị số lượng gợi ý nhập
+  // Cập nhật giá trị số lượng gợi ý nhập (ràng buộc <= SL còn lại)
   const handleSuggestedQntyChange = (key: string, val: number | null) => {
+    const targetItem = items.find((item) => getPendingPoRowKey(item) === key);
+    const remaining = Math.max(0, Number(targetItem?.Remaining_Qnty ?? 0));
+    let nextVal = val !== null && val !== undefined ? Number(val) : 0;
+    if (nextVal < 0) nextVal = 0;
+    if (targetItem && nextVal > remaining) {
+      message.warning(
+        isEn
+          ? `Receipt quantity (${nextVal}) cannot exceed remaining quantity (${remaining})!`
+          : `Số lượng nhập (${nextVal}) không được vượt quá số lượng còn lại (${remaining})!`
+      );
+      nextVal = remaining;
+    }
+
     setItems((prev) =>
       prev.map((item) => {
         if (getPendingPoRowKey(item) === key) {
           return {
             ...item,
-            Suggested_Qnty: val !== null && val !== undefined ? val : 0,
+            Suggested_Qnty: nextVal,
           };
         }
         return item;
@@ -276,7 +289,7 @@ export default function PendingPoReconcileTab({
       return;
     }
 
-    // 2. Kiểm tra số lượng nhập > 0
+    // 2. Kiểm tra số lượng nhập > 0 và <= SL còn lại
     const invalidQtyItem = selectedItems.find(
       (i) => i.Suggested_Qnty === undefined || i.Suggested_Qnty === null || Number(i.Suggested_Qnty) <= 0
     );
@@ -285,6 +298,19 @@ export default function PendingPoReconcileTab({
         isEn
           ? `Receipt quantity of item "${invalidQtyItem.ItemName || invalidQtyItem.ItemCode}" must be greater than 0!`
           : `Số lượng nhập của vật tư "${invalidQtyItem.ItemName || invalidQtyItem.ItemCode}" phải lớn hơn 0!`
+      );
+      return;
+    }
+
+    const exceededQtyItem = selectedItems.find(
+      (i) => Number(i.Suggested_Qnty || 0) > Math.max(0, Number(i.Remaining_Qnty ?? 0))
+    );
+    if (exceededQtyItem) {
+      const remaining = Math.max(0, Number(exceededQtyItem.Remaining_Qnty ?? 0));
+      message.warning(
+        isEn
+          ? `Receipt quantity of item "${exceededQtyItem.ItemName || exceededQtyItem.ItemCode}" cannot exceed remaining quantity (${remaining})!`
+          : `Số lượng nhập của vật tư "${exceededQtyItem.ItemName || exceededQtyItem.ItemCode}" không được vượt quá số lượng còn lại (${remaining})!`
       );
       return;
     }
@@ -572,6 +598,7 @@ export default function PendingPoReconcileTab({
           return (
             <InputNumber
               min={0}
+              max={Math.max(0, Number(record.Remaining_Qnty ?? 0))}
               value={val}
               onChange={(newVal) => handleSuggestedQntyChange(key, newVal)}
               style={{ width: "100%" }}

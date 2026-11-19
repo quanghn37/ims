@@ -24,6 +24,7 @@ import {
   IconCircleX,
   IconTrash,
   IconSend,
+  IconArrowBackUp,
 } from "@tabler/icons-react";
 import ActionIconButton from "@/components/common/ActionIconButton";
 import dayjs from "dayjs";
@@ -40,7 +41,6 @@ import RequisitionPendingDrawer from "./RequisitionPendingDrawer";
 import RequisitionItemEditDrawer from "./RequisitionItemEditDrawer";
 import InventoryWorkflowDrawer from "../../receipt/_components/InventoryWorkflowDrawer";
 import ApprovalBadge, { renderApprovalBadge } from "@/components/common/ApprovalBadge";
-import { isTransactionApprovedOrRejected } from "../../_components/UnconfirmTransactionButton";
 import { useTranslation } from "@/locales/LanguageContext";
 import ResizableTitle from "@/components/table/ResizableTitle";
 import { usePersistedTableColumns } from "@/components/table/usePersistedTableColumns";
@@ -610,7 +610,21 @@ export default function RequisitionEditTab({
 
   // --- Xử lý Trình duyệt phiếu yêu cầu xuất ---
   const [submittingApproval, setSubmittingApproval] = useState(false);
+  const [cancellingApproval, setCancellingApproval] = useState(false);
   const isEditing = Boolean(editingRequisition);
+
+  const isPendingApproval = useMemo(() => {
+    if (!editingRequisition) return false;
+    const rawStatus =
+      (editingRequisition as any).Status !== undefined && (editingRequisition as any).Status !== null && (editingRequisition as any).Status !== ""
+        ? (editingRequisition as any).Status
+        : (editingRequisition as any).StatusCode !== undefined && (editingRequisition as any).StatusCode !== null && (editingRequisition as any).StatusCode !== ""
+        ? (editingRequisition as any).StatusCode
+        : (editingRequisition as any).ApprovalStatus !== undefined && (editingRequisition as any).ApprovalStatus !== null && (editingRequisition as any).ApprovalStatus !== ""
+        ? (editingRequisition as any).ApprovalStatus
+        : editingRequisition.status;
+    return rawStatus !== undefined && rawStatus !== null && String(rawStatus).trim() !== "" && Number(rawStatus) === 2;
+  }, [editingRequisition]);
 
   // Xác định trạng thái "Đang lập" dựa vào Status = 0 để hiển thị nút Trình duyệt / Thêm mới / Chỉnh sửa
   const isApprovalStatusZero = useMemo(() => {
@@ -935,6 +949,63 @@ export default function RequisitionEditTab({
     }
   };
 
+  const handleCancelApproval = async () => {
+    const rawId =
+      getEditingTransId() ??
+      (editingRequisition as any)?.TransactionId ??
+      (editingRequisition as any)?.transactionId ??
+      (editingRequisition as any)?.Id ??
+      (!isNaN(Number(editingRequisition?.id)) ? Number(editingRequisition?.id) : undefined);
+
+    if (!rawId) {
+      message.error("Không tìm thấy mã phiếu để gỡ trình duyệt.");
+      return;
+    }
+
+    try {
+      setCancellingApproval(true);
+      const res: any = await warehouseApi.submitInventoryApproval(
+        { TransactionId: Number(rawId) },
+        "cancel_approval"
+      );
+
+      if (res?.Success === false || res?.Success === "false") {
+        message.error(res?.Message || "Gỡ trình duyệt phiếu yêu cầu thất bại!");
+        return;
+      }
+
+      message.success(
+        res?.Message || "Đã gỡ trình duyệt phiếu yêu cầu thành công! Trạng thái chuyển về Đang lập."
+      );
+
+      const approvalStatus = res?.Data?.ApprovalStatus ?? 0;
+      const approvalStatusName = res?.Data?.ApprovalStatusName ?? "Đang lập";
+      const status = res?.Data?.Status ?? 0;
+      const statusName = res?.Data?.StatusName ?? "Đang lập";
+
+      const updatedRequisition: MaterialRequisition = {
+        ...editingRequisition!,
+        Status: status,
+        StatusCode: String(status),
+        StatusName: statusName,
+        ApprovalStatus: approvalStatus,
+        ApprovalStatusName: approvalStatusName,
+        status: "DRAFT",
+      };
+
+      if (onUpdateEditingRequisition) {
+        onUpdateEditingRequisition(updatedRequisition);
+      }
+
+      fetchSubmissions(Number(rawId));
+    } catch (err: any) {
+      console.error("Lỗi gỡ trình duyệt phiếu yêu cầu:", err);
+      message.error(err?.message || "Gỡ trình duyệt phiếu yêu cầu thất bại!");
+    } finally {
+      setCancellingApproval(false);
+    }
+  };
+
   return (
     <div style={{ padding: "10px 18px", minHeight: "calc(100vh - 110px)", background: "#fff" }}>
       <Form form={form} layout="vertical" onFinish={handleSubmit}>
@@ -988,7 +1059,36 @@ export default function RequisitionEditTab({
               </Popconfirm>
             )}
 
-            {editingRequisition && onDelete && !isTransactionApprovedOrRejected(editingRequisition) && (
+            {isEditing && isPendingApproval && (
+              <Popconfirm
+                title="Xác nhận gỡ trình duyệt phiếu yêu cầu xuất này?"
+                description="Sau khi gỡ trình duyệt, phiếu yêu cầu sẽ quay về trạng thái Đang lập."
+                onConfirm={handleCancelApproval}
+                okText="Xác nhận"
+                cancelText={t.common.cancel || "Hủy"}
+                okButtonProps={{ loading: cancellingApproval }}
+              >
+                <Button
+                  icon={<IconArrowBackUp size={15} strokeWidth={1.8} style={{ color: "#d97706" }} />}
+                  loading={cancellingApproval}
+                  style={{
+                    height: 32,
+                    fontSize: 13,
+                    fontWeight: 500,
+                    borderRadius: 6,
+                    borderColor: "#dce5e6",
+                    background: "#FFFFFF",
+                    color: "#334155",
+                    display: "inline-flex",
+                    alignItems: "center",
+                  }}
+                >
+                  Gỡ Trình Duyệt
+                </Button>
+              </Popconfirm>
+            )}
+
+            {editingRequisition && onDelete && isApprovalStatusZero && (
               <Popconfirm
                 title={t.common.deleteConfirmTitle || "Xác nhận xóa phiếu này?"}
                 description={t.common.deleteConfirmDesc || "Hành động này sẽ xóa phiếu yêu cầu và không thể hoàn tác."}
@@ -1024,7 +1124,7 @@ export default function RequisitionEditTab({
             >
               {t.common.close}
             </Button>
-            {!isTransactionApprovedOrRejected(editingRequisition) && (
+            {(!isEditing || isApprovalStatusZero) && (
               <Button
                 type="primary"
                 icon={<IconDeviceFloppy size={16} strokeWidth={2} />}
