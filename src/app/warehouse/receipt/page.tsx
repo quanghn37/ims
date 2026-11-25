@@ -283,6 +283,16 @@ export default function StockInPage() {
 
     // 3. Dự phòng nếu chưa kịp xuất hiện trong trang 1, dựng thông tin đầy đủ từ sourcePoItem & transactionData
     if (transId || docCode) {
+      const rawStatus = transactionData?.Status ?? transactionData?.StatusCode;
+      const statusNum =
+        rawStatus !== undefined && rawStatus !== null && rawStatus !== "" && !isNaN(Number(rawStatus))
+          ? Number(rawStatus)
+          : 0;
+      const statusName =
+        transactionData?.StatusName ||
+        transactionData?.ApprovalStatusName ||
+        (statusNum === 0 ? "Đang lập" : String(rawStatus ?? ""));
+
       const createdReceipt: StockInReceipt = {
         id: String(transId || docCode),
         TransactionId: transId,
@@ -309,7 +319,12 @@ export default function StockInPage() {
         description: sourcePoItem?.ContractCode
           ? `Phiếu nhập kho từ đơn hàng ${sourcePoItem.ContractCode}`
           : `Phiếu nhập ${docCode || ""}`,
-        status: transactionData?.StatusCode || transactionData?.Status || "COMPLETED",
+        status: statusNum === 0 ? "DRAFT" : (statusNum === 1 ? "COMPLETED" : (statusNum === 2 ? "PENDING" : String(statusNum))),
+        Status: statusNum,
+        StatusCode: String(statusNum),
+        StatusName: statusName,
+        ApprovalStatus: transactionData?.ApprovalStatus ?? statusNum,
+        ApprovalStatusName: statusName,
         items: [],
       };
       handleOpenEdit(createdReceipt);

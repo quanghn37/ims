@@ -634,13 +634,14 @@ export default function RequisitionEditTab({
       (editingRequisition as any)?.status ??
       editingRequisition?.ApprovalStatus;
 
-    if (rawStatus !== undefined && rawStatus !== null && !isNaN(Number(rawStatus))) {
+    if (rawStatus !== undefined && rawStatus !== null && String(rawStatus).trim() !== "" && !isNaN(Number(rawStatus))) {
       return Number(rawStatus) === 0;
     }
 
     const name = String(
       editingRequisition?.StatusName ||
       editingRequisition?.ApprovalStatusName ||
+      (typeof rawStatus === "string" ? rawStatus : "") ||
       ""
     ).toLowerCase().trim();
 

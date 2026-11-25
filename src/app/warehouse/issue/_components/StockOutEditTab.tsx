@@ -318,13 +318,14 @@ export default function StockOutEditTab({
         ? editingIssue.ApprovalStatus
         : editingIssue.status;
 
-    if (rawStatus !== undefined && rawStatus !== null && !isNaN(Number(rawStatus))) {
+    if (rawStatus !== undefined && rawStatus !== null && String(rawStatus).trim() !== "" && !isNaN(Number(rawStatus))) {
       return Number(rawStatus) === 0;
     }
 
     const str = String(
       editingIssue.StatusName ||
       editingIssue.ApprovalStatusName ||
+      (typeof rawStatus === "string" ? rawStatus : "") ||
       ""
     ).trim().toLowerCase();
 
@@ -529,6 +530,12 @@ export default function StockOutEditTab({
         issuer: values.issuer || "Nguyễn Văn Thao (Thủ kho)",
         description: values.description || "",
         status: values.status || (editingIssue?.status || "DRAFT"),
+        Status: editingIssue?.Status ?? 0,
+        StatusCode: editingIssue?.StatusCode ?? "0",
+        StatusName: editingIssue?.StatusName ?? "Đang lập",
+        ApprovalStatus: editingIssue?.ApprovalStatus ?? 0,
+        ApprovalStatusName: editingIssue?.ApprovalStatusName ?? "Đang lập",
+        TransactionId: editingIssue?.TransactionId,
         totalQty,
         totalAmount,
         items,

@@ -106,13 +106,14 @@ export default function StockInEditTab({
         ? editingReceipt.ApprovalStatus
         : editingReceipt.status;
 
-    if (rawStatus !== undefined && rawStatus !== null && !isNaN(Number(rawStatus))) {
+    if (rawStatus !== undefined && rawStatus !== null && String(rawStatus).trim() !== "" && !isNaN(Number(rawStatus))) {
       return Number(rawStatus) === 0;
     }
 
     const str = String(
       editingReceipt.StatusName ||
       editingReceipt.ApprovalStatusName ||
+      (typeof rawStatus === "string" ? rawStatus : "") ||
       ""
     ).trim().toLowerCase();
 
