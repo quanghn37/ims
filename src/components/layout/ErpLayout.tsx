@@ -159,6 +159,10 @@ export const ErpLayout: React.FC<ErpLayoutProps> = ({ children }) => {
           key: "/warehouse/period-report",
           label: <Link href="/warehouse/period-report" prefetch={false}>{t("menu.periodReport")}</Link>,
         },
+        {
+          key: "/warehouse/period-control",
+          label: <Link href="/warehouse/period-control" prefetch={false}>{t("menu.periodControl")}</Link>,
+        },
       ],
     },
     {
@@ -312,6 +316,7 @@ export const ErpLayout: React.FC<ErpLayoutProps> = ({ children }) => {
               {activePath.startsWith("/warehouse/issue") && t("pageTitles.issue")}
               {activePath.startsWith("/warehouse/inventory") && t("pageTitles.inventory")}
               {activePath.startsWith("/warehouse/period-report") && t("pageTitles.periodReport")}
+              {activePath.startsWith("/warehouse/period-control") && t("pageTitles.periodControl")}
               {activePath.startsWith("/invoices") && t("pageTitles.invoices")}
               {activePath.startsWith("/replace-task-assignment") && t("pageTitles.replaceTaskAssignment")}
             </Text>

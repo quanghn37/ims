@@ -28,7 +28,6 @@ interface ContractsTableProps {
   columnFilters: Record<string, string>;
   setColumnFilters: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   pagination: PaginationState;
-  setPagination: React.Dispatch<React.SetStateAction<PaginationState>>;
   isFiltering: boolean;
   columnSuggestions: Record<string, string[]>;
   storageKey: string;
@@ -39,7 +38,7 @@ interface ContractsTableProps {
   onDelete?: (record: ContractItem) => void;
 }
 
-export default function ContractsTable({ filteredContracts, loading, searchKeyword, setSearchKeyword, columnFilters, setColumnFilters, pagination, setPagination, isFiltering, columnSuggestions, storageKey, onRefresh, onCreate, onEdit, onCreateAddendum }: ContractsTableProps) {
+export default function ContractsTable({ filteredContracts, loading, searchKeyword, setSearchKeyword, columnFilters, setColumnFilters, pagination, isFiltering, columnSuggestions, storageKey, onRefresh, onCreate, onEdit, onCreateAddendum }: ContractsTableProps) {
   const { t } = useTranslation();
   const initialMainColumns = useMemo(
     () => [
@@ -485,8 +484,8 @@ export default function ContractsTable({ filteredContracts, loading, searchKeywo
         pagination={{
           current: pagination.current,
           pageSize: pagination.pageSize,
-          total: isFiltering ? filteredContracts.length : pagination.total,
-          onChange: (page, pageSize) => isFiltering ? setPagination((previous) => ({ ...previous, current: page, pageSize })) : onRefresh(page, pageSize),
+          total: pagination.total,
+          onChange: (page, pageSize) => onRefresh(page, pageSize),
           showSizeChanger: true,
           pageSizeOptions: ["100", "200", "500", "1000"],
           showTotal: (total, range) => `${range[0]}–${range[1]} / ${total} ${t.table.records}`,

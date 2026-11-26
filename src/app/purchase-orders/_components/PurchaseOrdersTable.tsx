@@ -21,7 +21,6 @@ interface PurchaseOrdersTableProps {
   filteredOrders: ContractItem[];
   loading: boolean;
   pagination: PaginationState;
-  setPagination: React.Dispatch<React.SetStateAction<PaginationState>>;
   searchKeyword: string;
   setSearchKeyword: (value: string) => void;
   columnFilters: Record<string, string>;
@@ -39,7 +38,6 @@ export default function PurchaseOrdersTable({
   filteredOrders,
   loading,
   pagination,
-  setPagination,
   searchKeyword,
   setSearchKeyword,
   columnFilters,
@@ -457,10 +455,8 @@ export default function PurchaseOrdersTable({
         pagination={{
           current: pagination.current,
           pageSize: pagination.pageSize,
-          total: isFiltering ? filteredOrders.length : pagination.total,
-          onChange: (page, pageSize) => isFiltering
-            ? setPagination((previous) => ({ ...previous, current: page, pageSize }))
-            : onRefresh(page, pageSize),
+          total: pagination.total,
+          onChange: (page, pageSize) => onRefresh(page, pageSize),
           showSizeChanger: true,
           pageSizeOptions: ["100", "200", "500", "1000"],
           showTotal: (total, range) => `${range[0]}–${range[1]} / ${total} ${t.table.records}`,

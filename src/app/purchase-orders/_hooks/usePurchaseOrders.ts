@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { message } from "antd";
 import { extractApiList, extractTotalRows } from "@/lib/api-client";
 import { useColumnFiltering } from "@/lib/table-utils";
@@ -58,13 +58,14 @@ export function usePurchaseOrders(enabled = true) {
     getSearchValues: getOrderSearchValues,
   });
 
-  const fetchOrders = async (page = 1, pageSize = 10) => {
+  const fetchOrders = useCallback(async (page = 1, pageSize = 10, keyword = searchKeyword) => {
     setLoading(true);
     try {
       const data = await purchaseOrdersApi.getPurchaseOrders({
         DisplayMode: "purchase_order",
         ClientId: "",
         WSId: "",
+        Keyword: keyword.trim() || undefined,
         PageNum: page,
         PageSize: pageSize,
       });
@@ -83,13 +84,13 @@ export function usePurchaseOrders(enabled = true) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchKeyword]);
 
   useEffect(() => {
-    if (enabled) {
-      fetchOrders();
-    }
-  }, [enabled]);
+    if (!enabled) return;
+    const timeoutId = window.setTimeout(() => fetchOrders(1, 10, searchKeyword), searchKeyword ? 300 : 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [enabled, fetchOrders, searchKeyword]);
 
   return {
     orders,

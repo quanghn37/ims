@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import type { ColumnsType, ColumnType } from "antd/es/table";
 import { message } from "antd";
 import ColumnSettingsPopover, { ColumnSettingItem } from "./ColumnSettingsPopover";
+import { writeLocalStorageJson } from "@/lib/table-utils";
 
 interface UsePersistedTableColumnsProps<T> {
   tableKey: string;
@@ -154,12 +155,8 @@ export function usePersistedTableColumns<T extends Record<string, any>>({
   const saveColumnConfigs = useCallback(
     (nextConfigs: ColumnSettingItem[]) => {
       setColumnConfigs(nextConfigs);
-      try {
-        const toSave = nextConfigs.map(({ key, visible }) => ({ key, visible }));
-        localStorage.setItem(configStorageKey, JSON.stringify(toSave));
-      } catch (e) {
-        console.error(`[${tableKey}] Lỗi lưu cấu hình cột:`, e);
-      }
+      const toSave = nextConfigs.map(({ key, visible }) => ({ key, visible }));
+      writeLocalStorageJson(configStorageKey, toSave);
     },
     [configStorageKey, tableKey]
   );
@@ -226,13 +223,8 @@ export function usePersistedTableColumns<T extends Record<string, any>>({
       const nextWidth = Math.round(Math.max(size.width, minColumnWidth));
       const next = { ...widthsRef.current, [columnKey]: nextWidth };
       widthsRef.current = next;
-      try {
-        const serialized = JSON.stringify(next);
-        localStorage.setItem(widthsStorageKey, serialized);
-        localStorage.setItem(baseWidthsStorageKey, serialized);
-      } catch (e) {
-        console.error(`[${tableKey}] Lỗi lưu độ rộng cột:`, e);
-      }
+      writeLocalStorageJson(widthsStorageKey, next);
+      writeLocalStorageJson(baseWidthsStorageKey, next);
       setColumnWidths(next);
     },
     [widthsStorageKey, baseWidthsStorageKey, minColumnWidth, tableKey]

@@ -68,13 +68,14 @@ async function proxyRequest(
       statusText: backendRes.statusText,
       headers: responseHeaders,
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error(`[Proxy Error] ${method} ${targetUrl}:`, err);
+    const errorMessage = err instanceof Error ? err.message : "Unknown proxy error";
     return NextResponse.json(
       {
         Success: "false",
-        Message: `Không thể kết nối đến máy chủ ERP backend (${TARGET_BASE}): ${err.message}`,
-        error: err.message,
+        Message: `Không thể kết nối đến máy chủ ERP backend (${TARGET_BASE}): ${errorMessage}`,
+        error: errorMessage,
       },
       { status: 502 }
     );

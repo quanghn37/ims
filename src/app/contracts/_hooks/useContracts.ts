@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { message } from "antd";
 import { extractApiList, extractTotalRows } from "@/lib/api-client";
 import { useColumnFiltering } from "@/lib/table-utils";
@@ -51,11 +51,14 @@ export function useContracts(enabled = true) {
     getSearchValues: getContractSearchValues,
   });
 
-  const fetchContracts = async (page = 1, pageSize = 100) => {
+  const fetchContracts = useCallback(async (page = 1, pageSize = 100, keyword = searchKeyword) => {
     setLoading(true);
     try {
       const data = await contractsApi.getContracts({
         DisplayMode: "mat_equip",
+        Keyword: keyword.trim() || undefined,
+        PageNum: page,
+        PageSize: pageSize,
       });
       const list = extractApiList<ContractItem>(data).map((item: any) => {
         const rawStatus = item.StatusName || item.ApprovalStatusName || item.StatusCode;
@@ -73,13 +76,15 @@ export function useContracts(enabled = true) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchKeyword]);
 
   useEffect(() => {
-    if (enabled) {
-      fetchContracts(1, 100);
-    }
-  }, [enabled]);
+    if (!enabled) return;
+    const timeoutId = window.setTimeout(() => {
+      fetchContracts(1, 100, searchKeyword);
+    }, searchKeyword ? 300 : 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [enabled, fetchContracts, searchKeyword]);
 
   useEffect(() => {
     setPagination((previous) => previous.current !== 1 ? { ...previous, current: 1 } : previous);

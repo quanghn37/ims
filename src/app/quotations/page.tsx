@@ -62,7 +62,6 @@ function QuotationsPageContent() {
     columnFilters,
     setColumnFilters,
     pagination,
-    setPagination,
     fetchQuotations,
     columnSuggestions,
     filteredQuotations,
@@ -741,7 +740,6 @@ function QuotationsPageContent() {
         columnFilters={columnFilters}
         setColumnFilters={setColumnFilters}
         pagination={pagination}
-        setPagination={setPagination}
         isFiltering={isFiltering}
         columnSuggestions={columnSuggestions}
         onRefresh={fetchQuotations}

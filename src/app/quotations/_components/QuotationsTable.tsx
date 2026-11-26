@@ -24,7 +24,6 @@ interface QuotationsTableProps {
   columnFilters: Record<string, string>;
   setColumnFilters: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   pagination: PaginationState;
-  setPagination: React.Dispatch<React.SetStateAction<PaginationState>>;
   isFiltering: boolean;
   columnSuggestions: Record<string, string[]>;
   onRefresh: (page: number, pageSize: number) => void;
@@ -42,7 +41,6 @@ export default function QuotationsTable({
   columnFilters,
   setColumnFilters,
   pagination,
-  setPagination,
   isFiltering,
   columnSuggestions,
   onRefresh,
@@ -371,10 +369,8 @@ export default function QuotationsTable({
         pagination={{
           current: pagination.current,
           pageSize: pagination.pageSize,
-          total: isFiltering ? filteredQuotations.length : pagination.total,
-          onChange: (page, pageSize) => isFiltering
-            ? setPagination((previous) => ({ ...previous, current: page, pageSize }))
-            : onRefresh(page, pageSize),
+          total: pagination.total,
+          onChange: (page, pageSize) => onRefresh(page, pageSize),
           showSizeChanger: true,
           pageSizeOptions: ["100", "200", "500", "1000"],
           showTotal: (total, range) => `${range[0]}–${range[1]} / ${total} ${t.table.records}`,

@@ -63,7 +63,6 @@ function ContractsPageContent() {
     columnFilters,
     setColumnFilters,
     pagination,
-    setPagination,
     fetchContracts,
     columnSuggestions,
     filteredContracts,
@@ -685,7 +684,6 @@ function ContractsPageContent() {
         columnFilters={columnFilters}
         setColumnFilters={setColumnFilters}
         pagination={pagination}
-        setPagination={setPagination}
         isFiltering={isFiltering}
         columnSuggestions={columnSuggestions}
         storageKey={STORAGE_KEY_MAIN}

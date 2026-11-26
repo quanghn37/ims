@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { message } from "antd";
 import { extractApiList, extractTotalRows } from "@/lib/api-client";
 import { useColumnFiltering } from "@/lib/table-utils";
@@ -33,11 +33,11 @@ export function useQuotations(enabled = true) {
     excludePlaceholderDateFromFilters: true,
   });
 
-  const fetchQuotations = async (page = 1, pageSize = 100) => {
+  const fetchQuotations = useCallback(async (page = 1, pageSize = 100, keyword = searchKeyword) => {
     setLoading(true);
     try {
       const data = await quotationsApi.getContracts({
-        DisplayMode: "quotation", ClientId: "", WSId: "", PageNum: page, PageSize: pageSize,
+        DisplayMode: "quotation", ClientId: "", WSId: "", Keyword: keyword.trim() || undefined, PageNum: page, PageSize: pageSize,
       });
       const list = extractApiList<ContractItem>(data);
       setQuotations(list);
@@ -47,13 +47,13 @@ export function useQuotations(enabled = true) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchKeyword]);
 
   useEffect(() => {
-    if (enabled) {
-      fetchQuotations(1, 100);
-    }
-  }, [enabled]);
+    if (!enabled) return;
+    const timeoutId = window.setTimeout(() => fetchQuotations(1, 100, searchKeyword), searchKeyword ? 300 : 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [enabled, fetchQuotations, searchKeyword]);
 
   useEffect(() => {
     setPagination((previous) => previous.current !== 1 ? { ...previous, current: 1 } : previous);

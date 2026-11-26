@@ -282,7 +282,7 @@ export function extractTotalRows(res: any, fallback = 0): number {
  * Development Auditor to detect redundant/conflicting params or UI leaks in API requests
  */
 function auditApiParams(method: "GET" | "POST", endpoint: string, params: Record<string, any>) {
-  if (!IS_BROWSER) return;
+  if (!IS_BROWSER || process.env.NODE_ENV === "production") return;
   // Cho phép tắt qua localStorage nếu cần: localStorage.setItem("DISABLE_API_AUDIT", "1")
   if (localStorage.getItem("DISABLE_API_AUDIT") === "1") return;
 
@@ -364,12 +364,13 @@ function auditApiParams(method: "GET" | "POST", endpoint: string, params: Record
   }
 }
 
-interface CacheEntry {
-  data: any;
+interface CacheEntry<T = unknown> {
+  data: T;
   timestamp: number;
 }
+const MAX_CACHE_ENTRIES = 200;
 const erpGetCache = new Map<string, CacheEntry>();
-const erpInFlightRequests = new Map<string, Promise<any>>();
+const erpInFlightRequests = new Map<string, Promise<unknown>>();
 const recentRequestTimestamps = new Map<string, number>();
 const DEFAULT_CACHE_TTL_MS = 60 * 1000; // 60s in-memory cache for snappy navigation
 let erpCacheGeneration = 0;
@@ -378,6 +379,23 @@ export function clearErpCache() {
   erpCacheGeneration += 1;
   erpGetCache.clear();
   erpInFlightRequests.clear();
+  recentRequestTimestamps.clear();
+}
+
+function setCacheEntry(key: string, entry: CacheEntry) {
+  if (erpGetCache.has(key)) erpGetCache.delete(key);
+  erpGetCache.set(key, entry);
+  if (erpGetCache.size <= MAX_CACHE_ENTRIES) return;
+
+  let oldestKey: string | undefined;
+  let oldestTimestamp = Number.POSITIVE_INFINITY;
+  erpGetCache.forEach((value, cacheKey) => {
+    if (value.timestamp < oldestTimestamp) {
+      oldestTimestamp = value.timestamp;
+      oldestKey = cacheKey;
+    }
+  });
+  if (oldestKey) erpGetCache.delete(oldestKey);
 }
 
 function isPublicAuthEndpoint(cleanEndpoint: string) {
@@ -455,6 +473,8 @@ export async function erpGet<T = any>(
   if (!options?.skipCache && erpGetCache.has(cacheKey)) {
     const entry = erpGetCache.get(cacheKey)!;
     if (now - entry.timestamp < ttl) {
+      erpGetCache.delete(cacheKey);
+      erpGetCache.set(cacheKey, entry);
       return entry.data as T;
     }
     erpGetCache.delete(cacheKey);
@@ -498,7 +518,7 @@ export async function erpGet<T = any>(
       }
 
       if (cacheGeneration === erpCacheGeneration) {
-        erpGetCache.set(cacheKey, { data, timestamp: Date.now() });
+        setCacheEntry(cacheKey, { data, timestamp: Date.now() });
       }
       return data as T;
     } finally {
@@ -519,7 +539,7 @@ export async function erpGet<T = any>(
  * Consims API POST Helper:
  * Sends body as { params: { ... } } with LogIn and SessionId auto-populated
  */
-export async function erpPost<T = any>(
+export async function erpPost<T = unknown>(
   endpoint: string,
   params: Record<string, any> = {},
   updateMode?: string
@@ -594,7 +614,7 @@ export async function erpPost<T = any>(
 /**
  * Consims FormData POST Helper (for Excel and file uploads)
  */
-export async function erpPostForm<T = any>(endpoint: string, formData: FormData): Promise<T> {
+export async function erpPostForm<T = unknown>(endpoint: string, formData: FormData): Promise<T> {
   // Invalidate in-memory cache on form upload
   clearErpCache();
 

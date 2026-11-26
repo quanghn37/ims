@@ -69,7 +69,6 @@ function PurchaseOrdersPageContent() {
     columnSuggestions,
     isFiltering,
     pagination,
-    setPagination,
     fetchOrders,
     filteredOrders,
   } = usePurchaseOrders(!isDetailPage);
@@ -1041,7 +1040,6 @@ function PurchaseOrdersPageContent() {
         filteredOrders={filteredOrders}
         loading={loading}
         pagination={pagination}
-        setPagination={setPagination}
         searchKeyword={searchKeyword}
         setSearchKeyword={setSearchKeyword}
         columnFilters={columnFilters}

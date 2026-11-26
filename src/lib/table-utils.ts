@@ -11,30 +11,35 @@ interface ResizeEvent {
   size: { width: number };
 }
 
+export function readLocalStorageJson<T>(key: string, fallback: T): T {
+  if (typeof window === "undefined") return fallback;
+  try {
+    const serialized = localStorage.getItem(key);
+    return serialized ? JSON.parse(serialized) as T : fallback;
+  } catch (error) {
+    console.error(`Lỗi đọc cấu hình localStorage [${key}]:`, error);
+    return fallback;
+  }
+}
+
+export function writeLocalStorageJson(key: string, value: unknown): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+    return true;
+  } catch (error) {
+    console.error(`Lỗi lưu cấu hình localStorage [${key}]:`, error);
+    return false;
+  }
+}
+
 export function usePersistedColumnWidths<T extends ResizableColumn>(initialColumns: T[], storageKey: string) {
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>(() => {
-    if (typeof window === "undefined") return {};
-    try {
-      const savedWidthsString = localStorage.getItem(storageKey);
-      if (savedWidthsString) {
-        return JSON.parse(savedWidthsString);
-      }
-    } catch (error) {
-      console.error("Lỗi đọc cấu hình kích thước cột từ localStorage:", error);
-    }
-    return {};
+    return readLocalStorageJson<Record<string, number>>(storageKey, {});
   });
 
   useEffect(() => {
-    try {
-      const savedWidthsString = localStorage.getItem(storageKey);
-      if (savedWidthsString) {
-        const savedWidths: Record<string, number> = JSON.parse(savedWidthsString);
-        setColumnWidths(savedWidths);
-      }
-    } catch (error) {
-      console.error("Lỗi đọc cấu hình kích thước cột từ localStorage:", error);
-    }
+    setColumnWidths(readLocalStorageJson<Record<string, number>>(storageKey, {}));
   }, [storageKey]);
 
   const handleResizeColumn = useCallback((index: number) => (_: unknown, { size }: ResizeEvent) => {
@@ -42,11 +47,7 @@ export function usePersistedColumnWidths<T extends ResizableColumn>(initialColum
     const key = String(targetCol?.key ?? targetCol?.dataIndex ?? index);
     setColumnWidths((previous) => {
       const next = { ...previous, [key]: Math.max(size.width, 60) };
-      try {
-        localStorage.setItem(storageKey, JSON.stringify(next));
-      } catch (error) {
-        console.error("Lỗi lưu kích thước cột:", error);
-      }
+      writeLocalStorageJson(storageKey, next);
       return next;
     });
   }, [initialColumns, storageKey]);
