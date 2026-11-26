@@ -34,6 +34,7 @@ import StockOutItemModal from "./StockOutItemModal";
 import { useTranslation } from "@/locales/LanguageContext";
 import InventoryWorkflowDrawer from "../../receipt/_components/InventoryWorkflowDrawer";
 import ApprovalBadge, { renderApprovalBadge } from "@/components/common/ApprovalBadge";
+import UnconfirmTransactionButton from "../../_components/UnconfirmTransactionButton";
 
 const { Text } = Typography;
 
@@ -443,6 +444,57 @@ export default function StockOutEditTab({
       message.error(err?.message || "Gỡ trình duyệt phiếu xuất kho thất bại!");
     } finally {
       setCancellingApproval(false);
+    }
+  };
+
+  const [unconfirming, setUnconfirming] = useState(false);
+
+  const handleUnconfirm = async () => {
+    const rawId =
+      editingIssue?.TransactionId ??
+      (editingIssue as any)?.Id ??
+      (!isNaN(Number(editingIssue?.id)) ? Number(editingIssue?.id) : undefined);
+
+    if (!rawId) {
+      message.error("Không tìm thấy TransactionId để gỡ xác nhận phiếu xuất.");
+      return;
+    }
+
+    try {
+      setUnconfirming(true);
+      const res: any = await warehouseApi.unconfirmInventoryApproval({
+        TransactionId: Number(rawId),
+      });
+
+      if (res?.Success === false || String(res?.Success).toLowerCase() === "false") {
+        message.error(res?.Message || "Gỡ xác nhận phiếu xuất kho thất bại!");
+        return;
+      }
+
+      message.success(
+        res?.Message || "Đã gỡ xác nhận phiếu xuất kho! Trạng thái chuyển về Đang lập."
+      );
+
+      const updatedIssue: StockOutIssue = {
+        ...editingIssue!,
+        ApprovalStatus: 0,
+        ApprovalStatusName: "Đang lập",
+        Status: 0,
+        StatusName: "Đang lập",
+        StatusCode: "0",
+        status: "DRAFT",
+      };
+
+      if (onUpdateEditingIssue) {
+        onUpdateEditingIssue(updatedIssue);
+      }
+
+      fetchSubmissions(Number(rawId));
+    } catch (err: any) {
+      console.error("Lỗi gỡ xác nhận phiếu xuất kho:", err);
+      message.error(err?.message || "Gỡ xác nhận phiếu xuất kho thất bại!");
+    } finally {
+      setUnconfirming(false);
     }
   };
 
@@ -906,6 +958,16 @@ export default function StockOutEditTab({
                 Gỡ Trình Duyệt
               </Button>
             </Popconfirm>
+          )}
+
+          {/* Nút Gỡ xác nhận xuất: chỉ hiển thị khi Status = 1 */}
+          {isEditing && (
+            <UnconfirmTransactionButton
+              record={editingIssue}
+              loading={unconfirming}
+              onConfirm={handleUnconfirm}
+              transactionType="issue"
+            />
           )}
 
           {isEditing && onDelete && editingIssue && isApprovalStatusZero && (

@@ -37,6 +37,7 @@ import ResizableTitle from "@/components/table/ResizableTitle";
 import { usePersistedTableColumns } from "@/components/table/usePersistedTableColumns";
 import ErpDetailCard from "@/components/common/ErpDetailCard";
 import ApprovalBadge, { renderApprovalBadge } from "@/components/common/ApprovalBadge";
+import UnconfirmTransactionButton from "../../_components/UnconfirmTransactionButton";
 import StockInReconcileModal from "./StockInReconcileModal";
 import StockInItemEditDrawer from "./StockInItemEditDrawer";
 import { extractApiList } from "@/lib/api-client";
@@ -225,6 +226,58 @@ export default function StockInEditTab({
       message.error(err?.message || "Gỡ trình duyệt phiếu nhập kho thất bại!");
     } finally {
       setCancellingApproval(false);
+    }
+  };
+
+  const [unconfirming, setUnconfirming] = useState(false);
+
+  const handleUnconfirm = async () => {
+    const rawId =
+      editingReceipt?.TransactionId ??
+      editingReceipt?.Id ??
+      (!isNaN(Number(editingReceipt?.id)) ? Number(editingReceipt?.id) : undefined);
+
+    if (!rawId) {
+      message.error("Không tìm thấy TransactionId để gỡ xác nhận phiếu nhập.");
+      return;
+    }
+
+    try {
+      setUnconfirming(true);
+      const res: any = await warehouseApi.unconfirmInventoryApproval({
+        TransactionId: Number(rawId),
+      });
+
+      if (res?.Success === false || String(res?.Success).toLowerCase() === "false") {
+        message.error(res?.Message || "Gỡ xác nhận phiếu nhập kho thất bại!");
+        return;
+      }
+
+      message.success(
+        res?.Message || "Đã gỡ xác nhận phiếu nhập kho! Trạng thái chuyển về Đang lập."
+      );
+
+      const updatedReceipt: StockInReceipt = {
+        ...editingReceipt!,
+        ApprovalStatus: 0,
+        ApprovalStatusName: "Đang lập",
+        Status: 0,
+        StatusName: "Đang lập",
+        StatusCode: "0",
+        status: "DRAFT",
+      };
+
+      if (onUpdateEditingReceipt) {
+        onUpdateEditingReceipt(updatedReceipt);
+      }
+      if (onRefreshItems) {
+        onRefreshItems();
+      }
+    } catch (err: any) {
+      console.error("Lỗi gỡ xác nhận phiếu nhập kho:", err);
+      message.error(err?.message || "Gỡ xác nhận phiếu nhập kho thất bại!");
+    } finally {
+      setUnconfirming(false);
     }
   };
 
@@ -841,6 +894,16 @@ export default function StockInEditTab({
                 Gỡ Trình Duyệt
               </Button>
             </Popconfirm>
+          )}
+
+          {/* Nút Gỡ xác nhận nhập: chỉ hiển thị khi Status = 1 */}
+          {isEditing && (
+            <UnconfirmTransactionButton
+              record={editingReceipt}
+              loading={unconfirming}
+              onConfirm={handleUnconfirm}
+              transactionType="receipt"
+            />
           )}
 
           {/* Button Lưu & Xóa: Chỉ hiển thị khi tạo mới hoặc phiếu ở trạng thái Status = 0 */}

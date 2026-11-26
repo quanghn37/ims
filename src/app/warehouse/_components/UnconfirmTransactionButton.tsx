@@ -28,8 +28,8 @@ export function isTransactionApproved(record?: any): boolean {
       ? record.ApprovalStatus
       : record.status;
 
-  if (rawStatus !== undefined && rawStatus !== null && !isNaN(Number(rawStatus))) {
-    if (Number(rawStatus) === 1) return true;
+  if (rawStatus !== undefined && rawStatus !== null && String(rawStatus).trim() !== "" && !isNaN(Number(rawStatus))) {
+    return Number(rawStatus) === 1;
   }
 
   const statusUpper = String(record.status || "").trim().toUpperCase();
@@ -110,7 +110,14 @@ export default function UnconfirmTransactionButton({
   if (!isApproved) return null;
 
   const isEn = language === "en";
-  const label = isEn ? "Unconfirm" : "Gỡ xác nhận";
+  const label =
+    transactionType === "issue"
+      ? isEn
+        ? "Unconfirm Issue"
+        : "Gỡ xác nhận xuất"
+      : isEn
+      ? "Unconfirm Receipt"
+      : "Gỡ xác nhận nhập";
   const confirmTitle = isEn
     ? "Unconfirm this transaction?"
     : transactionType === "issue"

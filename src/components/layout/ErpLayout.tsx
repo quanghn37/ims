@@ -44,7 +44,10 @@ export const ErpLayout: React.FC<ErpLayoutProps> = ({ children }) => {
     if (collapsed) {
       setOpenKeys([]);
     } else {
-      setOpenKeys(pathname.startsWith("/warehouse") ? ["warehouse"] : []);
+      const nextOpenKeys: string[] = [];
+      if (pathname.startsWith("/warehouse")) nextOpenKeys.push("warehouse");
+      if (pathname.startsWith("/purchase-orders")) nextOpenKeys.push("purchase-orders-group");
+      setOpenKeys(nextOpenKeys);
     }
   }, [collapsed, pathname]);
 
@@ -107,9 +110,19 @@ export const ErpLayout: React.FC<ErpLayoutProps> = ({ children }) => {
       label: <Link href="/contracts" prefetch={false}>{t("menu.contracts")}</Link>,
     },
     {
-      key: "/purchase-orders",
+      key: "purchase-orders-group",
       icon: <IconShoppingCart size={18} strokeWidth={1.8} />,
-      label: <Link href="/purchase-orders" prefetch={false}>{t("menu.purchaseOrders")}</Link>,
+      label: t("menu.purchaseOrders"),
+      children: [
+        {
+          key: "/purchase-orders",
+          label: <Link href="/purchase-orders" prefetch={false}>{t("menu.purchaseOrders")}</Link>,
+        },
+        {
+          key: "/purchase-orders/processing",
+          label: <Link href="/purchase-orders/processing" prefetch={false}>{t("menu.orderProcessing")}</Link>,
+        },
+      ],
     },
     {
       key: "/submissions",
@@ -292,6 +305,7 @@ export const ErpLayout: React.FC<ErpLayoutProps> = ({ children }) => {
               {activePath === "/quotations" && t("pageTitles.quotations")}
               {activePath === "/contracts" && t("pageTitles.contracts")}
               {activePath === "/purchase-orders" && t("pageTitles.purchaseOrders")}
+              {activePath.startsWith("/purchase-orders/processing") && t("pageTitles.orderProcessing")}
               {activePath.startsWith("/submissions") && t("pageTitles.submissions")}
               {activePath.startsWith("/warehouse/receipt") && t("pageTitles.receipt")}
               {activePath.startsWith("/warehouse/requisition") && t("pageTitles.requisition")}
