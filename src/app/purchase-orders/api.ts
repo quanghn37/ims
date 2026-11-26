@@ -61,4 +61,19 @@ export const purchaseOrdersApi = {
       PageSize: 50,
       ...params,
     }),
+  cancelPurchaseOrderItems: <T = any>(params: {
+    ContractId: number | string;
+    Items: Array<{
+      SubmissionId: number | string;
+      CancelQnty: number;
+      CancelReason: string;
+    }>;
+    WSId?: string;
+    [key: string]: any;
+  }) =>
+    postFeatureData<T>("api/cancel-purchaserorder-item", {
+      WSId: "",
+      ...params,
+      ContractId: !isNaN(Number(params.ContractId)) ? Number(params.ContractId) : params.ContractId,
+    }),
 };

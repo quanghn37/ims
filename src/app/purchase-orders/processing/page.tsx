@@ -11,8 +11,6 @@ import {
   Checkbox,
   Tag,
   Modal,
-  Tabs,
-  Popconfirm,
   message,
 } from "antd";
 import type { ColumnType } from "antd/es/table";
@@ -20,15 +18,15 @@ import {
   SearchOutlined,
   ReloadOutlined,
   CloseCircleOutlined,
-  UndoOutlined,
 } from "@ant-design/icons";
-import { IconBan, IconHistory, IconScale } from "@tabler/icons-react";
+import { IconBan } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { ErpPageContainer } from "@/components/layout/ErpPageContainer";
 import ResizableTitle from "@/components/table/ResizableTitle";
 import { usePersistedTableColumns } from "@/components/table/usePersistedTableColumns";
 import { extractApiList, extractTotalRows } from "@/lib/api-client";
 import { warehouseApi } from "@/app/warehouse/api";
+import { purchaseOrdersApi } from "@/app/purchase-orders/api";
 import { useTranslation } from "@/locales/LanguageContext";
 
 interface PendingPoCancelItem {
@@ -53,6 +51,7 @@ interface PendingPoCancelItem {
   TaxRate?: number;
   PO_Qnty?: number;
   Total_Received_Qnty?: number;
+  CancelledQnty?: number;
   Remaining_Qnty?: number;
   Orgcode?: string;
   OrgCode?: string;
@@ -65,13 +64,6 @@ interface PendingPoCancelItem {
   CancelReason?: string;
 }
 
-interface CancelledPoHistoryItem extends PendingPoCancelItem {
-  CancelId: string;
-  CancelledAt: string;
-  CancelledQty: number;
-  PreviousRemainingQty: number;
-}
-
 const getPoRowKey = (record: PendingPoCancelItem): string => {
   return `${record.ContractId || "po"}_${record.SourceSubmissionId || record.SubmissionId || "sub"}_${record.MaterialId || record.ItemCode || record.RowNum || ""}`;
 };
@@ -80,9 +72,7 @@ export default function OrderProcessingPage() {
   const { t, language } = useTranslation();
   const isEn = language === "en";
 
-  const [activeTab, setActiveTab] = useState<"pending" | "history">("pending");
   const [items, setItems] = useState<PendingPoCancelItem[]>([]);
-  const [cancelledHistory, setCancelledHistory] = useState<CancelledPoHistoryItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [selectedWarehouseFilter, setSelectedWarehouseFilter] = useState<string | number>("ALL");
@@ -246,6 +236,10 @@ export default function OrderProcessingPage() {
     [items, selectedRowKeys]
   );
 
+  const getPoGroupId = (record: PendingPoCancelItem): string => {
+    return String(record.ContractId ?? record.ContractCode ?? "");
+  };
+
   // Mở popup Xác nhận Hủy
   const handleOpenConfirmCancel = () => {
     if (selectedItems.length === 0) {
@@ -253,6 +247,18 @@ export default function OrderProcessingPage() {
         isEn
           ? "Please select at least 1 item to cancel!"
           : "Vui lòng chọn ít nhất 1 dòng vật tư để hủy!"
+      );
+      return;
+    }
+
+    const uniquePos = Array.from(
+      new Set(selectedItems.map((i) => getPoGroupId(i)).filter(Boolean))
+    );
+    if (uniquePos.length > 1) {
+      message.warning(
+        isEn
+          ? "You can only cancel items from the same purchase order!"
+          : "Chỉ được chọn hủy các dòng vật tư trong cùng 1 đơn hàng PO!"
       );
       return;
     }
@@ -286,8 +292,8 @@ export default function OrderProcessingPage() {
     setConfirmModalOpen(true);
   };
 
-  // Thực thi Xác nhận Hủy trên Wireframe (API map sau)
-  const handleConfirmCancelWireframe = async () => {
+  // Thực thi Xác nhận Hủy gọi POST api/cancel-purchaserorder-item
+  const handleConfirmCancel = async () => {
     const missingReason = selectedItems.some(
       (it) => !(it.CancelReason || "").trim() && !commonCancelReason.trim()
     );
@@ -300,89 +306,82 @@ export default function OrderProcessingPage() {
       return;
     }
 
+    const missingContractOrSub = selectedItems.find(
+      (it) => !it.ContractId || !(it.SourceSubmissionId ?? it.SubmissionId)
+    );
+    if (missingContractOrSub) {
+      message.error(
+        isEn
+          ? `Missing ContractId or SourceSubmissionId for item "${missingContractOrSub.ItemName || missingContractOrSub.ItemCode}".`
+          : `Thiếu ContractId hoặc SourceSubmissionId cho vật tư "${missingContractOrSub.ItemName || missingContractOrSub.ItemCode}".`
+      );
+      return;
+    }
+
     setConfirmingCancel(true);
     try {
-      const nowStr = dayjs().format("DD/MM/YYYY HH:mm");
-      const newHistoryEntries: CancelledPoHistoryItem[] = selectedItems.map((it) => {
-        const cancelQty = Number(it.Cancel_Qnty || 0);
-        const prevRemaining = Number(it.Remaining_Qnty || 0);
-        const finalReason = (it.CancelReason || "").trim() || commonCancelReason.trim();
-        return {
-          ...it,
-          CancelId: `${getPoRowKey(it)}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-          CancelledAt: nowStr,
-          CancelledQty: cancelQty,
-          PreviousRemainingQty: prevRemaining,
-          CancelReason: finalReason,
-        };
+      // Nhóm các dòng được chọn theo ContractId để gọi API cancel-purchaserorder-item
+      const groupedByContract = new Map<number, PendingPoCancelItem[]>();
+      selectedItems.forEach((it) => {
+        const cId = Number(it.ContractId);
+        const arr = groupedByContract.get(cId) || [];
+        arr.push(it);
+        groupedByContract.set(cId, arr);
       });
 
-      const selectedMap = new Map(
-        selectedItems.map((it) => [getPoRowKey(it), Number(it.Cancel_Qnty || 0)])
-      );
+      const messages: string[] = [];
+      const succeededItems: PendingPoCancelItem[] = [];
 
-      setItems((prev) =>
-        prev
-          .map((it) => {
-            const key = getPoRowKey(it);
-            if (!selectedMap.has(key)) return it;
-            const cancelQty = selectedMap.get(key) || 0;
-            const nextRemaining = Math.max(0, Number(it.Remaining_Qnty || 0) - cancelQty);
-            return {
-              ...it,
-              Remaining_Qnty: nextRemaining,
-              Cancel_Qnty: nextRemaining,
-              CancelReason: "",
-            };
-          })
-          .filter((it) => Number(it.Remaining_Qnty || 0) > 0)
-      );
+      for (const [contractId, groupItems] of Array.from(groupedByContract.entries())) {
+        const res: any = await purchaseOrdersApi.cancelPurchaseOrderItems({
+          ContractId: contractId,
+          Items: groupItems.map((it) => ({
+            SubmissionId: Number(it.SourceSubmissionId ?? it.SubmissionId),
+            CancelQnty: Number(it.Cancel_Qnty || 0),
+            CancelReason: (it.CancelReason || "").trim() || commonCancelReason.trim(),
+          })),
+        });
 
-      setCancelledHistory((prev) => [...newHistoryEntries, ...prev]);
+        if (res?.Success === false || String(res?.Success).toLowerCase() === "false") {
+          message.error(
+            res?.Message ||
+              (isEn ? "Failed to cancel purchase order items!" : "Hủy số lượng đơn hàng thất bại!")
+          );
+          return;
+        }
+
+        if (res?.Message) {
+          messages.push(res.Message);
+        }
+        succeededItems.push(...groupItems);
+      }
+
       setSelectedRowKeys([]);
       setConfirmModalOpen(false);
+
       message.success(
-        isEn
-          ? `Cancelled ${selectedItems.length} item(s) (Wireframe preview - API pending).`
-          : `Đã xác nhận hủy ${selectedItems.length} dòng vật tư (Wireframe - chờ map API).`
+        messages.join(" ") ||
+          (isEn
+            ? `Successfully cancelled ${succeededItems.length} item(s).`
+            : `Đã hủy thành công ${succeededItems.length} dòng vật tư.`)
+      );
+
+      // Tải lại danh sách từ API get-pendinginventory-po để cập nhật SL còn lại / SL đã hủy
+      await fetchPendingItems(
+        pagination.current,
+        pagination.pageSize,
+        selectedWarehouseFilter,
+        searchKeyword
+      );
+    } catch (err: any) {
+      console.error("Lỗi hủy số lượng đơn hàng:", err);
+      message.error(
+        err?.message ||
+          (isEn ? "Failed to cancel purchase order items!" : "Hủy số lượng đơn hàng thất bại!")
       );
     } finally {
       setConfirmingCancel(false);
     }
-  };
-
-  // Hoàn tác / Mở lại dòng đã hủy trên Wireframe
-  const handleReopenItem = (historyItem: CancelledPoHistoryItem) => {
-    setCancelledHistory((prev) => prev.filter((h) => h.CancelId !== historyItem.CancelId));
-
-    const targetKey = getPoRowKey(historyItem);
-    setItems((prev) => {
-      const exists = prev.some((it) => getPoRowKey(it) === targetKey);
-      if (exists) {
-        return prev.map((it) => {
-          if (getPoRowKey(it) !== targetKey) return it;
-          const restoredRemaining = Number(it.Remaining_Qnty || 0) + historyItem.CancelledQty;
-          return {
-            ...it,
-            Remaining_Qnty: restoredRemaining,
-            Cancel_Qnty: restoredRemaining,
-          };
-        });
-      }
-      const restored: PendingPoCancelItem = {
-        ...historyItem,
-        Remaining_Qnty: historyItem.CancelledQty,
-        Cancel_Qnty: historyItem.CancelledQty,
-        CancelReason: "",
-      };
-      return [restored, ...prev];
-    });
-
-    message.success(
-      isEn
-        ? `Reopened "${historyItem.ItemName || historyItem.ItemCode}" (${historyItem.CancelledQty}).`
-        : `Đã mở lại "${historyItem.ItemName || historyItem.ItemCode}" (SL: ${historyItem.CancelledQty}).`
-    );
   };
 
   const isAllCurrentPageSelected = useMemo(() => {
@@ -397,13 +396,63 @@ export default function OrderProcessingPage() {
     );
   }, [items, selectedRowKeys, isAllCurrentPageSelected]);
 
+  const handleToggleSelectRow = (record: PendingPoCancelItem, checked: boolean) => {
+    const key = getPoRowKey(record);
+    if (!checked) {
+      setSelectedRowKeys((prev) => prev.filter((k) => k !== key));
+      return;
+    }
+
+    if (selectedItems.length > 0) {
+      const activePoId = getPoGroupId(selectedItems[0]);
+      const rowPoId = getPoGroupId(record);
+      if (activePoId && rowPoId && activePoId !== rowPoId) {
+        const activePoLabel = selectedItems[0].ContractCode || activePoId;
+        message.warning(
+          isEn
+            ? `You can only select items from the same purchase order (${activePoLabel})!`
+            : `Chỉ được chọn hủy các dòng vật tư trong cùng 1 đơn hàng (${activePoLabel})!`
+        );
+        return;
+      }
+    }
+
+    setSelectedRowKeys((prev) => (prev.includes(key) ? prev : [...prev, key]));
+  };
+
   const handleToggleSelectAll = (checked: boolean) => {
     const currentPageKeys = items.map(getPoRowKey);
-    if (checked) {
-      setSelectedRowKeys((prev) => Array.from(new Set([...prev, ...currentPageKeys])));
-    } else {
+    if (!checked) {
       setSelectedRowKeys((prev) => prev.filter((k) => !currentPageKeys.includes(k)));
+      return;
     }
+
+    const uniquePagePos = Array.from(
+      new Set(items.map((it) => getPoGroupId(it)).filter(Boolean))
+    );
+    if (uniquePagePos.length > 1) {
+      message.warning(
+        isEn
+          ? "Current list contains multiple purchase orders. Please filter by 1 PO or select items from the same PO!"
+          : "Danh sách đang có nhiều đơn hàng khác nhau. Vui lòng lọc theo 1 đơn hàng hoặc chọn các dòng trong cùng 1 đơn hàng!"
+      );
+      return;
+    }
+
+    if (selectedItems.length > 0 && uniquePagePos.length === 1) {
+      const activePoId = getPoGroupId(selectedItems[0]);
+      if (activePoId && activePoId !== uniquePagePos[0]) {
+        const activePoLabel = selectedItems[0].ContractCode || activePoId;
+        message.warning(
+          isEn
+            ? `You can only select items from the same purchase order (${activePoLabel})!`
+            : `Chỉ được chọn hủy các dòng vật tư trong cùng 1 đơn hàng (${activePoLabel})!`
+        );
+        return;
+      }
+    }
+
+    setSelectedRowKeys((prev) => Array.from(new Set([...prev, ...currentPageKeys])));
   };
 
   const rawColumns: (ColumnType<PendingPoCancelItem> & { cannotHide?: boolean })[] = useMemo(
@@ -632,12 +681,7 @@ export default function OrderProcessingPage() {
           return (
             <Checkbox
               checked={isSelected}
-              onChange={(e) => {
-                const checked = e.target.checked;
-                setSelectedRowKeys((prev) =>
-                  checked ? [...prev, key] : prev.filter((k) => k !== key)
-                );
-              }}
+              onChange={(e) => handleToggleSelectRow(record, e.target.checked)}
             />
           );
         },
@@ -661,142 +705,8 @@ export default function OrderProcessingPage() {
     defaultScrollX: 1820,
   });
 
-  const historyColumns: ColumnType<CancelledPoHistoryItem>[] = useMemo(
-    () => [
-      {
-        title: t.table?.stt || "STT",
-        key: "stt",
-        width: 60,
-        align: "center",
-        render: (_v, _r, idx) => idx + 1,
-      },
-      {
-        title: isEn ? "PO No." : "Số đơn hàng PO",
-        dataIndex: "ContractCode",
-        key: "ContractCode",
-        width: 190,
-      },
-      {
-        title: isEn ? "Vendor" : "Nhà cung cấp",
-        dataIndex: "ClientName",
-        key: "ClientName",
-        width: 220,
-      },
-      {
-        title: isEn ? "Item Name" : "Tên vật tư",
-        dataIndex: "ItemName",
-        key: "ItemName",
-        width: 260,
-        render: (text: string, record) => (
-          <div>
-            <div style={{ color: "#123443" }}>{text || "---"}</div>
-            {record.ItemCode && (
-              <div style={{ fontSize: 12, color: "#718894" }}>{record.ItemCode}</div>
-            )}
-          </div>
-        ),
-      },
-      {
-        title: isEn ? "Unit" : "ĐVT",
-        dataIndex: "UomCode",
-        key: "UomCode",
-        width: 80,
-        align: "center",
-      },
-      {
-        title: isEn ? "Cancelled Qty" : "SL đã hủy",
-        dataIndex: "CancelledQty",
-        key: "CancelledQty",
-        width: 120,
-        align: "right",
-        render: (val: number) =>
-          Number(val || 0).toLocaleString("en-US", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          }),
-      },
-      {
-        title: isEn ? "Cancel Reason" : "Lý do Hủy",
-        dataIndex: "CancelReason",
-        key: "CancelReason",
-        width: 220,
-      },
-      {
-        title: isEn ? "Cancelled At" : "Thời gian hủy",
-        dataIndex: "CancelledAt",
-        key: "CancelledAt",
-        width: 150,
-        align: "center",
-      },
-      {
-        title: isEn ? "Action" : "Thao tác",
-        key: "action",
-        width: 120,
-        align: "center",
-        fixed: "right",
-        render: (_val, record) => (
-          <Popconfirm
-            title={isEn ? "Reopen this item?" : "Mở lại dòng vật tư này?"}
-            description={
-              isEn
-                ? "Remaining quantity will be restored to the pending list."
-                : "Số lượng hủy sẽ được hoàn lại về danh sách chờ xử lý."
-            }
-            onConfirm={() => handleReopenItem(record)}
-            okText={isEn ? "Reopen" : "Mở lại"}
-            cancelText={t.common?.cancel || "Hủy"}
-          >
-            <Button
-              size="small"
-              icon={<UndoOutlined />}
-              style={{
-                borderRadius: 6,
-                borderColor: "#b2ded9",
-                color: "#008f89",
-                background: "#eef8f6",
-                fontSize: 12.5,
-              }}
-            >
-              {isEn ? "Reopen" : "Mở lại"}
-            </Button>
-          </Popconfirm>
-        ),
-      },
-    ],
-    [t, isEn]
-  );
-
   return (
     <ErpPageContainer>
-      <Tabs
-        activeKey={activeTab}
-        onChange={(key) => setActiveTab(key as "pending" | "history")}
-        style={{ marginBottom: 8 }}
-        items={[
-          {
-            key: "pending",
-            label: (
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                <IconScale size={16} strokeWidth={1.8} />
-                {isEn ? "Pending Orders" : "Đơn hàng chờ xử lý"}
-              </span>
-            ),
-          },
-          {
-            key: "history",
-            label: (
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                <IconHistory size={16} strokeWidth={1.8} />
-                {isEn
-                  ? `Cancelled History (${cancelledHistory.length})`
-                  : `Lịch sử đã hủy (${cancelledHistory.length})`}
-              </span>
-            ),
-          },
-        ]}
-      />
-
-      {activeTab === "pending" ? (
         <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
           {/* Toolbar: Bộ lọc bên trái, Thao tác Xác nhận Hủy bên phải */}
           <div
@@ -933,32 +843,8 @@ export default function OrderProcessingPage() {
             />
           </div>
         </div>
-      ) : (
-        <div
-          style={{
-            background: "#FFFFFF",
-            border: "1px solid #dce5e6",
-            borderRadius: 8,
-            overflow: "hidden",
-            flex: 1,
-            minHeight: 0,
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          <Table
-            className="erp-full-table"
-            rowKey="CancelId"
-            size="middle"
-            columns={historyColumns}
-            dataSource={cancelledHistory}
-            pagination={false}
-            scroll={{ x: 1400, y: "100%" }}
-          />
-        </div>
-      )}
 
-      {/* Modal Xác nhận Hủy (Wireframe tương tác - chờ map API) */}
+      {/* Modal Xác nhận Hủy */}
       <Modal
         open={confirmModalOpen}
         onCancel={() => setConfirmModalOpen(false)}
@@ -981,7 +867,7 @@ export default function OrderProcessingPage() {
             type="primary"
             danger
             loading={confirmingCancel}
-            onClick={handleConfirmCancelWireframe}
+            onClick={handleConfirmCancel}
           >
             {isEn ? "Confirm Cancel" : "Xác nhận Hủy"}
           </Button>,
